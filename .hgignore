@@ -1,0 +1,15 @@
+syntax: glob
+additional/**
+cache/**
+databases/**
+errors/**
+sessions/**
+controllers/**
+cron/**
+languages/**
+models/**
+modules/**
+static/**
+views/**
+*˜
+*.pyc
