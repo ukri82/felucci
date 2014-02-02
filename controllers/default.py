@@ -27,11 +27,16 @@ def index():
 def fixture():
     response.flash = T("Fixture...")
     
-    return dict(message_header = "", message_contents = GetFixture())
+    return dict(message_header = "Fixture", FixtureData = GetFixture())
     """
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
     """
-
+    
+def submit_fixture():
+    response.flash = T("Predictions submitted...")
+    
+    return dict(message_header=T('Hello'), message_contents=T('Predictions submitted'))
+    
 
 def user():
     """

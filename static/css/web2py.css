@@ -325,6 +325,7 @@ table.table1{
     line-height: 1.4em;
     font-style: normal;
     border-collapse:separate;
+    table-layout: fixed;
 }
 .table1 thead th{
     padding:15px;
@@ -404,6 +405,8 @@ table.table1{
     border-radius:2px;
     color:#666;
     text-shadow:1px 1px 1px #fff;
+    word-wrap:break-word;
+    max-width:150px;
 }
 .table1 tbody span.check::before{
     content : url(../images/check0.png)

@@ -193,11 +193,47 @@ def GetGroups(aGroupName_in):
    return message_contents
    
 def GetFixture():
-   left=[db.fixture.on(db.fixture.team1==db.teams.id), db.stadiums.on(db.fixture.venue==db.stadiums.id)]
-   rows=db().select(
+    '''
+    left=[db.fixture.on(db.fixture.team1==db.teams.id), db.stadiums.on(db.fixture.venue==db.stadiums.id)]
+    rows=db().select(
         db.fixture.ALL, db.teams.ALL, db.stadiums.ALL,
         left=left)
-   return rows
+    '''
+	
+    groups = db().select(db.groups.ALL, groupby=db.groups.name)
+	
+    aTeamData = db().select(db.teams.ALL)
+    
+    aFixture = []
+    for group in groups:
+	    
+        aTeams = db(db.groups.name==group.name).select()
+        aGroupData = {'id' : group.id, 'name' : group.name}
+        
+        aTeamIds = [i['team_id'] for i in aTeams]
+        aMatches = db(db.fixture.team1.belongs(aTeamIds) | db.fixture.team2.belongs(aTeamIds)).select()
+         
+        aMatchResults = [[row.id, row.game_number, row.venue, row.referee, row.date_time,  
+				row.team1, aTeamData[row.team1 - 1].name, aTeamData[row.team1 - 1].short_name, aTeamData[row.team1 - 1].icon_file_name, 
+				row.team2, aTeamData[row.team2 - 1].name, aTeamData[row.team2 - 1].short_name, aTeamData[row.team2 - 1].icon_file_name, 
+				row.venue, db.stadiums[row.venue].name, db.stadiums[row.venue].city] for row in aMatches]
+        
+				
+        aFixture.append({'group_data' : aGroupData,
+						 'fixture' : aMatchResults})
+    
+    '''
+    left=[db.fixture.on(db.fixture.team1==db.teams.id), db.stadiums.on(db.fixture.venue==db.stadiums.id)]
+    rows=db().select(
+        db.fixture.ALL, db.teams.ALL, db.stadiums.ALL,
+        left=left)
+    
+    aResult = [[row.fixture.id, row.fixture.game_number, row.fixture.venue, row.fixture.referee, row.fixture.date_time,  
+				row.fixture.team1, db.teams[row.fixture.team1].name, db.teams[row.fixture.team1].short_name, db.teams[row.fixture.team1].icon_file_name, 
+				row.fixture.team2, db.teams[row.fixture.team2].name, db.teams[row.fixture.team2].short_name, db.teams[row.fixture.team2].icon_file_name, 
+				row.stadiums.id, row.stadiums.name, row.stadiums.city] for row in rows]
+    '''
+    return aFixture
 
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)

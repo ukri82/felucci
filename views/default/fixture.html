@@ -4,7 +4,7 @@
 {{if 'message_header' in globals():}}
 <h3>{{=message_header}}</h3>
 {{if 'message_contents' in globals():}}
-<h4>{{=message_contents}}</h4>
+<!--<h4>{{=message_contents}}</h4>-->
 {{pass}}
 {{elif 'content' in globals():}}
 {{=content}}
@@ -14,70 +14,59 @@
 
 {{block main_content}}
 
+<form action = "/felucci/default/submit_fixture" method="post">
+
+<table>
+<tbody>
+<tr> 
+<td> 
+
+{{for groupFixture in FixtureData:}}
+<h4>Group {{=groupFixture['group_data']['name']}}</h4>
+ 
+                    
 <table class="table1">
-                <thead>
-                    <tr>
-                        <th></th>
-                        <th scope="col" abbr="Starter">Smart Starter</th>
-                        <th scope="col" abbr="Medium">Smart Medium</th>
-                        <th scope="col" abbr="Business">Smart Business</th>
-                        <th scope="col" abbr="Deluxe">Smart Deluxe</th>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <th scope="row">Price per month</th>
-                        <td>$ 2.90</td>
-                        <td>$ 5.90</td>
-                        <td>$ 9.90</td>
-                        <td>$ 14.90</td>
-                    </tr>
-                </tfoot>
-                <tbody>
-                    <tr>
-                        <th scope="row">Storage Space</th>
-                        <td>512 MB</td>
-                        <td>1 GB</td>
-                        <td>2 GB</td>
-                        <td>4 GB</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Bandwidth</th>
-                        <td>50 GB</td>
-                        <td>100 GB</td>
-                        <td>150 GB</td>
-                        <td>Unlimited</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">MySQL Databases</th>
-                        <td>Unlimited</td>
-                        <td>Unlimited</td>
-                        <td>Unlimited</td>
-                        <td>Unlimited</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Setup</th>
-                        <td>19.90 $</td>
-                        <td>12.90 $</td>
-                        <td>free</td>
-                        <td>free</td>
-                    </tr>
-                    <tr>
-                        <th scope="row">PHP 5</th>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                    </tr>
-                    <tr>
-                        <th scope="row">Ruby on Rails</th>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                        <td><span class="check"></span></td>
-                    </tr>
-                </tbody>
-            </table>
+    <thead>
+        <tr>
+            <th></th>
+            <th scope="col" abbr="GameNumber">Game</th>
+            <th scope="col" abbr="Team1">Team 1</th>
+            <th scope="col" abbr="Team2">Team 2</th>
+            <th scope="col" abbr="DateTime">Date and Time</th>
+            <th scope="col" abbr="Venue">Venue</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{index = 1}}
+    {{for item in groupFixture['fixture']:}}
+        <tr>
+            <th scope="row">{{=index}}{{index = index + 1}}</th>
+            <td>{{=item[1]}}</td>
+            <td>{{=item[7]}} {{=IMG(_src=URL('static/images/country_icons', item[8]),_alt=item[6], _title = item[6])}} <input type="number" name="score1" value = "0" style = "width: 50px;">  </td>
+            <td>{{=item[11]}} {{=IMG(_src=URL('static/images/country_icons', item[12]),_alt=item[10], _title = item[10])}}  <input type="number" name="score2" value = "0" style = "width: 50px;"></td>
+            <td>{{=item[4]}}</td>
+            <td>{{=item[14]}}, {{=item[15]}}</td>
+        </tr>
+    {{pass}}
+    
+    </tbody>
+</table>
+
+{{pass}}
+
+</td>
+</tr>
+<tr >
+<td style = "text-align:center;">
+<input type="submit" value="Submit Prediction" >
+</td>
+</tr>
+</tbody>
+</table>
+
+</form>
+
 {{end}}
 
 {{block right_sidebar}}
