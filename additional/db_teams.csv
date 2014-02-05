@@ -1,4 +1,4 @@
-teams.id,teams.name,teams.short_name,teams.captain,teams.coach,teams.icon_file_name,teams.profile,teams.key_players
+team.team_id,team.name,team.short_name,team.captain,team.coach,team.icon_file_name,team.profile,team.key_players
 1,Brazil,BRA,0,Luiz Felipe Scolari,BRA.png,x,
 2,Croatia,CRO,0,Niko Kovac,CRO.png,x,
 3,Mexico,MEX,0,Miguel Herrera,MEX.png,x,

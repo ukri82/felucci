@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import logging
 #########################################################################
 ## This scaffolding model makes your app work on Google App Engine too
 ## File is released under public domain and you can use without limitations
@@ -80,7 +80,8 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
-db.define_table('detailed_predictions',
+db.define_table('detailed_prediction',
+    Field('detailed_prediction_id','integer'),
     Field('prediction_id','integer'),
     Field('team_id','integer'),
     Field('goals','integer'),
@@ -94,7 +95,8 @@ db.define_table('detailed_predictions',
     Field('goal_scorers_id','string', length=50), redefine=True
 )
 
-db.define_table('detailed_results',
+db.define_table('detailed_result',
+    Field('detailed_result_id','integer'),
     Field('result_id','integer'),
     Field('team_id','integer'),
     Field('goals_scored','integer'),
@@ -109,6 +111,7 @@ db.define_table('detailed_results',
 )
 
 db.define_table('fixture',
+    Field('fixture_id','integer'),
 	Field('game_number','integer'),
     Field('team1','integer'),
     Field('team2','integer'),
@@ -117,39 +120,45 @@ db.define_table('fixture',
     Field('referee','string', length=50), redefine=True
 )
 
-db.define_table('groups',
+db.define_table('team_group',
+    Field('group_id','integer'),
     Field('name','string', length=2),
     Field('team_id','integer'), redefine=True
 )
  
-db.define_table('players',
+db.define_table('player',
+    Field('player_id','integer'),
     Field('first_name','string', length=50),
     Field('last_name','string', length=50),
     Field('player_image','string', length=50),
-    Field('tam_id','integer'), redefine=True
+    Field('team_id','integer'), redefine=True
 )
 
-db.define_table('predicters',
+db.define_table('predicter',
+    Field('predicter_id','integer'),
     Field('g_id','string', length=50),
     Field('first_name','string', length=50),
     Field('last_name','string', length=50),
     Field('nick_name','string', length=50), redefine=True
 )
 
-db.define_table('predictions',
+db.define_table('prediction',
+    Field('prediction_id','integer'),
     Field('match_id','integer'),
     Field('team1_details_id','integer'),
     Field('team2_details_id','integer'),
     Field('predictor_id','integer'), redefine=True
 )
 
-db.define_table('results',
+db.define_table('match_result',
+    Field('result_id','integer'),
     Field('match_id','integer'),
     Field('team1_details_id','integer'),
     Field('team2_details_id','integer'), redefine=True
 )
 
-db.define_table('stadiums',
+db.define_table('stadium',
+    Field('stadium_id','integer'),
     Field('name','string', length=50),
     Field('city','string', length=50),
     Field('capacity','integer'),
@@ -158,7 +167,8 @@ db.define_table('stadiums',
     Field('location_coord','string', length=50), redefine=True
 )
 
-db.define_table('teams',
+db.define_table('team',
+    Field('team_id','integer'),
     Field('name','string', length=30),
 	Field('short_name','string', length=3),
     Field('captain','integer'),
@@ -182,7 +192,7 @@ db.detailed_results.drop()
 '''
 
 def GetGroups(aGroupName_in):
-   rows = db(db.groups.name==aGroupName_in).select()
+   rows = db(db.team_group.name==aGroupName_in).select()
    aTeamIds = [i['team_id'] for i in rows]
    rows = db(db.fixture.team1.belongs(aTeamIds) | db.fixture.team2.belongs(aTeamIds)).select()
    aMatchIds = [i['id'] for i in rows]
@@ -192,48 +202,49 @@ def GetGroups(aGroupName_in):
    """
    return message_contents
    
+
 def GetFixture():
+    
+    aGroupTable = db().select(db.team_group.ALL)
+    
+    aGroupData = dict()
+    for group in aGroupTable:
+        if group.name not in aGroupData:
+            aGroupData[group.name] = list()
+        aGroupData[group.name].append(list([group.group_id, group.team_id]))
+        
+    
+    aStadiumTable = db().select(db.stadium.ALL)
+    aStadiumData = dict()
+    for stadium in aStadiumTable:
+        aStadiumData[stadium.stadium_id] = list([stadium.name, stadium.city])
+     
     '''
-    left=[db.fixture.on(db.fixture.team1==db.teams.id), db.stadiums.on(db.fixture.venue==db.stadiums.id)]
-    rows=db().select(
-        db.fixture.ALL, db.teams.ALL, db.stadiums.ALL,
-        left=left)
+    logging.info("value of aStadiumData is %s", str(aStadiumData))
     '''
-	
-    groups = db().select(db.groups.ALL, groupby=db.groups.name)
-	
-    aTeamData = db().select(db.teams.ALL)
+    
+    aTeamTable = db().select(db.team.ALL)
+    aTeamData = dict()
+    for team in aTeamTable:
+        aTeamData[team.team_id] = list([team.name, team.short_name, team.icon_file_name])
     
     aFixture = []
-    for group in groups:
-	    
-        aTeams = db(db.groups.name==group.name).select()
-        aGroupData = {'id' : group.id, 'name' : group.name}
+    for groupName, teamData in aGroupData.items():
+        aTeamIds = [item[1] for item in teamData]
+ 
+        aMatchTable = db(db.fixture.team1.belongs(aTeamIds)).select()
         
-        aTeamIds = [i['team_id'] for i in aTeams]
-        aMatches = db(db.fixture.team1.belongs(aTeamIds) | db.fixture.team2.belongs(aTeamIds)).select()
-         
-        aMatchResults = [[row.id, row.game_number, row.venue, row.referee, row.date_time,  
-				row.team1, aTeamData[row.team1 - 1].name, aTeamData[row.team1 - 1].short_name, aTeamData[row.team1 - 1].icon_file_name, 
-				row.team2, aTeamData[row.team2 - 1].name, aTeamData[row.team2 - 1].short_name, aTeamData[row.team2 - 1].icon_file_name, 
-				row.venue, db.stadiums[row.venue].name, db.stadiums[row.venue].city] for row in aMatches]
+        aMatchData = [[row.id, row.game_number, row.venue, row.referee, row.date_time,  
+				row.team1, aTeamData[row.team1][0], aTeamData[row.team1][1], aTeamData[row.team1][2], 
+				row.team2, aTeamData[row.team2][0], aTeamData[row.team2][1], aTeamData[row.team2][2], 
+				row.venue, aStadiumData[row.venue][0], aStadiumData[row.venue][1]] for row in aMatchTable]
+                
+        aMatchData = sorted(aMatchData, key=lambda k: k[1])
         
-				
-        aFixture.append({'group_data' : aGroupData,
-						 'fixture' : aMatchResults})
+        aFixture.append({'group_name' : groupName,
+						 'fixture' : aMatchData})
     
-    '''
-    left=[db.fixture.on(db.fixture.team1==db.teams.id), db.stadiums.on(db.fixture.venue==db.stadiums.id)]
-    rows=db().select(
-        db.fixture.ALL, db.teams.ALL, db.stadiums.ALL,
-        left=left)
-    
-    aResult = [[row.fixture.id, row.fixture.game_number, row.fixture.venue, row.fixture.referee, row.fixture.date_time,  
-				row.fixture.team1, db.teams[row.fixture.team1].name, db.teams[row.fixture.team1].short_name, db.teams[row.fixture.team1].icon_file_name, 
-				row.fixture.team2, db.teams[row.fixture.team2].name, db.teams[row.fixture.team2].short_name, db.teams[row.fixture.team2].icon_file_name, 
-				row.stadiums.id, row.stadiums.name, row.stadiums.city] for row in rows]
-    '''
-    return aFixture
+    return sorted(aFixture, key=lambda k: k['group_name'])
 
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)

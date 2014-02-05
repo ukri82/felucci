@@ -1,4 +1,4 @@
-groups.id,groups.name,groups.team_id
+team_group.group_id,team_group.name,team_group.team_id
 1,A,1
 2,A,2
 3,A,3
