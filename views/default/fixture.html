@@ -43,8 +43,8 @@
         <tr>
             <th scope="row">{{=index}}{{index = index + 1}}</th>
             <td>{{=item[1]}}</td>
-            <td>{{=item[7]}} {{=IMG(_src=URL('static/images/country_icons', item[8]),_alt=item[6], _title = item[6])}} <input type="number" name="score1" value = "0" style = "width: 50px;">  </td>
-            <td>{{=item[11]}} {{=IMG(_src=URL('static/images/country_icons', item[12]),_alt=item[10], _title = item[10])}}  <input type="number" name="score2" value = "0" style = "width: 50px;"></td>
+            <td>{{=item[7]}} {{=IMG(_src=URL('static/images/country_icons', item[8]),_alt=item[6], _title = item[6])}} {{=INPUT(_type='number', _name="%s_score1" % item[0], _value = 0, _style="width: 50px;")}} </td>
+            <td>{{=item[11]}} {{=IMG(_src=URL('static/images/country_icons', item[12]),_alt=item[10], _title = item[10])}}  {{=INPUT(_type='number', _name="%s_score2" % item[0], _value = 0, _style="width: 50px;")}}</td>
             <td>{{=item[4]}}</td>
             <td>{{=item[14]}}, {{=item[15]}}</td>
         </tr>

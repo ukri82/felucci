@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import logging
+import re
+
+
 #########################################################################
 ## This scaffolding model makes your app work on Google App Engine too
 ## File is released under public domain and you can use without limitations
@@ -190,7 +193,7 @@ db.groups.drop()
 db.fixture.drop()
 db.detailed_results.drop()
 '''
-
+    
 def GetGroups(aGroupName_in):
    rows = db(db.team_group.name==aGroupName_in).select()
    aTeamIds = [i['team_id'] for i in rows]
@@ -202,7 +205,61 @@ def GetGroups(aGroupName_in):
    """
    return message_contents
    
+            
+def UpdatePrediction(aUserId_in, aParams_in):
 
+    '''
+    Get the fixture data in a dictionary
+    '''
+    aFixtureTable = db().select(db.fixture.ALL)
+    aFixtureData = dict()
+    for match in aFixtureTable:
+        aFixtureData[match.id] = list([match.team1, match.team2])
+    
+    '''
+    See if there is an entry for the predictor in the prediction table, if not create one
+    '''
+    aUserRow = db(db.prediction.predictor_id==aUserId_in).select()
+    predictionId = -1
+    
+    
+    if len(aUserRow) == 0:
+        predictionId = db.prediction.insert(predictor_id=aUserId_in)
+    else:
+        predictionId = aUserRow[0].id
+        
+    logging.info("value of len(aParams_in) is %s", str(len(aParams_in)))
+    '''
+    process each team results for each match
+    '''
+    for aPredictReq in aParams_in:
+        aMatchIdStr = ''
+        aTeamIndexStr = ''
+        try:
+            matchObj = re.search('(\d*)_score(\d)', aPredictReq)
+            aMatchIdStr = matchObj.group(1)
+            aTeamIndexStr = matchObj.group(2)
+        except AttributeError:
+            logging.error("value of aPredictReq is %s", str(aPredictReq))
+
+        aMatchId = int(aMatchIdStr)
+        aTeamIndex = int(aTeamIndexStr) - 1
+        aTeamId = aFixtureData[aMatchId][aTeamIndex]
+        
+        detailedPredictionIdTeam = -1
+        aDetRows = db(db.detailed_prediction.prediction_id == predictionId and db.detailed_prediction.team_id == aTeamId).select()
+        if len(aDetRows) == 0:
+            detailedPredictionIdTeam = db.detailed_prediction.insert(prediction_id=predictionId, team_id = aTeamId)
+        else:
+            detailedPredictionIdTeam = aDetRows[0].id
+        
+        if aTeamIndex == 0:
+            db(db.prediction.id==predictionId).update(match_id=aMatchId, team1_details_id=detailedPredictionIdTeam)
+        else:
+            db(db.prediction.id==predictionId).update(match_id=aMatchId, team2_details_id=detailedPredictionIdTeam)
+            
+        db(db.detailed_prediction.id==detailedPredictionIdTeam).update(goals=int(aParams_in[aPredictReq]))
+        
 def GetFixture():
     
     aGroupTable = db().select(db.team_group.ALL)

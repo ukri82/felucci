@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # this file is released under public domain and you can use without limitations
 
+import logging
+
 #########################################################################
 ## This is a sample controller
 ## - index is the default action of any application
@@ -34,6 +36,10 @@ def fixture():
     
 def submit_fixture():
     response.flash = T("Predictions submitted...")
+    
+    logging.info("value of request is %s", str(request.vars))
+    
+    UpdatePrediction(auth.user.id, request.vars)
     
     return dict(message_header=T('Hello'), message_contents=T('Predictions submitted'))
     
