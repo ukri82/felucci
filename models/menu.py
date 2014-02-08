@@ -10,8 +10,8 @@ response.logo = A(B('web',SPAN(2),'py'),XML('&trade;&nbsp;'),
                   _class="brand",_href="http://www.web2py.com/")
 response.logo = IMG('static/images', 'fulecci_logo.png', _style="height:20px; width:20px;")
 '''
-response.logo = A(IMG(_src=URL('static/images', 'favicon.png'),_alt='Felucci'),
-                  _class="brand",_href="/felucci/default/index")
+response.logo = A(IMG(_src=URL('static/images', 'favicon.png'),_alt='Fulecci'),
+                  _class="brand",_href="/fulecci/default/index")
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 
@@ -31,7 +31,7 @@ response.google_analytics_id = None
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
 	(T('Predictions'), False, URL('default', 'get_predictions'), []),
-    (T('Administrator'), False, URL('appadmin', 'index'), [])
+    (T('Administration'), False, URL('appadmin', 'index'), [])
 ]
 
 DEVELOPMENT_MENU = False

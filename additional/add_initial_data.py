@@ -1,5 +1,5 @@
 import sqlite3
-conn = sqlite3.connect('C:/Unni/ODESK/Felucci/web2py/applications/felucci/databases/storage.sqlite')
+conn = sqlite3.connect('C:/Unni/ODESK/Felucci/web2py/applications/fulecci/databases/storage.sqlite')
 
 c = conn.cursor()
 
