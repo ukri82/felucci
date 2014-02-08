@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import logging
-import re
 
 
 #########################################################################
@@ -11,6 +9,8 @@ import re
 ## if SSL/HTTPS is properly configured and you want all HTTP requests to
 ## be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
+
+migrate_flag = False
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
@@ -83,20 +83,7 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
-db.define_table('detailed_prediction',
-    Field('detailed_prediction_id','integer'),
-    Field('prediction_id','integer'),
-    Field('team_id','integer'),
-    Field('goals','integer'),
-    Field('possession','double'),
-    Field('total_shots','integer'),
-    Field('shots_on_target','integer'),
-    Field('shots_off_target','integer'),
-    Field('corners','integer'),
-    Field('yellow_cards','integer'),
-    Field('red_cards','integer'),
-    Field('goal_scorers_id','string', length=50), redefine=True
-)
+
 
 db.define_table('detailed_result',
     Field('detailed_result_id','integer'),
@@ -110,7 +97,7 @@ db.define_table('detailed_result',
     Field('corners','integer'),
     Field('yellow_cards','integer'),
     Field('read_cards','integer'),
-    Field('goal_scorers_ids','string', length=50), redefine=True
+    Field('goal_scorers_ids','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('fixture',
@@ -120,13 +107,13 @@ db.define_table('fixture',
     Field('team2','integer'),
     Field('date_time','datetime'),
     Field('venue','integer'),
-    Field('referee','string', length=50), redefine=True
+    Field('referee','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('team_group',
     Field('group_id','integer'),
     Field('name','string', length=2),
-    Field('team_id','integer'), redefine=True
+    Field('team_id','integer'), redefine=migrate_flag
 )
  
 db.define_table('player',
@@ -134,7 +121,7 @@ db.define_table('player',
     Field('first_name','string', length=50),
     Field('last_name','string', length=50),
     Field('player_image','string', length=50),
-    Field('team_id','integer'), redefine=True
+    Field('team_id','integer'), redefine=migrate_flag
 )
 
 db.define_table('predicter',
@@ -142,22 +129,29 @@ db.define_table('predicter',
     Field('g_id','string', length=50),
     Field('first_name','string', length=50),
     Field('last_name','string', length=50),
-    Field('nick_name','string', length=50), redefine=True
+    Field('nick_name','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('prediction',
-    Field('prediction_id','integer'),
+    Field('predictor_id','integer'),
     Field('match_id','integer'),
-    Field('team1_details_id','integer'),
-    Field('team2_details_id','integer'),
-    Field('predictor_id','integer'), redefine=True
+    Field('team_id','integer'),
+    Field('goals','integer'),
+    Field('possession','double'),
+    Field('total_shots','integer'),
+    Field('shots_on_target','integer'),
+    Field('shots_off_target','integer'),
+    Field('corners','integer'),
+    Field('yellow_cards','integer'),
+    Field('red_cards','integer'),
+    Field('goal_scorers_id','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('match_result',
     Field('result_id','integer'),
     Field('match_id','integer'),
     Field('team1_details_id','integer'),
-    Field('team2_details_id','integer'), redefine=True
+    Field('team2_details_id','integer'), redefine=migrate_flag
 )
 
 db.define_table('stadium',
@@ -167,7 +161,7 @@ db.define_table('stadium',
     Field('capacity','integer'),
     Field('profile','string', length=10000),
 	Field('icon_file_name','string', length=50),
-    Field('location_coord','string', length=50), redefine=True
+    Field('location_coord','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('team',
@@ -178,7 +172,7 @@ db.define_table('team',
     Field('coach','string', length=50),
     Field('icon_file_name','string', length=50),
     Field('profile','string', length=10000),
-    Field('key_players','string', length=50), redefine=True
+    Field('key_players','string', length=50), redefine=migrate_flag
 )
 
 '''
@@ -193,115 +187,7 @@ db.groups.drop()
 db.fixture.drop()
 db.detailed_results.drop()
 '''
-    
-def GetGroups(aGroupName_in):
-   rows = db(db.team_group.name==aGroupName_in).select()
-   aTeamIds = [i['team_id'] for i in rows]
-   rows = db(db.fixture.team1.belongs(aTeamIds) | db.fixture.team2.belongs(aTeamIds)).select()
-   aMatchIds = [i['id'] for i in rows]
-   message_contents = aMatchIds
-   """
-   for row in rows: message_contents += "(%s, %s)" % (row.id, row.date_time)
-   """
-   return message_contents
-   
-            
-def UpdatePrediction(aUserId_in, aParams_in):
 
-    '''
-    Get the fixture data in a dictionary
-    '''
-    aFixtureTable = db().select(db.fixture.ALL)
-    aFixtureData = dict()
-    for match in aFixtureTable:
-        aFixtureData[match.id] = list([match.team1, match.team2])
-    
-    '''
-    See if there is an entry for the predictor in the prediction table, if not create one
-    '''
-    aUserRow = db(db.prediction.predictor_id==aUserId_in).select()
-    predictionId = -1
-    
-    
-    if len(aUserRow) == 0:
-        predictionId = db.prediction.insert(predictor_id=aUserId_in)
-    else:
-        predictionId = aUserRow[0].id
-        
-    logging.info("value of len(aParams_in) is %s", str(len(aParams_in)))
-    '''
-    process each team results for each match
-    '''
-    for aPredictReq in aParams_in:
-        aMatchIdStr = ''
-        aTeamIndexStr = ''
-        try:
-            matchObj = re.search('(\d*)_score(\d)', aPredictReq)
-            aMatchIdStr = matchObj.group(1)
-            aTeamIndexStr = matchObj.group(2)
-        except AttributeError:
-            logging.error("value of aPredictReq is %s", str(aPredictReq))
-
-        aMatchId = int(aMatchIdStr)
-        aTeamIndex = int(aTeamIndexStr) - 1
-        aTeamId = aFixtureData[aMatchId][aTeamIndex]
-        
-        detailedPredictionIdTeam = -1
-        aDetRows = db(db.detailed_prediction.prediction_id == predictionId and db.detailed_prediction.team_id == aTeamId).select()
-        if len(aDetRows) == 0:
-            detailedPredictionIdTeam = db.detailed_prediction.insert(prediction_id=predictionId, team_id = aTeamId)
-        else:
-            detailedPredictionIdTeam = aDetRows[0].id
-        
-        if aTeamIndex == 0:
-            db(db.prediction.id==predictionId).update(match_id=aMatchId, team1_details_id=detailedPredictionIdTeam)
-        else:
-            db(db.prediction.id==predictionId).update(match_id=aMatchId, team2_details_id=detailedPredictionIdTeam)
-            
-        db(db.detailed_prediction.id==detailedPredictionIdTeam).update(goals=int(aParams_in[aPredictReq]))
-        
-def GetFixture():
-    
-    aGroupTable = db().select(db.team_group.ALL)
-    
-    aGroupData = dict()
-    for group in aGroupTable:
-        if group.name not in aGroupData:
-            aGroupData[group.name] = list()
-        aGroupData[group.name].append(list([group.group_id, group.team_id]))
-        
-    
-    aStadiumTable = db().select(db.stadium.ALL)
-    aStadiumData = dict()
-    for stadium in aStadiumTable:
-        aStadiumData[stadium.stadium_id] = list([stadium.name, stadium.city])
-     
-    '''
-    logging.info("value of aStadiumData is %s", str(aStadiumData))
-    '''
-    
-    aTeamTable = db().select(db.team.ALL)
-    aTeamData = dict()
-    for team in aTeamTable:
-        aTeamData[team.team_id] = list([team.name, team.short_name, team.icon_file_name])
-    
-    aFixture = []
-    for groupName, teamData in aGroupData.items():
-        aTeamIds = [item[1] for item in teamData]
- 
-        aMatchTable = db(db.fixture.team1.belongs(aTeamIds)).select()
-        
-        aMatchData = [[row.id, row.game_number, row.venue, row.referee, row.date_time,  
-				row.team1, aTeamData[row.team1][0], aTeamData[row.team1][1], aTeamData[row.team1][2], 
-				row.team2, aTeamData[row.team2][0], aTeamData[row.team2][1], aTeamData[row.team2][2], 
-				row.venue, aStadiumData[row.venue][0], aStadiumData[row.venue][1]] for row in aMatchTable]
-                
-        aMatchData = sorted(aMatchData, key=lambda k: k[1])
-        
-        aFixture.append({'group_name' : groupName,
-						 'fixture' : aMatchData})
-    
-    return sorted(aFixture, key=lambda k: k['group_name'])
 
 ## after defining tables, uncomment below to enable auditing
 # auth.enable_record_versioning(db)

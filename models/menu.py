@@ -5,14 +5,19 @@
 ## Customize your APP title, subtitle and menus here
 #########################################################################
 
+'''
 response.logo = A(B('web',SPAN(2),'py'),XML('&trade;&nbsp;'),
                   _class="brand",_href="http://www.web2py.com/")
+response.logo = IMG('static/images', 'fulecci_logo.png', _style="height:20px; width:20px;")
+'''
+response.logo = A(IMG(_src=URL('static/images', 'favicon.png'),_alt='Felucci'),
+                  _class="brand",_href="/felucci/default/index")
 response.title = request.application.replace('_',' ').title()
 response.subtitle = ''
 
 ## read more at http://dev.w3.org/html5/markup/meta.name.html
-response.meta.author = 'Your Name <you@example.com>'
-response.meta.description = 'a cool new app'
+response.meta.author = 'Unni <ukri82@yahoo.com>'
+response.meta.description = 'FIFA 2014 world cup prediction contest'
 response.meta.keywords = 'web2py, python, framework'
 response.meta.generator = 'Web2py Web Framework'
 
@@ -25,7 +30,8 @@ response.google_analytics_id = None
 
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
-	(T('Fixture'), False, URL('default', 'fixture'), [])
+	(T('Predictions'), False, URL('default', 'get_predictions'), []),
+    (T('Administrator'), False, URL('appadmin', 'index'), [])
 ]
 
 DEVELOPMENT_MENU = False
