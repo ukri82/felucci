@@ -326,6 +326,10 @@ table.table1{
     font-style: normal;
     border-collapse:separate;
     table-layout: fixed;
+    /*  to center the table horizontally */
+    margin-left: auto;
+    margin-right: auto;
+    /*  to center the table horizontally */
 }
 .table1 thead th{
     padding:15px;
@@ -353,6 +357,7 @@ table.table1{
     -moz-border-radius:5px 5px 0px 0px;
     border-top-left-radius:5px;
     border-top-right-radius:5px;
+    text-align: center;
 }
 .table1 thead th:empty{
     background:transparent;
@@ -406,11 +411,16 @@ table.table1{
     color:#666;
     text-shadow:1px 1px 1px #fff;
     word-wrap:break-word;
-    max-width:150px;
 }
 .table1 tbody span.check::before{
     content : url(../images/check0.png)
 }
+
+.tab-content>.tab-pane, .pill-content>.pill-pane {
+border: 2px solid #E7EFE0;
+}
+
+.w2p_fw {padding: 5px;}
 
 /* fix some IE problems */
 

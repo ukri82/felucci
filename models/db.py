@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import logging
 
 #########################################################################
 ## This scaffolding model makes your app work on Google App Engine too
@@ -10,7 +10,7 @@
 ## be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
 
-migrate_flag = False
+migrate_flag = True
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
@@ -47,19 +47,26 @@ from gluon.tools import Auth, Crud, Service, PluginManager, prettydate
 auth = Auth(db)
 crud, service, plugins = Crud(db), Service(), PluginManager()
 
+auth.settings.extra_fields[auth.settings.table_user_name]= [
+  Field('nickname', 'string'),
+  Field('image', 'upload')
+]
+
 ## create all tables needed by auth if not custom tables
 auth.define_tables(username=False, signature=False)
 
 ## configure email
 mail = auth.settings.mailer
 mail.settings.server = 'logging' or 'smtp.gmail.com:587'
-mail.settings.sender = 'you@gmail.com'
-mail.settings.login = 'username:password'
+mail.settings.sender = 'fulecci@gmail.com'
+mail.settings.login = 'fulecci:icceluf123'
 
 ## configure auth policy
 auth.settings.registration_requires_verification = False
 auth.settings.registration_requires_approval = False
 auth.settings.reset_password_requires_verification = True
+
+
 
 ## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.
 ## register with janrain.com, write your domain:api_key in private/janrain.key
