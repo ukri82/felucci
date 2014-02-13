@@ -1,4 +1,4 @@
-{{left_sidebar_enabled=False,right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
 {{extend 'layout.html'}}
 
 {{if 'message_header' in globals():}}
@@ -11,10 +11,6 @@
 {{else:}}
 {{=BEAUTIFY(response._vars)}}
 {{pass}}
-
-{{block left_sidebar}}
-{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname)}}
-{{end}}
 
 {{block main_content}}
 {{end}}

@@ -138,6 +138,7 @@ div.error {
     background-repeat: repeat-y;
 }
 
+
 .topbar {
     padding:10px 0;
     width:100%;
@@ -178,6 +179,8 @@ div.error {
 
 .copyright {float:left}
 #poweredBy {float:right}
+
+
 
 /* #MEDIA QUERIES SECTION */
 
@@ -421,6 +424,17 @@ border: 2px solid #E7EFE0;
 }
 
 .w2p_fw {padding: 5px;}
+
+img.profile_image {
+    max-width: 50%;
+    max-height: 50%;
+    /*  to center the table horizontally */
+    margin-left: auto;
+    margin-right: auto;
+    /*  to center the table horizontally */
+}
+
+
 
 /* fix some IE problems */
 

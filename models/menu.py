@@ -30,8 +30,8 @@ response.google_analytics_id = None
 
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
-	(T('Predictions'), False, URL('default', 'get_predictions'), []),
-    (T('Administration'), False, URL('appadmin', 'index'), [])
+    (T('Administration'), False, URL('appadmin', 'index'), []),
+	(T('Help'), False, URL('default', 'get_help'), [])    
 ]
 
 DEVELOPMENT_MENU = False

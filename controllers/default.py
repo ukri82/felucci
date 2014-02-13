@@ -92,15 +92,22 @@ def GetPredictions(aUserId_in):
 def index():
     
     response.flash = T("Welcome to Fulecci!")
+    nick_name = ''
+    user_image = ''
+    if auth.user is not None:
+        nick_name = auth.user.nickname
+        user_image = auth.user.image
+        response.view = 'default/profile.html'
+        
+    logging.info("value of response.view is %s", str(response.view))
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
     
 
 @auth.requires_login()
 def get_predictions():
-    response.flash = T("Predictions...")
     
     response.view = 'default/predictions.html'
-    return dict(message_header = "Predictions", PredictionData = GetPredictions(auth.user.id))
+    return dict(PredictionData = GetPredictions(auth.user.id))
     
     
 @auth.requires_login()  
@@ -113,6 +120,9 @@ def submit_predictions():
     response.view = 'default/predictions.html'
     return dict(message_header = "Predictions", PredictionData = GetPredictions(auth.user.id))
     
+def get_help():
+    response.view = 'default/help.html'
+    return dict()
     
 def user():
     """
