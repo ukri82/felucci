@@ -1,0 +1,47 @@
+{{right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
+{{extend 'layout.html'}}
+
+<div class="container">
+<div class="span2 left-sidebar">
+<ul class="nav nav-list" data-tabs="tabs" id="UserTabs">
+      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4>{{=auth.user.nickname}}</h4></li>
+      <li class="divider"></li>
+      <li class="active" ><a href="#"  data-toggle="tab"><i class="icon-white icon-home"></i> Home</a></li>
+      <li><a href="#Statistics"  data-toggle="tab"><i class="icon-book"></i> Statistics</a></li>
+      <li><a href="#Predictions"  data-toggle="tab"><i class="icon-pencil"></i> Predictions</a></li>
+      <li class="divider"></li>
+      <li><a href="#Profile"  data-toggle="tab"><i class="icon-user"></i> Profile</a></li>
+      <li><a href="#"  data-toggle="tab"><i class="icon-cog"></i> Settings</a></li>
+      <li class="divider"></li>
+      <li><a href="#Help"  data-toggle="tab"><i class="icon-flag"></i> Help</a></li>
+</ul>
+
+</div>
+
+
+<div style="width:850">
+
+<div id="UserTabs_content" class="tab-content">
+
+<div class="tab-pane" id="Predictions">
+{{=LOAD('default','get_predictions',ajax=True, ajax_trap=True, target = "Predictions")}}
+</div>
+<div class="tab-pane active" id="Statistics">
+Statistics come here.
+</div>
+<div class="tab-pane" id="Profile">
+{{=LOAD('default','profile',ajax=True)}}
+</div>
+<div class="tab-pane" id="Help">
+{{=LOAD('default','get_help',ajax=True)}}
+</div>
+
+</div>
+</div>
+
+</div>
+
+{{block right_sidebar}}
+<!--{{=IMG(_src=URL('static/images', 'WC-2014-Brasil.png'),_alt='2014 Fifa World Cup')}}//-->
+
+{{end}}
