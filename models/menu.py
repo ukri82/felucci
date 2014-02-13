@@ -30,7 +30,7 @@ response.google_analytics_id = None
 
 response.menu = [
     (T('Home'), False, URL('default', 'index'), []),
-    (T('Administration'), False, URL('appadmin', 'index'), []),
+    (T('Administration'), False, URL('default', 'admin_page', scheme='http'), []),
 	(T('Help'), False, URL('default', 'get_help'), [])    
 ]
 

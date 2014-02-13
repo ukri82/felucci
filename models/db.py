@@ -92,11 +92,10 @@ use_janrain(auth, filename='private/janrain.key')
 
 
 
-db.define_table('detailed_result',
-    Field('detailed_result_id','integer'),
-    Field('result_id','integer'),
+db.define_table('match_result',
+    Field('match_id','integer'),
     Field('team_id','integer'),
-    Field('goals_scored','integer'),
+    Field('goals','integer'),
     Field('possession','double'),
     Field('total_shots','integer'),
     Field('shots_on_target','integer'),
@@ -152,13 +151,6 @@ db.define_table('prediction',
     Field('yellow_cards','integer'),
     Field('red_cards','integer'),
     Field('goal_scorers_id','string', length=50), redefine=migrate_flag
-)
-
-db.define_table('match_result',
-    Field('result_id','integer'),
-    Field('match_id','integer'),
-    Field('team1_details_id','integer'),
-    Field('team2_details_id','integer'), redefine=migrate_flag
 )
 
 db.define_table('stadium',

@@ -418,11 +418,11 @@ table.table1{
 .table1 tbody span.check::before{
     content : url(../images/check0.png)
 }
-
+/*
 .tab-content>.tab-pane, .pill-content>.pill-pane {
 border: 2px solid #E7EFE0;
 }
-
+*/
 .w2p_fw {padding: 5px;}
 
 img.profile_image {
