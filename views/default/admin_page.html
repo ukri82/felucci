@@ -21,7 +21,7 @@
 {{=LOAD('default','get_results',ajax=True, ajax_trap=True, target = "Results")}}
 </div>
 <div class="tab-pane" id="Database">
-<a href="appadmin/index" target="_newtab">Admin Page </a>
+{{=A('Admin Page', _href=URL(a = 'admin', c = 'default', f = 'index'))}}
 </div>
 <div class="tab-pane" id="Help">
 {{=LOAD('default','get_help',ajax=True)}}

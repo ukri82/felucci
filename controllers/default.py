@@ -4,6 +4,40 @@
 import logging
 import re
 
+def get_configured_logger(name):
+    logger = logging.getLogger(name)
+    if (len(logger.handlers) == 0):
+        # This logger has no handlers, so we can assume it hasn't yet been configured
+        # (Configure logger)
+
+        # Create default handler
+        if request.env.web2py_runtime_gae:
+            # Create GAEHandler
+            # handler = GAEHandler()
+            logger.debug(name + ' logger created')
+        else:
+            # Create RotatingFileHandler
+            import os
+            formatter="%(asctime)s %(levelname)s %(process)s %(thread)s %(funcName)s():%(lineno)d %(message)s"
+            handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'private/app.log'),maxBytes=1024,backupCount=2)
+            handler.setFormatter(logging.Formatter(formatter))
+
+        handler.setLevel(logging.DEBUG)
+
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+
+        # Test entry:
+        logger.debug(name + ' logger created')
+    else:
+        # Test entry:
+        logger.debug(name + ' already exists')
+
+    return logger
+    
+    
+logger = get_configured_logger(request.application)
+
 def ParseResultStr(aResult_in):
     
     aMatchIdStr = ''
@@ -158,22 +192,33 @@ def index():
     if auth.user is not None:
         response.view = 'default/user_page.html'
         
-    logging.info("value of response.view is %s", str(response.view))
+    logger.info("value of response.view is %s", str(response.view))
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
     
 
 @auth.requires_login()
 def get_predictions():
     
-    response.view = 'default/predictions.html'
+    response.view = 'default/user_predictions.html'
     return dict(PredictionData = GetPredictions(auth.user.id), match_results = 'false')
     
 @auth.requires_login()
 def get_results():
     
-    response.view = 'default/predictions.html'
+    response.view = 'default/user_predictions.html'
     return dict(PredictionData = GetResults(), match_results = 'true')
     
+@auth.requires_login()
+def get_stats():
+    
+    response.view = 'default/user_stats.html'
+    return dict()
+    
+@auth.requires_login()
+def get_newsfeed():
+    aNewsData = db().select(db.news_item.ALL)
+    response.view = 'default/user_newsfeeds.html'
+    return dict(NewsData = aNewsData)
     
 @auth.requires_login()  
 def submit_predictions():

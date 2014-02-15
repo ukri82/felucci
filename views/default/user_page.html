@@ -6,14 +6,14 @@
 <ul class="nav nav-list" data-tabs="tabs" id="UserTabs">
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4>{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
-      <li class="active" ><a href="#"  data-toggle="tab"><i class="icon-white icon-home"></i> Home</a></li>
-      <li><a href="#Statistics"  data-toggle="tab"><i class="icon-book"></i> Statistics</a></li>
-      <li><a href="#Predictions"  data-toggle="tab"><i class="icon-pencil"></i> Predictions</a></li>
+      <li class="active" ><a href="#UserHome"  data-toggle="tab"><i class="icon-white icon-home"></i> Home</a></li>
+      <li><a href="#UserStatistics"  data-toggle="tab"><i class="icon-white icon-book"></i> Statistics</a></li>
+      <li><a href="#UserPredictions"  data-toggle="tab"><i class="icon-white icon-pencil"></i> Predictions</a></li>
       <li class="divider"></li>
-      <li><a href="#Profile"  data-toggle="tab"><i class="icon-user"></i> Profile</a></li>
-      <li><a href="#"  data-toggle="tab"><i class="icon-cog"></i> Settings</a></li>
+      <li><a href="#UserProfile"  data-toggle="tab"><i class="icon-white icon-user"></i> Profile</a></li>
+      <li><a href="#UserSettings"  data-toggle="tab"><i class="icon-white icon-cog"></i> Settings</a></li>
       <li class="divider"></li>
-      <li><a href="#Help"  data-toggle="tab"><i class="icon-flag"></i> Help</a></li>
+      <li><a href="#UserHelp"  data-toggle="tab"><i class="icon-white icon-flag"></i> Help</a></li>
 </ul>
 
 </div>
@@ -23,17 +23,27 @@
 
 <div id="UserTabs_content" class="tab-content">
 
-<div class="tab-pane" id="Predictions">
-{{=LOAD('default','get_predictions',ajax=True, ajax_trap=True, target = "Predictions")}}
+<div class="tab-pane active" id="UserHome">
+{{=LOAD('default','get_newsfeed',ajax=True, ajax_trap=True, target = "UserHome")}}
 </div>
-<div class="tab-pane active" id="Statistics">
-Statistics come here.
+
+<div class="tab-pane" id="UserStatistics">
+{{=LOAD('default','get_stats',ajax=True, ajax_trap=True, target = "UserStatistics")}}
 </div>
-<div class="tab-pane" id="Profile">
-{{=LOAD('default','profile',ajax=True)}}
+
+<div class="tab-pane" id="UserPredictions">
+{{=LOAD('default','get_predictions',ajax=True, ajax_trap=True, target = "UserPredictions")}}
 </div>
-<div class="tab-pane" id="Help">
-{{=LOAD('default','get_help',ajax=True)}}
+
+<div class="tab-pane" id="UserSettings">
+User settings.
+</div>
+
+<div class="tab-pane" id="UserProfile">
+{{=LOAD('default','profile',ajax=True, target = "UserProfile")}}
+</div>
+<div class="tab-pane" id="UserHelp">
+{{=LOAD('default','get_help',ajax=True, target = "UserHelp")}}
 </div>
 
 </div>

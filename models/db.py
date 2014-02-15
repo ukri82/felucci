@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import logging
+import logging, logging.handlers
 
 #########################################################################
 ## This scaffolding model makes your app work on Google App Engine too
@@ -90,6 +90,14 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
 
+db.define_table('news_item',
+    Field('title','string', length=500),
+    Field('body','string', length=10000),
+    Field('author','string', length=100),
+    Field('date_time','datetime'),
+    Field('image', 'upload'),
+    Field('tags','string', length=100), redefine=migrate_flag
+)
 
 
 db.define_table('match_result',
@@ -175,16 +183,15 @@ db.define_table('team',
 )
 
 '''
-db.detailed_predictions.drop()
-db.teams.drop()
-db.stadiums.drop()
-db.results.drop()
-db.predictions.drop()
-db.predicters.drop()
-db.players.drop()
-db.groups.drop()
+db.prediction.drop()
+db.team.drop()
+db.stadium.drop()
+db.match_result.drop()
+db.predicter.drop()
+db.player.drop()
+db.team_group.drop()
 db.fixture.drop()
-db.detailed_results.drop()
+db.news_item.drop()
 '''
 
 
