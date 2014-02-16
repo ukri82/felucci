@@ -39,13 +39,7 @@ ol.commentlist li.comment div.comment-meta {
 ol.commentlist li.comment div.comment-meta a {
     color: #888888;
 }
-ol.commentlist li.comment div.reply {
-    font-size: 11px;
-    margin-left: 8px;
-}
-ol.commentlist li.comment div.reply a {
-    font-weight: bold;
-}
+
 ol.commentlist li.comment ul.children {
     list-style: none outside none;
     margin: 10px 0 0;
@@ -89,4 +83,8 @@ ol.commentlist li.odd {
 }
 .avatar {
     float: left;
+}
+
+.comment-reply-title {
+    text-align:left;
 }

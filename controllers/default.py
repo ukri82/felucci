@@ -15,7 +15,6 @@ import re
 
 
 def index():
-    
     response.flash = T("Welcome to Fulecci!")
     if auth.user is not None:
         response.view = 'default/user_page.html'
@@ -68,7 +67,7 @@ def get_comments():
     
     response.view = 'default/user_comments.html'
     
-    return dict(CommentData = aComments, TargetType = aResultsDict['TargetType'], TargetId = aResultsDict['TargetId'], ToggleState = aResultsDict['ToggleState'] if 'ToggleState' in aResultsDict else "display:none")
+    return dict(CommentData = aComments, TargetType = aResultsDict['TargetType'], TargetId = aResultsDict['TargetId'], ToggleState = aResultsDict['ToggleState'] if 'ToggleState' in aResultsDict else "none")
     
 def submit_comment():    
     logger.info("value of request.vars is %s", str(request.vars))

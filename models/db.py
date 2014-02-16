@@ -91,19 +91,19 @@ use_janrain(auth, filename='private/janrain.key')
 #########################################################################
 
 db.define_table('news_item',
-    Field('title','string', length=500),
-    Field('body','string', length=10000),
-    Field('author_id','integer'),
+    Field('title','string', requires=IS_NOT_EMPTY()),
+    Field('body','text'),
+    Field('author_id',db.auth_user),
     Field('date_time','datetime'),
     Field('image', 'upload'),
     Field('tags','string', length=100), redefine=migrate_flag
 )
 
 db.define_table('user_comment',
-    Field('body','string', length=500),
+    Field('body','string', requires=IS_NOT_EMPTY()),
     Field('target_type','string', length=50),
-    Field('target_id','integer'),
-    Field('author_id','integer'),
+    Field('target_id','id'),
+    Field('author_id',db.auth_user),
     Field('date_time','datetime'), redefine=migrate_flag
 )
 # type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
@@ -134,28 +134,20 @@ db.define_table('fixture',
 
 db.define_table('team_group',
     Field('group_id','integer'),
-    Field('name','string', length=2),
+    Field('name','string', length=2, requires=IS_NOT_EMPTY()),
     Field('team_id','integer'), redefine=migrate_flag
 )
  
 db.define_table('player',
     Field('player_id','integer'),
     Field('first_name','string', length=50),
-    Field('last_name','string', length=50),
+    Field('last_name','string', length=50, requires=IS_NOT_EMPTY()),
     Field('player_image','string', length=50),
     Field('team_id','integer'), redefine=migrate_flag
 )
 
-db.define_table('predicter',
-    Field('predicter_id','integer'),
-    Field('g_id','string', length=50),
-    Field('first_name','string', length=50),
-    Field('last_name','string', length=50),
-    Field('nick_name','string', length=50), redefine=migrate_flag
-)
-
 db.define_table('prediction',
-    Field('predictor_id','integer'),
+    Field('predictor_id',db.auth_user),
     Field('match_id','integer'),
     Field('team_id','integer'),
     Field('goals','integer'),
@@ -170,25 +162,27 @@ db.define_table('prediction',
 )
 
 db.define_table('stadium',
-    Field('stadium_id','integer'),
-    Field('name','string', length=50),
+    Field('stadium_id','integer', requires=IS_NOT_EMPTY()),
+    Field('name','string', length=50, requires=IS_NOT_EMPTY()),
     Field('city','string', length=50),
     Field('capacity','integer'),
-    Field('profile','string', length=10000),
+    Field('profile','text'),
 	Field('icon_file_name','string', length=50),
     Field('location_coord','string', length=50), redefine=migrate_flag
 )
 
 db.define_table('team',
-    Field('team_id','integer'),
-    Field('name','string', length=30),
+    Field('team_id','integer', requires=IS_NOT_EMPTY()),
+    Field('name','string', length=30, requires=IS_NOT_EMPTY()),
     Field('short_name','string', length=3),
     Field('captain','integer'),
     Field('coach','string', length=50),
     Field('icon_file_name','string', length=50),
-    Field('profile','string', length=10000),
+    Field('profile','text'),
     Field('key_players','string', length=50), redefine=migrate_flag
 )
+
+
 
 '''
 db.prediction.drop()
