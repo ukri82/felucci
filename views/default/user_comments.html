@@ -4,8 +4,7 @@
 <form id="commentform">
 
 <h4 class="comments-title"> <a href="#" onclick="jQuery('#commentlist_{{=aCommentFormId}}').slideToggle();return false;">{{= len(CommentData)}} comments </a></h4>
-  
-<ol class="commentlist" id="commentlist_{{=aCommentFormId}}" style="display:none;"> 
+<ol class="commentlist" id="commentlist_{{=aCommentFormId}}" style="{{=ToggleState}}"> 
 {{for aCommentItem in CommentData:}}
     <li class="comment even thread-even depth-1" id="li-comment-{{=aCommentItem['id']}}">
 		<article id="comment-{{=aCommentItem['id']}}" class="comment">
@@ -35,7 +34,15 @@
           <textarea  name="UserComment_{{=aCommentFormId}}" id="UserComment_{{=aCommentFormId}}"/>
           <input value="{{=TargetType}}" type="hidden" name="TargetType_{{=aCommentFormId}}" id="TargetType_{{=aCommentFormId}}" />
           <input value="{{=TargetId}}" type="hidden" name="TargetId_{{=aCommentFormId}}" id="TargetId_{{=aCommentFormId}}" />
-          <input type="submit" onclick="ajax('{{=URL('submit_comment')}}',['UserComment_{{=aCommentFormId}}', 'TargetType_{{=aCommentFormId}}', 'TargetId_{{=aCommentFormId}}'],{{='comments_' + aCommentFormId}});return false;"/>
+          <input value="{{=ToggleState}}" type="hidden" name="ToggleState_{{=aCommentFormId}}" id="ToggleState_{{=aCommentFormId}}" />
+          
+          <input type="submit" onclick="ajax('{{=URL('submit_comment')}}',
+                                                ['UserComment_{{=aCommentFormId}}', 
+                                                 'TargetType_{{=aCommentFormId}}', 
+                                                 'TargetId_{{=aCommentFormId}}',
+                                                 'ToggleState_{{=aCommentFormId}}'],
+                                                 '{{='comments_' + aCommentFormId}}');
+                                                 return false;"/>
        
                 
     </div>

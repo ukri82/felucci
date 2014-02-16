@@ -169,6 +169,20 @@ def SubmitComment(aUserId_in, aTargetType_in, aTargetId_in, aComment_in):
 
     db.user_comment.insert(author_id = aUserId_in, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
 
+def ConvertURLArgs(anArgs_in):
+    
+    aResDict = dict()
+    
+    for key, value in request.vars.iteritems():
+        if key.startswith('TargetType'):
+            aResDict['TargetType'] = value
+        if key.startswith('TargetId'):
+            aResDict['TargetId'] = value
+        if key.startswith('UserComment'):
+            aResDict['UserComment'] = value
+        if key.startswith('ToggleState'):
+            aResDict['ToggleState'] = value
+    return aResDict
 
 
 

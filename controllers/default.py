@@ -4,37 +4,6 @@
 import logging
 import re
 
-def get_configured_logger(name):
-    logger = logging.getLogger(name)
-    if (len(logger.handlers) == 0):
-        # This logger has no handlers, so we can assume it hasn't yet been configured
-        # (Configure logger)
-
-        # Create default handler
-        if request.env.web2py_runtime_gae:
-            # Create GAEHandler
-            # handler = GAEHandler()
-            logger.debug(name + ' logger created')
-        else:
-            # Create RotatingFileHandler
-            import os
-            formatter="%(asctime)s %(levelname)s %(process)s %(thread)s %(funcName)s():%(lineno)d %(message)s"
-            handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'private/app.log'),maxBytes=1024,backupCount=2)
-            handler.setFormatter(logging.Formatter(formatter))
-
-        handler.setLevel(logging.DEBUG)
-
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
-
-        # Test entry:
-        logger.debug(name + ' logger created')
-    
-
-    return logger
-    
-    
-logger = get_configured_logger(request.application)
 
 #########################################################################
 ## This is a sample controller
@@ -88,18 +57,25 @@ def submit_predictions():
     
     return get_predictions()
  
+
 @auth.requires_login()  
 def get_comments():
-   
-    aComments = GetComments(request.vars['TargetType'], int(request.vars['TargetId']))
+    
+    aResultsDict = ConvertURLArgs(request.vars)
+    logger.info("value of aResultsDict is %s", str(aResultsDict))
+    
+    aComments = GetComments(aResultsDict['TargetType'], int(aResultsDict['TargetId']))
     
     response.view = 'default/user_comments.html'
     
-    return dict(CommentData = aComments, TargetType = request.vars['TargetType'], TargetId = request.vars['TargetId'])
+    return dict(CommentData = aComments, TargetType = aResultsDict['TargetType'], TargetId = aResultsDict['TargetId'], ToggleState = aResultsDict['ToggleState'] if 'ToggleState' in aResultsDict else "display:none")
     
 def submit_comment():    
-    logger.info("value of request.vars.TargetId is %s", str(request.vars))
-    SubmitComment(auth.user.id, request.vars.TargetType, int(request.vars.TargetId), request.vars.UserComment)
+    logger.info("value of request.vars is %s", str(request.vars))
+    aResultsDict = ConvertURLArgs(request.vars)
+    logger.info("value of aResultsDict is %s", str(aResultsDict))
+    
+    SubmitComment(auth.user.id, aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
     return get_comments()
     
 def get_help():
