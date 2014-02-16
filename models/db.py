@@ -93,12 +93,20 @@ use_janrain(auth, filename='private/janrain.key')
 db.define_table('news_item',
     Field('title','string', length=500),
     Field('body','string', length=10000),
-    Field('author','string', length=100),
+    Field('author_id','integer'),
     Field('date_time','datetime'),
     Field('image', 'upload'),
     Field('tags','string', length=100), redefine=migrate_flag
 )
 
+db.define_table('user_comment',
+    Field('body','string', length=500),
+    Field('target_type','string', length=50),
+    Field('target_id','integer'),
+    Field('author_id','integer'),
+    Field('date_time','datetime'), redefine=migrate_flag
+)
+# type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
 
 db.define_table('match_result',
     Field('match_id','integer'),

@@ -1,0 +1,92 @@
+.comments-area {
+    background: none repeat scroll 0 0 #A1CC44;
+    border: 1px solid #DDDDDD;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius:5px;
+}
+#comments .navigation {
+    padding: 0 0 18px;
+}
+label[for="comment"] {
+    display: block;
+}
+
+ul, ol {
+padding: 0;
+margin: 0 0 0px 0px;
+}
+
+ol.commentlist {
+    list-style: none outside none;
+}
+ol.commentlist p {
+    clear: left;
+    margin-left: 8px;
+}
+ol.commentlist li.comment {
+    
+}
+ol.commentlist li.comment div.vcard cite.fn {
+    font-style: normal;
+}
+ol.commentlist li.comment div.vcard img.avatar {
+    margin: 0 10px 10px;
+}
+ol.commentlist li.comment div.comment-meta {
+    font-size: 11px;
+}
+ol.commentlist li.comment div.comment-meta a {
+    color: #888888;
+}
+ol.commentlist li.comment div.reply {
+    font-size: 11px;
+    margin-left: 8px;
+}
+ol.commentlist li.comment div.reply a {
+    font-weight: bold;
+}
+ol.commentlist li.comment ul.children {
+    list-style: none outside none;
+    margin: 10px 0 0;
+}
+ol.commentlist li.comment ul.children li.depth-2 {
+    margin: 0 0 10px 10px;
+}
+ol.commentlist li.comment ul.children li.depth-3 {
+    margin: 0 0 10px 10px;
+}
+ol.commentlist li.comment ul.children li.depth-4 {
+    margin: 0 0 10px 10px;
+}
+ol.commentlist li.even {
+    background: none repeat scroll 0 0 #83C94C;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+}
+ol.commentlist li.odd {
+    background: none repeat scroll 0 0 #FFFFFF;
+    border: 1px solid #CCCCCC;
+    border-radius: 4px;
+}
+.comment, .trackback, .pingback {
+    margin: 10px 0;
+}
+.odd {
+    background: none repeat scroll 0 0 #F8F8F8;
+}
+#form-allowed-tags code {
+    font-size: 12px;
+}
+#respond input, #respond textarea {
+    margin: 0 5px 5px 0;
+    overflow: auto;
+}
+
+#respond textarea {
+    height: 50px;
+    width: 99%;
+}
+.avatar {
+    float: left;
+}
