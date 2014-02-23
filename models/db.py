@@ -110,16 +110,9 @@ db.define_table('user_comment',
 
 db.define_table('match_result',
     Field('match_id','integer'),
-    Field('team_id','integer'),
     Field('goals','integer'),
-    Field('possession','double'),
-    Field('total_shots','integer'),
-    Field('shots_on_target','integer'),
-    Field('shots_off_target','integer'),
-    Field('corners','integer'),
-    Field('yellow_cards','integer'),
-    Field('read_cards','integer'),
-    Field('goal_scorers_ids','string', length=50), redefine=migrate_flag
+    Field('team1_goals','integer'),
+    Field('team2_goals','integer'), redefine=migrate_flag
 )
 
 db.define_table('fixture',
@@ -127,8 +120,13 @@ db.define_table('fixture',
 	Field('game_number','integer'),
     Field('team1','integer'),
     Field('team2','integer'),
+    Field('team1_gen_matches','list:integer'),
+    Field('team2_gen_matches','list:integer'),
+    Field('team1_definition','string', length=20),
+    Field('team2_definition','string', length=20),
     Field('date_time','datetime'),
     Field('venue','integer'),
+    Field('stage','string', length=20),
     Field('referee','string', length=50), redefine=migrate_flag
 )
 
@@ -146,19 +144,13 @@ db.define_table('player',
     Field('team_id','integer'), redefine=migrate_flag
 )
 
-db.define_table('prediction',
+db.define_table('match_prediction',
     Field('predictor_id',db.auth_user),
     Field('match_id','integer'),
-    Field('team_id','integer'),
-    Field('goals','integer'),
-    Field('possession','double'),
-    Field('total_shots','integer'),
-    Field('shots_on_target','integer'),
-    Field('shots_off_target','integer'),
-    Field('corners','integer'),
-    Field('yellow_cards','integer'),
-    Field('red_cards','integer'),
-    Field('goal_scorers_id','string', length=50), redefine=migrate_flag
+    Field('team1_id','integer'),
+    Field('team2_id','integer'),
+    Field('team1_goals','integer'),
+    Field('team2_goals','integer'), redefine=migrate_flag
 )
 
 db.define_table('stadium',

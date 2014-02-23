@@ -18,7 +18,7 @@ def index():
     response.flash = T("Welcome to Fulecci!")
     if auth.user is not None:
         response.view = 'default/user_page.html'
-        
+        CacheData()
     
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
     
@@ -27,13 +27,13 @@ def index():
 def get_predictions():
     
     response.view = 'default/user_predictions.html'
-    return dict(PredictionData = GetPredictions(auth.user.id), match_results = 'false')
+    return dict(MacthPredictionData = GetMatchPredictions(auth.user.id), PositionPredictionData = GetPositionPredictions(auth.user.id), match_results = 'false')
     
 @auth.requires_login()
 def get_results():
     
     response.view = 'default/user_predictions.html'
-    return dict(PredictionData = GetResults(), match_results = 'true')
+    return dict(MacthPredictionData = GetResults(), match_results = 'true')
     
 @auth.requires_login()
 def get_stats():
@@ -43,7 +43,7 @@ def get_stats():
     
 @auth.requires_login()
 def get_newsfeed():
-    aNewsData = db().select(db.news_item.ALL)
+    aNewsData = GetPosts()
     response.view = 'default/user_newsfeeds.html'
     return dict(NewsData = aNewsData)
     
@@ -61,7 +61,6 @@ def submit_predictions():
 def get_comments():
     
     aResultsDict = ConvertURLArgs(request.vars)
-    logger.info("value of aResultsDict is %s", str(aResultsDict))
     
     aComments = GetComments(aResultsDict['TargetType'], int(aResultsDict['TargetId']))
     
