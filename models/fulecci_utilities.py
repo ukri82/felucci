@@ -30,54 +30,58 @@ def UpdateResults(aParams_in):
     '''
     process each team results for each match
     '''
+    aResultData = dict()
     for aUpdateReq in aParams_in:
         
-        aMatchId, aTeamIndex = ParseResultStr(aUpdateReq)
+        aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aUpdateReq)
          
         logging.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
         
+        if aMatchId not in aResultData:
+            aResultData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0}
         if aTeamIndex == 0:
-            db.match_result.update_or_insert((db.match_result.match_id == aMatchId), match_id = aMatchId, team1_goals=int(aParams_in[aUpdateReq]))
+            aResultData[aMatchId]['team1_goals'] = int(aParams_in[aUpdateReq])
         else:
-            db.match_result.update_or_insert((db.match_result.match_id == aMatchId), match_id = aMatchId, team2_goals=int(aParams_in[aUpdateReq]))
-
+            aResultData[aMatchId]['team2_goals'] = int(aParams_in[aUpdateReq])
+            
+    for aMatchId, aData in aResultData.items():
+        db.match_result.update_or_insert((db.match_result.match_id == aMatchId), match_id = aMatchId, team1_goals = aData['team1_goals'], team2_goals = aData['team2_goals'])
             
 def UpdatePrediction(aUserId_in, aParams_in):
 
     '''
     process each team results for each match
     '''
+    aPredData = dict()
     for aPredictReq in aParams_in:
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aPredictReq)
       
         logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
+        if aMatchId not in aPredData:
+            aPredData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0, 'team1_id' : 0, 'team2_id' : 0}
+        
         if aMatchOrPos == "match":
             if aTeamIndex == 0:
-                db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
-                                                        match_id = aMatchId, 
-                                                        predictor_id = aUserId_in, 
-                                                        team1_goals = int(aParams_in[aPredictReq])
-                                                    )
+                aPredData[aMatchId]['team1_goals'] = int(aParams_in[aPredictReq])
             else:
-                db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
-                                                        match_id = aMatchId, 
-                                                        predictor_id = aUserId_in, 
-                                                        team2_goals = int(aParams_in[aPredictReq])
-                                                    )
+                aPredData[aMatchId]['team2_goals'] = int(aParams_in[aPredictReq])
         else:
             if aTeamIndex == 0:
-                db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
-                                                        match_id = aMatchId, 
-                                                        predictor_id = aUserId_in, 
-                                                        team1_id = int(aParams_in[aPredictReq])
-                                                    )
+                aPredData[aMatchId]['team1_id'] = int(aParams_in[aPredictReq])
             else:
-                db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
-                                                        match_id = aMatchId, 
-                                                        predictor_id = aUserId_in, 
-                                                        team2_id = int(aParams_in[aPredictReq])
-                                                    )
-     
+                aPredData[aMatchId]['team2_id'] = int(aParams_in[aPredictReq])
+        
+    for aMatchId, aData in aPredData.items():
+    
+        db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
+                                                match_id = aMatchId, 
+                                                predictor_id = aUserId_in, 
+                                                team1_goals = aData['team1_goals'],
+                                                team2_goals = aData['team2_goals'],
+                                                team1_id = aData['team1_id'],
+                                                team2_id = aData['team2_id']
+                                            )
+    
 
 def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
     
@@ -175,13 +179,14 @@ def GetResults():
     aPredResults = dict()
     for fixtureId, aFixtureData in aFixtureData.items():
         
-        aPredData = CreatePredictionData(fixtureId, aFixtureData, aResTableData)
-        
-        aGroupName = session.TeamGroupTable[aFixtureData['team1']]['name']
-        if aGroupName not in aPredResults:
-            aPredResults[aGroupName] = list()
-        
-        aPredResults[aGroupName].append(aPredData)
+        if aFixtureData['team1'] in session.TeamGroupTable:     #For the second round, the team id is not present in the fixture table yet.
+            aPredData = CreatePredictionData(fixtureId, aFixtureData, aResTableData)
+            
+            aGroupName = session.TeamGroupTable[aFixtureData['team1']]['name']
+            if aGroupName not in aPredResults:
+                aPredResults[aGroupName] = list()
+            
+            aPredResults[aGroupName].append(aPredData)
     #logger.info("value of aPredResults is %s", str(aPredResults))
     return aPredResults
 
