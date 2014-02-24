@@ -1,0 +1,23 @@
+<div class="posts">
+{{for newsItem in NewsData:}}
+
+<div class="post">
+<h3 class="title">{{=newsItem.title}}</h3>
+
+<p class="byline"><small>Posted on {{=newsItem.date_time}} by {{=newsItem.author_id}}</small></p>
+
+<div class="entry"> 
+{{=IMG(_src=URL('download', newsItem.image),_alt=newsItem.title, _class="left", _width="122", _height="122")}}
+<p>{{=newsItem.body}}</p>
+</div>
+
+<p class="links"><a href="#" class="comments"></a></p>
+
+<div class="tab-pane" id="UserComments_{{=newsItem.id}}">
+{{=LOAD('default','get_comments',ajax=True, ajax_trap=True, target = "UserComments_" + str(newsItem.id), vars={'TargetType':'news_item', 'TargetId':newsItem.id})}}
+</div>
+</div>
+
+{{pass}}
+</div>
+<input value="{{=MoreFlag}}" type="hidden" id="MoreFlag" />

@@ -40,12 +40,34 @@ def get_stats():
     
     response.view = 'default/user_stats.html'
     return dict()
+  
+    
+@auth.requires_login()
+def get_newsfeed_chunk_data():
+    
+    if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+        session.myNewsFeedOffset = session.myNewsFeedOffset + 4
+    else:
+        session.myNewsFeedOffset = 0
+    
+    aMoreFlag, aNewsData = GetPosts(session.myNewsFeedOffset, 4)
+    logger.info("value of anOffset < MaxPosts is %s", str(aMoreFlag))
+    
+    return aMoreFlag, aNewsData
+    
+@auth.requires_login()
+def get_newsfeed_chunk():
+    
+    aMoreFlag, aNewsData = get_newsfeed_chunk_data()
+    
+    response.view = 'default/user_newsfeed_chunk.html'
+    return dict(NewsData = aNewsData, MoreFlag = aMoreFlag)
     
 @auth.requires_login()
 def get_newsfeed():
-    aNewsData = GetPosts()
+    session.myNewsFeedOffset = 0
     response.view = 'default/user_newsfeeds.html'
-    return dict(NewsData = aNewsData)
+    return dict()
     
 @auth.requires_login()  
 def submit_predictions():

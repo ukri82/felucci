@@ -10,18 +10,18 @@
 		<article id="comment-{{=aCommentItem['id']}}" class="comment">
 			<footer>
 				<div class="comment-author vcard">
-                    {{=IMG(_src=URL('download', aCommentItem['comment'][3]),_alt=aCommentItem['comment'][2], _class="avatar avatar-40 photo avatar-default", _width="40", _height="40")}}
-					<cite class="fn">{{=aCommentItem['comment'][2]}}</cite> <span class="says">says</span>
+                    {{=IMG(_src=URL('download', aCommentItem['comment']['author_image']),_alt=aCommentItem['comment']['author_nickname'], _class="avatar avatar-40 photo avatar-default", _width="40", _height="40")}}
+					<cite class="fn">{{=aCommentItem['comment']['author_nickname']}}</cite> <span class="says">says</span>
                 </div>
 				
 				<div class="comment-meta commentmetadata">
-					<time pubdate="" datetime="{{=aCommentItem['comment'][7]}}">
-					{{=aCommentItem['comment'][7]}}					
+					<time pubdate="" datetime="{{=aCommentItem['comment']['date_time']}}">
+					{{=aCommentItem['comment']['date_time']}}					
                     </time></a>
 				</div>
 			</footer>
 
-			<div class="comment-content"><p>{{=aCommentItem['comment'][4]}}</p></div>
+			<div class="comment-content"><p>{{=aCommentItem['comment']['body']}}</p></div>
 
 		</article><!-- #comment-## -->
 	</li><!-- #comment-## -->

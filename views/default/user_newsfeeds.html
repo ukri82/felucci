@@ -1,25 +1,54 @@
 <link rel="stylesheet" type="text/css" href="../static/css/posts.css" />
 <h2 style="text-align:center;">Latest News</h2>
-<div id="content">
-{{for newsItem in NewsData:}}
+<div id="news_items_content_dummy" style = "display:none"/>
 
-<div class="post">
-<h3 class="title">{{=newsItem.title}}</h3>
+<div id="news_items_content">
 
-<p class="byline"><small>Posted on {{=newsItem.date_time}} by {{=newsItem.author_id}}</small></p>
 
-<div class="entry"> 
-{{=IMG(_src=URL('download', newsItem.image),_alt=newsItem.title, _class="left", _width="122", _height="122")}}
-<p>{{=newsItem.body}}</p>
+
+<script language="javascript" type="text/javascript">
+
+function LoadNextChunkComments(aFirst_in)
+{
+    aURL = "default/get_newsfeed_chunk";
+    if(aFirst_in == false)
+    {
+        aURL = "default/get_newsfeed_chunk?NextChunk=True";
+    }
+    
+    $.web2py.component(aURL, "news_items_content_dummy");
+    
+    
+    (function (secondTime) {
+        if (secondTime) {
+            $('#news_items_content').append($('#news_items_content_dummy').html());
+            if(jQuery('#MoreFlag').prop("value") == "True")
+            {
+                jQuery('#MorePostsLink').show();
+            }
+            else
+            {
+                jQuery('#MorePostsLink').hide();
+            }
+        }
+        else {
+            setTimeout(arguments.callee, 2000, true); // call myself again in 2000 msecs
+        }
+    }(false));
+}
+
+
+$(document).ready(function(){
+    
+    LoadNextChunkComments(true);
+    
+    $("#MorePostsLink").click(function(){  
+        LoadNextChunkComments(false);
+    });
+
+});
+</script>
+
 </div>
 
-<p class="links"><a href="#" class="comments"></a></p>
-
-<div class="tab-pane" id="UserComments_{{=newsItem.id}}">
-{{=LOAD('default','get_comments',ajax=True, ajax_trap=True, target = "UserComments_" + str(newsItem.id), vars={'TargetType':'news_item', 'TargetId':newsItem.id})}}
-</div>
-
-</div>
-
-{{pass}}
-</div>
+<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MorePostsLink">More</a></p></h4>

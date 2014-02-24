@@ -42,7 +42,7 @@ def UpdateResults(aParams_in):
         
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aUpdateReq)
          
-        logging.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
+        #logging.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
         
         if aMatchId not in aResultData:
             aResultData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0}
@@ -63,7 +63,7 @@ def UpdatePrediction(aUserId_in, aParams_in):
     for aPredictReq in aParams_in:
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aPredictReq)
       
-        logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
+        #logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
         if aMatchId not in aPredData:
             aPredData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0, 'team1_id' : 0, 'team2_id' : 0}
         
@@ -194,11 +194,10 @@ def GetResults():
 
     
 def GetUsers(aUserIdList_in):
-    #logger.info("value of aUserIdList_in is %s", str(aUserIdList_in))
     aUserTable = db(db.auth_user.id.belongs(aUserIdList_in)).select()
     aUserData = dict()
     for user in aUserTable:
-        aUserData[user.id] = list([user.first_name, user.nickname, user.image])
+        aUserData[user.id] = {"first_name" : user.first_name, "nickname" : user.nickname, "image" : user.image}
         
     return aUserData
 
@@ -210,12 +209,20 @@ def GetComments(aTargetType_in, aTargetId_in):
 
     aResults = []
     for commentData in aCommentTable:
-        aComment = [commentData.author_id, aUserData[commentData.author_id][0], aUserData[commentData.author_id][1], aUserData[commentData.author_id][2], commentData.body, commentData.target_type, commentData.target_id, commentData.date_time]
+        aComment = {"author_id" : commentData.author_id, 
+                    "author_first_name" : aUserData[commentData.author_id]["first_name"], 
+                    "author_nickname" : aUserData[commentData.author_id]["nickname"], 
+                    "author_image" : aUserData[commentData.author_id]["image"], 
+                    "body" : commentData.body, 
+                    "target_type" : commentData.target_type, 
+                    "target_id" : commentData.target_id, 
+                    "date_time" : commentData.date_time
+                    }
         aResults.append({'id' : commentData.id,
 						 'comment' : aComment})
 
     #logger.info("value of aResults is %s", str(aResults))
-    return sorted(aResults, key=lambda k: k['comment'][7])
+    return sorted(aResults, key=lambda k: k['comment']["date_time"])
 
 def SubmitComment(aUserId_in, aTargetType_in, aTargetId_in, aComment_in):
 
@@ -236,12 +243,14 @@ def ConvertURLArgs(anArgs_in):
             aResDict['ToggleState'] = value
     return aResDict
 
-def GetPosts():
+def GetPosts(anOffset_in, aCount_in):
     aNumPosts = db(db.news_item.id > 0).count()
-    #ignore the count for the timebeing. Do it later.
-    aNewsData = db().select(db.news_item.ALL, orderby=db.news_item.date_time, limitby=(0, aNumPosts)) 
+    aMin = min(anOffset_in + aCount_in, aNumPosts)
     
-    return sorted(aNewsData, key=lambda k: k['date_time'], reverse=True)
+    #ignore the count for the timebeing. Do it later.
+    aNewsData = db().select(db.news_item.ALL, orderby=db.news_item.date_time, limitby=(anOffset_in, aMin)) 
+    
+    return aNumPosts > aMin , sorted(aNewsData, key=lambda k: k['date_time'], reverse=True)
     
 
 
