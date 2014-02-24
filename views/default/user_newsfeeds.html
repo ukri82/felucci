@@ -33,13 +33,13 @@ function LoadNextChunkComments(aFirst_in)
             {
                 $('#news_items_content').html($('#news_items_content_dummy').html());
             }
-            if(jQuery('#MoreFlag').prop("value") == "True")
+            if($('#MoreFlag').prop("value") == "True")
             {
-                jQuery('#MorePostsLink').show();
+                $('#MorePostsLink').show();
             }
             else
             {
-                jQuery('#MorePostsLink').hide();
+                $('#MorePostsLink').hide();
             }
         }
         else 
@@ -63,4 +63,4 @@ $(document).ready(function(){
 
 </div>
 
-<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MorePostsLink">More</a></p></h4>
+<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MorePostsLink" style="color: #FFFFFF">More</a></p></h4>
