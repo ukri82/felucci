@@ -31,8 +31,14 @@ function LoadNextChunkComments(aFirst_in)
             }
             else
             {
+                
                 $('#news_items_content').html($('#news_items_content_dummy').html());
+                $('#news_items_content_dummy').html("");
+                script = $('#news_items_content').find('script').text();
+                var myScript = new Function(script);
+                myScript();
             }
+            
             if($('#MoreFlag').prop("value") == "True")
             {
                 $('#MorePostsLink').show();
