@@ -2,21 +2,26 @@
 
     {{aTextForGroup = aOrigVal_in}}
     {{if 'IP' == aOrigVal_in :}}
-        {{aTextForGroup = 'Stage 16'}}
+        {{aTextForGroup = 'Stage of 16'}}
     {{pass}}
     {{if 'JQ' == aOrigVal_in :}}
-        {{aTextForGroup = 'Quarter'}}
+        {{aTextForGroup = 'Quarter Final'}}
     {{pass}}
     {{if 'KS' == aOrigVal_in :}}
-        {{aTextForGroup = 'Semi'}}
+        {{aTextForGroup = 'Semi Final'}}
     {{pass}}
     {{if 'L' == aOrigVal_in :}}
-        {{aTextForGroup = 'Loosers'}}
+        {{aTextForGroup = 'Losers Final'}}
     {{pass}}
     {{if 'MFN' == aOrigVal_in :}}
         {{aTextForGroup = 'Final'}}        
     {{pass}}
-
+    {{if 'NWN' == aOrigVal_in :}}
+        {{aTextForGroup = 'Losers Winner'}}        
+    {{pass}}
+    {{if 'OFN' == aOrigVal_in :}}
+        {{aTextForGroup = 'Winner'}}        
+    {{pass}}
 {{return aTextForGroup}}
 
 {{if match_results == 'false' :}}
@@ -38,8 +43,7 @@
     <ul id="fixture_tabs" class="nav nav-tabs" data-tabs="tabs">
         {{index = 0}}
         {{for aGroupName in keylist:}}
-            {{aTextForGroup = GetTextForGroup(aGroupName)}}
-            {{aLinkTxt = 'Group ' + aTextForGroup}}
+            {{aLinkTxt = 'Group ' + GetTextForGroup(aGroupName)}}
             {{aLinkName = 'Group' + aGroupName}}
             
             {{if index == 0 :}}
@@ -94,18 +98,18 @@
             <th scope="row">{{=matchIndex}}{{matchIndex = matchIndex + 1}}</th>
             <td>{{=item['game_number']}}</td>
             <td>
-            {{=item['team1_short_name']}}
-            {{if item['team1_icon'] != 'none' :}}
-                {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
-            {{pass}}
-                {{=INPUT(_type='number', _name="match_%s_score1" % item['fixture_id'], _value = item['team1_goals'], _style="width: 50px;")}} 
+                {{=item['team1_short_name']}}
+                {{if item['team1_icon'] != 'none' :}}
+                    {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
+                {{pass}}
+                    {{=INPUT(_type='number', _name="match_%s_score1" % item['fixture_id'], _value = item['team1_goals'], _style="width: 50px;")}} 
             </td>
             <td>
-            {{=item['team2_short_name']}}
-            {{if item['team2_icon'] != 'none' :}}
-                {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
-            {{pass}}
-                {{=INPUT(_type='number', _name="match_%s_score2" % item['fixture_id'], _value = item['team2_goals'], _style="width: 50px;")}}
+                {{=item['team2_short_name']}}
+                {{if item['team2_icon'] != 'none' :}}
+                    {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
+                {{pass}}
+                    {{=INPUT(_type='number', _name="match_%s_score2" % item['fixture_id'], _value = item['team2_goals'], _style="width: 50px;")}}
             </td>
             
             <td>{{=item['date_time']}}</td>
@@ -129,11 +133,15 @@
 {{for aStage in keylist:}}
 {{aStagePredictionData = PositionPredictionData[aStage]}}
 <div id="StageData" style="border: 2px solid #E7EFE0;">
-    <h4 style = "text-align:center;">{{aTextForGroup = GetTextForGroup(aStage)}} {{=aTextForGroup}}</h4>
+    <h4 style = "text-align:center;">{{=GetTextForGroup(aStage)}}</h4>
     <table class="table1">
         {{for predData in aStagePredictionData:}}
         <tr>
-             <td>{{=predData['team1_desc']}}
+            {{if predData['team2_desc'] != predData['team1_desc']:}}
+                <td>Match {{=predData['game_number']}}</td>
+            {{pass}}
+            
+            <td>{{=predData['team1_desc']}}
                 {{aName1 = "pos_%s_team1" % predData['fixture_id']}}
                 <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test">
                 {{for aTeamData in predData['possible_team1']:}}
@@ -144,20 +152,24 @@
                     {{pass}}
                 {{pass}}
                 </select>
-                </td>
-
-                <td>{{=predData['team2_desc']}}
-                {{aName2 = "pos_%s_team2" % predData['fixture_id']}}
-                <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test">
-                {{for aTeamData in predData['possible_team2']:}}
-                    {{if predData['team2_id'] == aTeamData['id'] :}}
-                        <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
-                    {{else:}}
-                        <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
-                    {{pass}}
-                {{pass}}
-                </select>
             </td>
+
+            {{if predData['team2_desc'] != predData['team1_desc']:}}
+                <td>X</td>
+                
+                <td>{{=predData['team2_desc']}}
+                    {{aName2 = "pos_%s_team2" % predData['fixture_id']}}
+                    <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test">
+                    {{for aTeamData in predData['possible_team2']:}}
+                        {{if predData['team2_id'] == aTeamData['id'] :}}
+                            <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
+                        {{else:}}
+                            <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
+                        {{pass}}
+                    {{pass}}
+                    </select>
+                </td>
+            {{pass}}
         </tr>
         {{pass}}
     </table>

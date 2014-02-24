@@ -3,6 +3,13 @@ import re
 import datetime
 import collections
 
+    
+def CacheData():
+    session.StadiumTable = db().select(db.stadium.ALL).as_dict( key = 'stadium_id')
+    session.TeamTable = db().select(db.team.ALL).as_dict( key = 'team_id')
+    session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
+    session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
+    
 def ParseResultStr(aResult_in):
     
     aMatchIdStr = ''
@@ -96,12 +103,7 @@ def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
             aResult = aResult.union(GetAllPossibleTeams(aMatchId, 2))
     
     return aResult
-    
-def CacheData():
-    session.StadiumTable = db().select(db.stadium.ALL).as_dict( key = 'stadium_id')
-    session.TeamTable = db().select(db.team.ALL).as_dict( key = 'team_id')
-    session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
-    session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
+
 
 def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
     aPredData = {"fixture_id":fixtureId_in,
