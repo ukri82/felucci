@@ -15,13 +15,24 @@ function LoadNextChunkComments(aFirst_in)
     {
         aURL = "default/get_newsfeed_chunk?NextChunk=True";
     }
+    else
+    {
+        $('#news_items_content').html("Loading posts...");
+    }
     
     $.web2py.component(aURL, "news_items_content_dummy");
     
-    
-    (function (secondTime) {
-        if (secondTime) {
-            $('#news_items_content').append($('#news_items_content_dummy').html());
+    (function () {
+        if ($.active == 0)  //  Are still some ajax calls active?
+        {
+            if(aFirst_in == false)
+            {
+                $('#news_items_content').append($('#news_items_content_dummy').html());
+            }
+            else
+            {
+                $('#news_items_content').html($('#news_items_content_dummy').html());
+            }
             if(jQuery('#MoreFlag').prop("value") == "True")
             {
                 jQuery('#MorePostsLink').show();
@@ -31,11 +42,12 @@ function LoadNextChunkComments(aFirst_in)
                 jQuery('#MorePostsLink').hide();
             }
         }
-        else {
-            setTimeout(arguments.callee, 2000, true); // call myself again in 2000 msecs
+        else 
+        {
+            setTimeout(arguments.callee, 50); // call myself again in 50 msecs and check if still some ajax is running.
         }
-    }(false));
-}
+    }());
+ }
 
 
 $(document).ready(function(){
