@@ -291,7 +291,15 @@ def RetrieveNextChunk(aTable_in, aSortField_in, anOffset_in, aCount_in, anAsc_in
     
     return aNumEntries > aMin , sorted(aData, key=lambda k: k[aSortField_in], reverse=True)    
 
-
+def RecreateData(aCSVFileName_in):
+    db(db.match_result.id > 0).delete()
+    db(db.match_prediction.id > 0).delete()
+    db(db.team.id > 0).delete()
+    db(db.fixture.id > 0).delete()
+    db(db.team_group.id > 0).delete()
+    db(db.stadium.id > 0).delete()
+    db.import_from_csv_file(aCSVFileName_in)
+    CacheData()
 
 
     

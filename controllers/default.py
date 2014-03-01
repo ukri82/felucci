@@ -141,10 +141,9 @@ def submit_comment():
     return get_comments()
 
 @auth.requires_login()    
-def submit_data_file():    
-    
-    db.import_from_csv_file(request.vars.csv_file.file)
-    CacheData()
+def submit_data_file():  
+ 
+    RecreateData(request.vars.csv_file.file)
     
     return "The file is successfully imported"
     
