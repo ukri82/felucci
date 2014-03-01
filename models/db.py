@@ -49,7 +49,8 @@ crud, service, plugins = Crud(db), Service(), PluginManager()
 
 auth.settings.extra_fields[auth.settings.table_user_name]= [
   Field('nickname', 'string'),
-  Field('image', 'upload')
+  Field('image', 'upload'),
+  Field('last_score', 'integer', writable=False)
 ]
 
 ## create all tables needed by auth if not custom tables
@@ -110,7 +111,6 @@ db.define_table('user_comment',
 
 db.define_table('match_result',
     Field('match_id','integer'),
-    Field('goals','integer'),
     Field('team1_goals','integer'),
     Field('team2_goals','integer'), redefine=migrate_flag
 )
@@ -147,6 +147,7 @@ db.define_table('player',
 db.define_table('match_prediction',
     Field('predictor_id',db.auth_user),
     Field('match_id','integer'),
+    Field('pred_type','string', length=10),
     Field('team1_id','integer'),
     Field('team2_id','integer'),
     Field('team1_goals','integer'),
@@ -172,6 +173,12 @@ db.define_table('team',
     Field('icon_file_name','string', length=50),
     Field('profile','text'),
     Field('key_players','string', length=50), redefine=migrate_flag
+)
+
+db.define_table('prediction_score',
+    Field('predictor_id',db.auth_user),
+    Field('match_id','integer'),
+    Field('score','integer'), redefine=migrate_flag
 )
 
 

@@ -1,0 +1,7 @@
+{{for aUser in UserStats:}}
+<tr>
+    <td><a href="javascript:void(0)" onclick="ClickUserDetails({{=aUser['id']}});return false" id = "UserProfileLink">{{=aUser['nickname']}}</a></td>
+    <td>{{=aUser['last_score']}}</td>
+</tr>
+{{pass}}
+<input value="{{=MoreFlag}}" type="hidden" id="MoreFlag" />

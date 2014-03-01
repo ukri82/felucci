@@ -37,28 +37,60 @@ def UpdateResults(aParams_in):
     '''
     process each team results for each match
     '''
+    logger.info("Res=============================================== %s", str(len(aParams_in)))
     aResultData = dict()
+    aFixtureData = dict()
     for aUpdateReq in aParams_in:
         
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aUpdateReq)
          
-        #logging.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
+        #logger.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
         
-        if aMatchId not in aResultData:
-            aResultData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0}
-        if aTeamIndex == 0:
-            aResultData[aMatchId]['team1_goals'] = int(aParams_in[aUpdateReq])
+        
+        
+        if aMatchOrPos == "match":
+            if aMatchId not in aResultData:
+                aResultData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0}
+            
+            if aTeamIndex == 0:
+                aResultData[aMatchId]['team1_goals'] = int(aParams_in[aUpdateReq])
+            else:
+                aResultData[aMatchId]['team2_goals'] = int(aParams_in[aUpdateReq])
         else:
-            aResultData[aMatchId]['team2_goals'] = int(aParams_in[aUpdateReq])
+            if aMatchId not in aFixtureData:
+                aFixtureData[aMatchId] = {'team1' : 0, 'team2' : 0}
+                
+            if aTeamIndex == 0:
+                aFixtureData[aMatchId]['team1'] = int(aParams_in[aUpdateReq])
+            else:
+                aFixtureData[aMatchId]['team2'] = int(aParams_in[aUpdateReq])
             
     for aMatchId, aData in aResultData.items():
-        db.match_result.update_or_insert((db.match_result.match_id == aMatchId), match_id = aMatchId, team1_goals = aData['team1_goals'], team2_goals = aData['team2_goals'])
+        #logger.info("(aMatchId: %s, team1_goals: %s, team2_goals: %s)", str(aMatchId), str(aData['team1_goals']), str(aData['team2_goals']))
+        db.match_result.update_or_insert((db.match_result.match_id == aMatchId), 
+                                            match_id = aMatchId, 
+                                            team1_goals = aData['team1_goals'], 
+                                            team2_goals = aData['team2_goals'])
+                                            
+    for aMatchId, aData in aFixtureData.items():
+        #logger.info("(aMatchId: %s, team1: %s, team1: %s)", str(aMatchId), str(aData['team1']), str(aData['team2']))
+        aTeam1 = aData['team1']
+        aTeam2 = aData['team2']
+        if aTeam2 == 0:
+            aTeam2 = aTeam1
+        
+        db.fixture.update_or_insert((db.fixture.fixture_id == aMatchId), 
+                                            fixture_id = aMatchId, 
+                                            team1 = aTeam1,
+                                            team2 = aTeam2)
             
-def UpdatePrediction(aUserId_in, aParams_in):
+def UpdatePredictions(aUserId_in, aParams_in, aPredictionType_in):
 
     '''
     process each team results for each match
     '''
+    logger.info("Pred=============================================== %s", str(len(aParams_in)))
+    
     aPredData = dict()
     for aPredictReq in aParams_in:
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aPredictReq)
@@ -80,8 +112,11 @@ def UpdatePrediction(aUserId_in, aParams_in):
         
     for aMatchId, aData in aPredData.items():
     
-        db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & (db.match_prediction.predictor_id == aUserId_in), 
+        db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & 
+                                             (db.match_prediction.predictor_id == aUserId_in) & 
+                                             (db.match_prediction.pred_type == aPredictionType_in), 
                                                 match_id = aMatchId, 
+                                                pred_type = aPredictionType_in,
                                                 predictor_id = aUserId_in, 
                                                 team1_goals = aData['team1_goals'],
                                                 team2_goals = aData['team2_goals'],
@@ -126,71 +161,73 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  }
     return aPredData
     
-def GetMatchPredictions(aUserId_in):
+def GetPriorPredictions(aUserId_in):
     
-    aFixtureData = db(db.fixture.stage == "Group").select().as_dict(key = 'fixture_id')
-    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in).select().as_dict(key = 'match_id')
+    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
     
-    aPredResults = dict()
+    return JoinFixtureWith(aPredTableData)
+    
+def JoinFixtureWith(aSourceData_in):
+    
+    aFixtureData = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
+    
+    aResults = dict()
     for fixtureId, aFixtureData in aFixtureData.items():
         
-        aPredData = CreatePredictionData(fixtureId, aFixtureData, aPredTableData)
-        aGroupName = session.TeamGroupTable[aFixtureData['team1']]['name']
-        if aGroupName not in aPredResults:
-            aPredResults[aGroupName] = list()
-        
-        aPredResults[aGroupName].append(aPredData)
+        if aFixtureData['team1'] in session.TeamGroupTable:     #For the second round, the team id is not present in the fixture table yet.
+            aPredData = CreatePredictionData(fixtureId, aFixtureData, aSourceData_in)
+            
+            aGroupName = session.TeamGroupTable[aFixtureData['team1']]['name'] if aFixtureData['stage'] == "Group" else aFixtureData['stage']
+            
+            if aGroupName not in aResults:
+                aResults[aGroupName] = list()
+            
+            aResults[aGroupName].append(aPredData)
+    #logger.info("value of aResults is %s", str(aResults))
+    return aResults
+
     
-    return aPredResults
     
 def GetPositionPredictions(aUserId_in):
     
-    aFixtureData = db(db.fixture.stage != "Group").select().as_dict(key = 'fixture_id')
-    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in).select().as_dict(key = 'match_id')
+    #aFixtureData = db(db.fixture.stage != "Group").select().as_dict(key = 'fixture_id')
+    aFixtureData = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
+    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
     
     aPredResults = dict()
     for fixtureId, aFixtureData in aFixtureData.items():
-        aPossibleTeam1 = GetAllPossibleTeams(fixtureId, 1)
-        aPossibleTeam2 = GetAllPossibleTeams(fixtureId, 2)
-        
-        aPossibleTeam1Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam1]
-        aPossibleTeam2Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam2]
-        
-        aPredData = {"fixture_id":fixtureId, 
-                     "game_number" : aFixtureData['game_number'], 
-                     "team1_desc" : aFixtureData['team1_definition'], 
-                     "team2_desc" : aFixtureData['team2_definition'], 
-                     "possible_team1" : aPossibleTeam1Data, 
-                     "possible_team2" : aPossibleTeam2Data,
-                     "team1_id" : aPredTableData[fixtureId]['team1_id'] if fixtureId in aPredTableData else 0,
-                     "team2_id" : aPredTableData[fixtureId]['team2_id'] if fixtureId in aPredTableData else 0
-                    }
-         
-        if aFixtureData["stage"] not in aPredResults:
-            aPredResults[aFixtureData["stage"]] = list()
-        
-        aPredResults[aFixtureData["stage"]].append(aPredData)
+        if aFixtureData['team1'] not in session.TeamGroupTable:
+            aPossibleTeam1 = GetAllPossibleTeams(fixtureId, 1)
+            aPossibleTeam2 = GetAllPossibleTeams(fixtureId, 2)
+            
+            aPossibleTeam1Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam1]
+            aPossibleTeam2Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam2]
+            
+            aPredData = {"fixture_id":fixtureId, 
+                         "game_number" : aFixtureData['game_number'], 
+                         "team1_desc" : aFixtureData['team1_definition'], 
+                         "team2_desc" : aFixtureData['team2_definition'], 
+                         "possible_team1" : aPossibleTeam1Data, 
+                         "possible_team2" : aPossibleTeam2Data,
+                         "team1_id" : aPredTableData[fixtureId]['team1_id'] if fixtureId in aPredTableData else 0,
+                         "team2_id" : aPredTableData[fixtureId]['team2_id'] if fixtureId in aPredTableData else 0
+                        }
+             
+            if aFixtureData["stage"] not in aPredResults:
+                aPredResults[aFixtureData["stage"]] = list()
+            
+            aPredResults[aFixtureData["stage"]].append(aPredData)
     
     return aPredResults
 
 def GetResults():
     
-    aFixtureData = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
     aResTableData = db().select(db.match_result.ALL).as_dict(key = 'match_id')
     
-    aPredResults = dict()
-    for fixtureId, aFixtureData in aFixtureData.items():
-        
-        if aFixtureData['team1'] in session.TeamGroupTable:     #For the second round, the team id is not present in the fixture table yet.
-            aPredData = CreatePredictionData(fixtureId, aFixtureData, aResTableData)
-            
-            aGroupName = session.TeamGroupTable[aFixtureData['team1']]['name']
-            if aGroupName not in aPredResults:
-                aPredResults[aGroupName] = list()
-            
-            aPredResults[aGroupName].append(aPredData)
-    #logger.info("value of aPredResults is %s", str(aPredResults))
-    return aPredResults
+    return JoinFixtureWith(aResTableData)
+    
+
+    
 
     
 def GetUsers(aUserIdList_in):
@@ -243,19 +280,16 @@ def ConvertURLArgs(anArgs_in):
             aResDict['ToggleState'] = value
     return aResDict
 
-def GetPosts(anOffset_in, aCount_in):
-    aNumPosts = db(db.news_item.id > 0).count()
-    aMin = min(anOffset_in + aCount_in, aNumPosts)
+def RetrieveNextChunk(aTable_in, aSortField_in, anOffset_in, aCount_in, anAsc_in):
+    aNumEntries = db(db[aTable_in].id > 0).count()
+    aMin = min(anOffset_in + aCount_in, aNumEntries)
     
-    #ignore the count for the timebeing. Do it later.
-    aNewsData = db().select(db.news_item.ALL, orderby=db.news_item.date_time, limitby=(anOffset_in, aMin)) 
+    if anAsc_in == True:
+        aData = db().select(db[aTable_in].ALL, orderby=db[aTable_in][aSortField_in], limitby=(anOffset_in, aMin))
+    else:
+        aData = db().select(db[aTable_in].ALL, orderby=~db[aTable_in][aSortField_in], limitby=(anOffset_in, aMin))
     
-    return aNumPosts > aMin , sorted(aNewsData, key=lambda k: k['date_time'], reverse=True)
-    
-
-
-
-
+    return aNumEntries > aMin , sorted(aData, key=lambda k: k[aSortField_in], reverse=True)    
 
 
 

@@ -24,23 +24,68 @@ def index():
     
 
 @auth.requires_login()
+def get_prior_predictions():
+    
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetPriorPredictions(auth.user.id), 
+                PositionPredictionData = GetPositionPredictions(auth.user.id), 
+                SubmitButtonText = "Submit Prior Predictions",
+                SubmitURL = "submit_predictions"
+                )
+@auth.requires_login()
+def get_spot_predictions():
+    
+    response.view = 'default/user_spot_predictions.html'
+    return dict()
+    
+@auth.requires_login()
 def get_predictions():
     
     response.view = 'default/user_predictions.html'
-    return dict(MacthPredictionData = GetMatchPredictions(auth.user.id), PositionPredictionData = GetPositionPredictions(auth.user.id), match_results = 'false')
+    return dict()
+    
     
 @auth.requires_login()
 def get_results():
     
-    response.view = 'default/user_predictions.html'
-    return dict(MacthPredictionData = GetResults(), match_results = 'true')
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetResults(), 
+                PositionPredictionData = GetPositionPredictions(auth.user.id),
+                SubmitButtonText = "Submit Results",
+                SubmitURL = "submit_results"
+                )
+                
+  
+
+@auth.requires_login()
+def get_user_stats_chunk_data():
+    
+    if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+        session.myUserStatsOffset = session.myUserStatsOffset + 4
+    else:
+        session.myUserStatsOffset = 0
+    
+    aMoreFlag, aStatsData = RetrieveNextChunk(db.auth_user, 'last_score', session.myUserStatsOffset, 4, False)
+    
+    return aMoreFlag, aStatsData
+    
+@auth.requires_login()
+def get_user_stats_chunk():
+    
+    aMoreFlag, aStatsData = get_user_stats_chunk_data()
+    
+    response.view = 'default/user_stats_chunk.html'
+    return dict(UserStats = aStatsData, MoreFlag = aMoreFlag)
     
 @auth.requires_login()
 def get_stats():
-    
     response.view = 'default/user_stats.html'
     return dict()
-  
+
+@auth.requires_login()
+def get_user_details():
+    response.view = 'default/user_details.html'
+    return dict(UserId = request.vars.items()[0][1])    
     
 @auth.requires_login()
 def get_newsfeed_chunk_data():
@@ -50,8 +95,7 @@ def get_newsfeed_chunk_data():
     else:
         session.myNewsFeedOffset = 0
     
-    aMoreFlag, aNewsData = GetPosts(session.myNewsFeedOffset, 4)
-    logger.info("value of anOffset < MaxPosts is %s", str(aMoreFlag))
+    aMoreFlag, aNewsData = RetrieveNextChunk(db.news_item, 'date_time', session.myNewsFeedOffset, 4, True)
     
     return aMoreFlag, aNewsData
     
@@ -72,7 +116,7 @@ def get_newsfeed():
 @auth.requires_login()  
 def submit_predictions():
    
-    UpdatePrediction(auth.user.id, request.vars)
+    UpdatePredictions(auth.user.id, request.vars, "prior")
     
     response.flash = T("Predictions updated...")
     
@@ -91,9 +135,7 @@ def get_comments():
     return dict(CommentData = aComments, TargetType = aResultsDict['TargetType'], TargetId = aResultsDict['TargetId'], ToggleState = aResultsDict['ToggleState'] if 'ToggleState' in aResultsDict else "none")
     
 def submit_comment():    
-    logger.info("value of request.vars is %s", str(request.vars))
     aResultsDict = ConvertURLArgs(request.vars)
-    logger.info("value of aResultsDict is %s", str(aResultsDict))
     
     SubmitComment(auth.user.id, aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
     return get_comments()

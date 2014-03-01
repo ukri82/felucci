@@ -1,4 +1,39 @@
 <h2 style="text-align:center;">User statistics</h2>
-<div style="margin-left: auto; margin-right: auto;">
-The user stats come here
+
+<div id="user_stats_content_dummy" style = "display:none"/>
+<div id="user_details_content" style = "display:none"/>
+<div id="user_stats_content">
+
+<script language="javascript" type="text/javascript" src="../static/js/fulecci_ondemand.js"/>
+
+<table class="table1" id = "stats_table">
+    <thead>
+        <tr>
+            <th scope="col" abbr="User">User</th>
+            <th scope="col" abbr="Score">Score</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    </tbody>
+</table>    
+
+<script language="javascript" type="text/javascript">
+function StatsAvailableCB(aFirst_in)
+{
+    $("#stats_table tbody").append($("#user_stats_content_dummy").html());
+}    
+LoadOnDemand("default/get_user_stats_chunk", "user_stats_content_dummy", "MoreStatsLink", "MoreFlag", StatsAvailableCB);
+
+function ClickUserDetails(aUserId_in)
+{
+    $.web2py.component("default/get_user_details?UserId=" + aUserId_in, "user_details_content");
+    $("#user_stats_content").hide();
+    $("#user_details_content").show();
+}
+</script>
+
+<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MoreStatsLink" style="color: #FFFFFF">More</a></p></h4>
+
 </div>
+

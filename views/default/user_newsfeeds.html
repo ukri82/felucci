@@ -3,68 +3,26 @@
 <div id="news_items_content_dummy" style = "display:none"/>
 
 <div id="news_items_content">
-
-
+<script language="javascript" type="text/javascript" src="../static/js/fulecci_ondemand.js"/>
 
 <script language="javascript" type="text/javascript">
-
-function LoadNextChunkComments(aFirst_in)
+function PostsAvailableCB(aFirst_in)
 {
-    aURL = "default/get_newsfeed_chunk";
     if(aFirst_in == false)
     {
-        aURL = "default/get_newsfeed_chunk?NextChunk=True";
+        $("#news_items_content").append($("#news_items_content_dummy").html());
     }
     else
     {
-        $('#news_items_content').html("Loading posts...");
+        $("#news_items_content").html($("#news_items_content_dummy").html());
     }
-    
-    $.web2py.component(aURL, "news_items_content_dummy");
-    
-    (function () {
-        if ($.active == 0)  //  Are still some ajax calls active?
-        {
-            if(aFirst_in == false)
-            {
-                $('#news_items_content').append($('#news_items_content_dummy').html());
-            }
-            else
-            {
-                
-                $('#news_items_content').html($('#news_items_content_dummy').html());
-                $('#news_items_content_dummy').html("");
-                script = $('#news_items_content').find('script').text();
-                var myScript = new Function(script);
-                myScript();
-            }
+    $("#news_items_content_dummy").html("");
+    script = $("#news_items_content").find('script').text();
+    var myScript = new Function(script);
+    myScript();
+}    
             
-            if($('#MoreFlag').prop("value") == "True")
-            {
-                $('#MorePostsLink').show();
-            }
-            else
-            {
-                $('#MorePostsLink').hide();
-            }
-        }
-        else 
-        {
-            setTimeout(arguments.callee, 50); // call myself again in 50 msecs and check if still some ajax is running.
-        }
-    }());
- }
-
-
-$(document).ready(function(){
-    
-    LoadNextChunkComments(true);
-    
-    $("#MorePostsLink").click(function(){  
-        LoadNextChunkComments(false);
-    });
-
-});
+LoadOnDemand("default/get_newsfeed_chunk", "news_items_content_dummy", "MorePostsLink", "MoreFlag", PostsAvailableCB);
 </script>
 
 </div>
