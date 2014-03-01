@@ -70,18 +70,18 @@ team_group.group_id,team_group.name,team_group.team_id
 
 TABLE stadium
 stadium.stadium_id,stadium.name,stadium.city,stadium.capacity,stadium.profile,stadium.icon_file_name,stadium.location_coord
-1,Estadio do Maracana,Rio de Janeiro,76935,"The Estádio do Maracanã, officially Estádio Jornalista Mário Filho (IPA: [i?'tad??u ?o?na'li?t? 'ma?ju 'fi?u]), is an open-air stadium in Rio de Janeiro, Brazil. Owned by the Rio de Janeiro state government, it is, as is the Maracanã neighborhood where it is located, named after the Rio Maracanã, a now canalized river in Rio de Janeiro. It was opened in 1950 to host the FIFA World Cup, in which Brazil were beaten 2–1 by Uruguay in the final.","maracana.jpg","-22.9145495,-43.2298859"
-2,Arena Corinthians,Sao Paulo,48234,"The Arena Corinthians, also referred to as Arena de Itaquera and Arena de Sao Paulo, got built to serve as a playing venue for the 2014 FIFA World Cup and to provide Corinthians with an own home.  Building works started in May 2011 and were planned to be completed in December 2013. However, an incident in which a crane and part of the roof structure collapsed, killing two workers, meant that the opening is expected to get pushed back to 2014.","arena_corinthians.jpg","-23.526801,-46.56757849999997"
-3,Mineirao,Belo Horizonte,62170,"Mineirão, officially called Estádio Governador Magalhães Pinto, was built to provide the city of Belo Horizonte with a larger alternative for Estádio Independência, then the prime venue of the city.  The stadium, projected with a capacity of 130,000 spectators, was meant to become the most modern stadium of Brazil and the new home of Atlético Mineiro and Cruzeiro.","mineirao.jpg","-19.8659724,-43.970345399999985"
-4,Estadio Nacional de Brasilia,Brasilia,70064,Estádio Nacional de Brasília Mané Garrincha is Brazil’s recently opened new national stadium in the city of Brasilia. It is one of the selected playing venues of the 2014 FIFA World Cup.","estadio_nacional_de_brasilia.JPG","-15.7839004,-47.9008647"
-5,Arena Castelao,Fortaleza,67037,"The Estádio Plácido Aderaldo Castelo, also known as the Castelão or Gigante da Boa Vista, is a football stadium that was inaugurated on November 11, 1973 in Fortaleza, Ceará, Brazil, with a maximum capacity of 67,037 people","fortaleza_arena.jpg","-3.8040344,-38.52228969999999"
-6,Itaipava Arena Fonte Nova,Salvador,56000,The Itaipava Arena Fonte Nova officially Complexo Esportivo Cultural Professor Octávio Mangabeira is a football-only stadium for the 2013 FIFA Confederations Cup and the subsequent 2014 FIFA World Cup","itaipava_arena.jpg","-12.9770909,-38.5038581"
-7,Estadio Beira-Rio,Porto Alegre,51300,"Estádio José Pinheiro Borda, better known as Estádio Beira-Rio due to its location beside the Guaíba River, is a football stadium in Porto Alegre, Brazil","beira_rio_internacional.jpg","-30.0645586,-51.232599300000004"
-8,Arena Pernambuco,Recife,46154,"Itaipava Arena Pernambuco is a new multi-use stadium in the Western suburbs of the Recife metropolitan area, in São Lourenço da Mata, Brazil, that is currently in the building stages","itaipava_arena_pernambuco.jpg","-8.0075658,-35.02218949999997"
-9,Arena da Amazonia,Manaus,46000,"Arena da Amazônia is the name of a football stadium in Manaus, Amazonas, Brazil to be located on the current site of the Vivaldão stadium. The stadium will have an all-seater capacity of 46,000 and will be constructed from 2010 to December 2013","arena_amazonia.jpg","-3.0836654,-60.027918399999976"
-10,Arena Pantanal,Cuiaba,43500,"Arena Pantanal is a new multi-use stadium in Cuiabá, Brazil, that is currently in the planning stages. Once completed in 2014, it will be used mostly for football matches and will be used to host matches during the 2014 FIFA World Cup","arena_pantanal.jpg","-15.6014109,-56.09789169999999"
-11,Arena das Dunas,Natal,45000,"The Arena das Dunas or Dunas Arena is a football stadium designed by leading sports architect, Christopher Lee of Populous under construction since January 2011 to host football matches for the 2014 FIFA World Cup which will be held in Brazil","dunes_arena.jpg","-5.8268059,-35.21242080000002"
-12,Arena da Baixada,Curitiba,28413,"Estádio Joaquim Américo Guimarães, commonly referred to as Arena da Baixada, is a football stadium in the Água Verde neighborhood of Curitiba, Paraná","vista_da_basílio_itibere.jpg","-25.4478733,-49.27589929999999",
+1,Estadio do Maracana,Rio de Janeiro,76935,"x","maracana.jpg","-22.9145495,-43.2298859"
+2,Arena Corinthians,Sao Paulo,48234,"x","arena_corinthians.jpg","-23.526801,-46.56757849999997"
+3,Mineirao,Belo Horizonte,62170,"x","mineirao.jpg","-19.8659724,-43.970345399999985"
+4,Estadio Nacional de Brasilia,Brasilia,70064,"x","estadio_nacional_de_brasilia.JPG","-15.7839004,-47.9008647"
+5,Arena Castelao,Fortaleza,67037,"x","fortaleza_arena.jpg","-3.8040344,-38.52228969999999"
+6,Itaipava Arena Fonte Nova,Salvador,56000,"x","itaipava_arena.jpg","-12.9770909,-38.5038581"
+7,Estadio Beira-Rio,Porto Alegre,51300,"","beira_rio_internacional.jpg","-30.0645586,-51.232599300000004"
+8,Arena Pernambuco,Recife,46154,"","itaipava_arena_pernambuco.jpg","-8.0075658,-35.02218949999997"
+9,Arena da Amazonia,Manaus,46000,"","arena_amazonia.jpg","-3.0836654,-60.027918399999976"
+10,Arena Pantanal,Cuiaba,43500,"","arena_pantanal.jpg","-15.6014109,-56.09789169999999"
+11,Arena das Dunas,Natal,45000,"","dunes_arena.jpg","-5.8268059,-35.21242080000002"
+12,Arena da Baixada,Curitiba,28413,"","vista_da_basilio_itibere.jpg","-25.4478733,-49.27589929999999"
 
 
 TABLE fixture
