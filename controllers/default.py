@@ -139,6 +139,14 @@ def submit_comment():
     
     SubmitComment(auth.user.id, aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
     return get_comments()
+
+@auth.requires_login()    
+def submit_data_file():    
+    
+    db.import_from_csv_file(request.vars.csv_file.file)
+    CacheData()
+    
+    return "The file is successfully imported"
     
 def get_help():
     response.view = 'default/help.html'

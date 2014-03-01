@@ -21,7 +21,12 @@
 {{=LOAD('default','get_results',ajax=True, ajax_trap=True, target = "Results")}}
 </div>
 <div class="tab-pane" id="Database">
-{{=A('Admin Page', _href=URL(a = 'admin', c = 'default', f = 'index'))}}
+<h5> Select DB csv file and click import </h5>
+<form action = "/fulecci/default/submit_data_file" enctype="multipart/form-data" method="post">
+<input type="file" name="csv_file" title="Browse...">
+<input type="submit" value="Import" class="btn">
+</form>
+
 </div>
 <div class="tab-pane" id="Help">
 {{=LOAD('default','get_help',ajax=True)}}
