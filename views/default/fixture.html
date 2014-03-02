@@ -1,0 +1,75 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
+{{extend 'layout.html'}}
+
+{{if 'message_header' in globals():}}
+<h3>{{=message_header}}</h3>
+{{if 'message_contents' in globals():}}
+<!--<h4>{{=message_contents}}</h4>-->
+{{pass}}
+{{elif 'content' in globals():}}
+{{=content}}
+{{else:}}
+{{=BEAUTIFY(response._vars)}}
+{{pass}}
+
+{{block main_content}}
+
+<form action = "/felucci/default/submit_fixture" method="post">
+
+<table>
+<tbody>
+<tr> 
+<td> 
+
+{{for groupFixture in FixtureData:}}
+<h4>Group {{=groupFixture['group_name']}}</h4>
+ 
+                    
+<table class="table1">
+    <thead>
+        <tr>
+            <th></th>
+            <th scope="col" abbr="GameNumber">Game</th>
+            <th scope="col" abbr="Team1">Team 1</th>
+            <th scope="col" abbr="Team2">Team 2</th>
+            <th scope="col" abbr="DateTime">Date and Time</th>
+            <th scope="col" abbr="Venue">Venue</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{index = 1}}
+    {{for item in groupFixture['fixture']:}}
+        <tr>
+            <th scope="row">{{=index}}{{index = index + 1}}</th>
+            <td>{{=item[1]}}</td>
+            <td>{{=item[7]}} {{=IMG(_src=URL('static/images/country_icons', item[8]),_alt=item[6], _title = item[6])}} {{=INPUT(_type='number', _name="%s_score1" % item[0], _value = 0, _style="width: 50px;")}} </td>
+            <td>{{=item[11]}} {{=IMG(_src=URL('static/images/country_icons', item[12]),_alt=item[10], _title = item[10])}}  {{=INPUT(_type='number', _name="%s_score2" % item[0], _value = 0, _style="width: 50px;")}}</td>
+            <td>{{=item[4]}}</td>
+            <td>{{=item[14]}}, {{=item[15]}}</td>
+        </tr>
+    {{pass}}
+    
+    </tbody>
+</table>
+
+{{pass}}
+
+</td>
+</tr>
+<tr >
+<td style = "text-align:center;">
+<input type="submit" value="Submit Prediction" >
+</td>
+</tr>
+</tbody>
+</table>
+
+</form>
+
+{{end}}
+
+{{block right_sidebar}}
+<!--{{=IMG(_src=URL('static/images', 'WC-2014-Brasil.png'),_alt='2014 Fifa World Cup')}}//-->
+{{=IMG(_src=URL('static/images', 'WC-2014-Brasil.png'),_alt='2014 Fifa World Cup')}}
+{{end}}

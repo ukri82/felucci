@@ -1,0 +1,60 @@
+<link rel="stylesheet" type="text/css" href="../static/css/comments.css" />
+{{aCommentFormId = TargetType + str(TargetId)}}
+<div id="comments_{{=aCommentFormId}}" class="comments-area">
+<form id="commentform">
+
+<h4 class="comments-title"> <a href="#" onclick="jQuery('#commentlist_{{=aCommentFormId}}').slideToggle();return false;">{{= len(CommentData)}} comments </a></h4>
+<ol class="commentlist" id="commentlist_{{=aCommentFormId}}" style="display:{{=ToggleState}}"> 
+{{for aCommentItem in CommentData:}}
+    <li class="comment even thread-even depth-1" id="li-comment-{{=aCommentItem['id']}}">
+		<article id="comment-{{=aCommentItem['id']}}" class="comment">
+			<footer>
+				<div class="comment-author vcard">
+                    {{=IMG(_src=URL('download', aCommentItem['comment']['author_image']),_alt=aCommentItem['comment']['author_nickname'], _class="avatar avatar-40 photo avatar-default", _width="40", _height="40")}}
+					<cite class="fn">{{=aCommentItem['comment']['author_nickname']}}</cite> <span class="says">says</span>
+                </div>
+				
+				<div class="comment-meta commentmetadata">
+					<time pubdate="" datetime="{{=aCommentItem['comment']['date_time']}}">
+					{{=aCommentItem['comment']['date_time']}}					
+                    </time></a>
+				</div>
+			</footer>
+
+			<div class="comment-content"><p>{{=aCommentItem['comment']['body']}}</p></div>
+
+		</article><!-- #comment-## -->
+	</li><!-- #comment-## -->
+{{pass}}	
+ </ol>
+ <div id="respond" class="comment-respond">
+    <h5 id="reply-title" class="comment-reply-title">Leave a Comment</h5>
+    <div id="commentform-div" class="comment-form">
+          <textarea  name="UserComment_{{=aCommentFormId}}" id="UserComment_{{=aCommentFormId}}"/>
+          <input value="{{=TargetType}}" type="hidden" name="TargetType_{{=aCommentFormId}}" id="TargetType_{{=aCommentFormId}}" />
+          <input value="{{=TargetId}}" type="hidden" name="TargetId_{{=aCommentFormId}}" id="TargetId_{{=aCommentFormId}}" />
+          <input value="{{=ToggleState}}" type="hidden" name="ToggleState_{{=aCommentFormId}}" id="ToggleState_{{=aCommentFormId}}" />
+          
+          <input type="submit" id="UserCommentSubmit_{{=aCommentFormId}}" />
+          <script>
+            $('#UserCommentSubmit_{{=aCommentFormId}}').click(function(){
+                        if(jQuery('#UserComment_{{=aCommentFormId}}').prop("value") == "")
+                        {
+                            alert("Please enter a valid comment");
+                            return false;
+                        }
+                        jQuery('#ToggleState_{{=aCommentFormId}}').prop("value", String(jQuery('#commentlist_{{=aCommentFormId}}').css("display")));
+                        ajax('{{=URL('submit_comment')}}',
+                        ['UserComment_{{=aCommentFormId}}', 
+                         'TargetType_{{=aCommentFormId}}', 
+                         'TargetId_{{=aCommentFormId}}',
+                         'ToggleState_{{=aCommentFormId}}'],
+                         '{{='comments_' + aCommentFormId}}');
+                         return false;
+            });
+           </script>     
+    </div>
+</div>
+
+ </form>
+</div>

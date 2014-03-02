@@ -1,0 +1,30 @@
+<link rel="stylesheet" type="text/css" href="../static/css/posts.css" />
+<h2 style="text-align:center;">Latest News</h2>
+<div id="news_items_content_dummy" style = "display:none"/>
+
+<div id="news_items_content">
+<script language="javascript" type="text/javascript" src="../static/js/fulecci_ondemand.js"/>
+
+<script language="javascript" type="text/javascript">
+function PostsAvailableCB(aFirst_in)
+{
+    if(aFirst_in == false)
+    {
+        $("#news_items_content").append($("#news_items_content_dummy").html());
+    }
+    else
+    {
+        $("#news_items_content").html($("#news_items_content_dummy").html());
+    }
+    $("#news_items_content_dummy").html("");
+    script = $("#news_items_content").find('script').text();
+    var myScript = new Function(script);
+    myScript();
+}    
+            
+LoadOnDemand("default/get_newsfeed_chunk", "news_items_content_dummy", "MorePostsLink", "MoreFlag", PostsAvailableCB);
+</script>
+
+</div>
+
+<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MorePostsLink" style="color: #FFFFFF">More</a></p></h4>

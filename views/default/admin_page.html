@@ -1,0 +1,38 @@
+{{extend 'layout.html'}}
+<div class="container">
+<div class="span2 left-sidebar">
+<ul class="nav nav-list" data-tabs="tabs" id="AdminTabs">
+      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4>{{=auth.user.nickname}}</h4></li>
+      <li class="divider"></li>
+      <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i>Results</a></li>
+      <li><a href="#Database"  data-toggle="tab"><i class="icon-book"></i> Database </a></li>
+      <li class="divider"></li>
+      <li><a href="#Help"  data-toggle="tab"><i class="icon-flag"></i> Help</a></li>
+</ul>
+
+</div>
+
+
+<div style="width:850">
+
+<div id="Admin_content" class="tab-content">
+
+<div class="tab-pane active" id="Results">
+{{=LOAD('default','get_results',ajax=True, ajax_trap=True, target = "Results")}}
+</div>
+<div class="tab-pane" id="Database">
+<h5> Select DB csv file and click import </h5>
+<form action = "/fulecci/default/submit_data_file" enctype="multipart/form-data" method="post">
+<input type="file" name="csv_file" title="Browse...">
+<input type="submit" value="Import" class="btn">
+</form>
+
+</div>
+<div class="tab-pane" id="Help">
+{{=LOAD('default','get_help',ajax=True)}}
+</div>
+
+</div>
+</div>
+
+</div>

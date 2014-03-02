@@ -1,0 +1,19 @@
+{{left_sidebar_enabled,right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
+{{extend 'layout.html'}}
+
+{{if 'message_header' in globals():}}
+<h3>{{=message_header}}</h3>
+{{if 'message_contents' in globals():}}
+<h4>{{=message_contents}}</h4>
+{{pass}}
+{{elif 'content' in globals():}}
+{{=content}}
+{{else:}}
+{{=BEAUTIFY(response._vars)}}
+{{pass}}
+
+{{block main_content}}
+{{end}}
+
+{{block right_sidebar}}
+{{end}}
