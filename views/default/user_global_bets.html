@@ -1,0 +1,44 @@
+<h4 style="text-align:center;">Current bets</h4>
+<form action = "/fulecci/default/submit_bets" id = "BetForm" method="post">
+
+<table  style = "margin-left: auto;margin-right: auto;">
+<tbody>
+<tr> 
+<td> 
+
+<table class="table1">
+    <thead>
+        <tr>
+            <th scope="col" abbr="BetMatchId">Game</th>
+            <th scope="col" abbr="BetOffer">Offer</th>
+            <th scope="col" abbr="BetOdd">Odd</th>
+            <th scope="col" abbr="BetUserOffer">User offer</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{for item in ActiveBets:}}
+        <tr>
+        <td>{{=item['team1']}} X {{=item['team2']}} </td>
+        <td>{{=item['offer']}} </td>
+        <td>{{=item['odd']}} </td>
+        <td>{{=INPUT(_type='number', _name="user_bet_%s" % item['id'], _value = item['points'], _style="width: 50px;")}}</td>
+        </tr>
+    {{pass}}    
+    </tbody>
+</table>
+
+</td>
+</tr>
+<tr >
+<td style = "text-align:center;">
+
+<input type="submit" value="Submit Bets">
+<input type="reset" value="Reset all values" >
+
+</td>
+</tr>
+</tbody>
+</table>
+
+</form>

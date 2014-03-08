@@ -6,6 +6,7 @@
       <li class="divider"></li>
       <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i>Results</a></li>
       <li><a href="#Database"  data-toggle="tab"><i class="icon-book"></i> Database </a></li>
+      <li><a href="#ActiveBets"  data-toggle="tab"><i class="icon-briefcase"></i> Bets </a></li>
       <li class="divider"></li>
       <li><a href="#Help"  data-toggle="tab"><i class="icon-flag"></i> Help</a></li>
 </ul>
@@ -27,6 +28,9 @@
 <input type="submit" value="Import" class="btn">
 </form>
 
+</div>
+<div class="tab-pane" id="ActiveBets">
+{{=LOAD('default','get_bet_admin',ajax=True)}}
 </div>
 <div class="tab-pane" id="Help">
 {{=LOAD('default','get_help',ajax=True)}}

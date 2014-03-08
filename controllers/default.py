@@ -151,6 +151,46 @@ def get_help():
     response.view = 'default/help.html'
     return dict()
 
+@auth.requires_login()    
+def get_user_bets():
+    response.view = 'default/user_bets.html'
+    return dict()    
+    
+@auth.requires_login()    
+def get_user_bets_active():
+    response.view = 'default/user_global_bets.html'
+    anActiveBets = GetActiveBets(auth.user)
+    return dict(ActiveBets = anActiveBets)    
+    
+@auth.requires_login()    
+def get_user_bets_old():
+    response.view = 'default/user_old_bets.html'
+    aUserBets = GetOldBets(auth.user)
+    return dict(OldBets = aUserBets) 
+
+@auth.requires_login()
+def submit_bets():
+    UpdateUserBets(auth.user, request.vars)
+    
+    response.flash = T("Bets updated...")
+    
+    return get_user_bets_active()
+ 
+@auth.requires_login() 
+def get_bet_admin():
+    response.view = 'default/admin_global_bets.html'
+    anActiveBets = GetActiveBetsAdmin()
+    return dict(ActiveBets = anActiveBets)  
+    
+@auth.requires_login()
+def submit_admin_bets():
+    UpdateAdminBets(request.vars)
+    
+    response.flash = T("Admin Bets updated...")
+    
+    return get_bet_admin()
+    
+    
 @auth.requires_login()
 def admin_page():
     response.view = 'default/admin_page.html'

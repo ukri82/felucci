@@ -1,0 +1,26 @@
+<h4 style="text-align:center;">Old User bets</h4>
+
+<table class="table1">
+    <thead>
+        <tr>
+            <th scope="col" abbr="BetMatchId">Game</th>
+            <th scope="col" abbr="BetOffer">Offer</th>
+            <th scope="col" abbr="BetOdd">Odd</th>
+            <th scope="col" abbr="BetUserOffer">User offer</th>
+            <th scope="col" abbr="BetUserOffer">User score</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{for item in OldBets:}}
+        <tr>
+            <td>{{=item['team1']}} X {{=item['team2']}} </td>
+            <td>{{=item['offer']}} </td>
+            <td>{{=item['odd']}} </td>
+            <td>{{=item['points']}} </td>
+            <td>{{=item['scored_points']}} </td>
+        </tr>
+    {{pass}}    
+    </tbody>
+</table>
+

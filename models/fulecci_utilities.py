@@ -301,7 +301,99 @@ def RecreateData(aCSVFileName_in):
     db.import_from_csv_file(aCSVFileName_in)
     CacheData()
 
+def GetActiveBets(aUserId_in):
+    
+    allOpenBets = db(db.bet_offer.bet_state == 'open').select()
+    aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select().as_dict(key = 'bet_id')
+    
+    aBetData = []
+    
+    for aBet in allOpenBets:
+        
+        aBetItem = {
+                    "id" : aBet["id"],
+                    "match_id" : aBet["match_id"],
+                    "team1" : session.TeamTable[session.FixtureTable[aBet["match_id"]]["team1"]]["name"],
+                    "team2" : session.TeamTable[session.FixtureTable[aBet["match_id"]]["team2"]]["name"],
+                    "offer" : aBet["offer"],
+                    "odd" : aBet["odd"],
+                    "points" : aUserBetTable[aBet["id"]]["points"] if aBet["id"] in aUserBetTable else 0
+                   }
+        aBetData.append(aBetItem)
+        
+    return aBetData
+    
+    
+def GetOldBets(aUserId_in):
+    
+    aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
+    aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select()
+    
+    aUserBetData = []
+    for aUserBet in aUserBetTable:
+        if aAllBets[aUserBet["bet_id"]]["bet_state"] not in set(['unopen', 'open']):
+            aMatchId = aAllBets[aUserBet["bet_id"]]["match_id"]
+            aBetItem = {
+                        "id" : aUserBet["id"],
+                        "match_id" : aMatchId,
+                        "team1" : session.TeamTable[session.FixtureTable[aMatchId]["team1"]]["name"],
+                        "team2" : session.TeamTable[session.FixtureTable[aMatchId]["team2"]]["name"],
+                        "offer" : aAllBets[aUserBet["bet_id"]]["offer"],
+                        "odd" : aAllBets[aUserBet["bet_id"]]["odd"],
+                        "points" : aUserBet["points"],
+                        "scored_points" : aUserBet["scored_points"]
+                        }
+            aUserBetData.append(aBetItem)
+        
+    return aUserBetData
+    
+def UpdateUserBets(aUserId_in, aParams_in):
+
+    logger.info("The bet params are : %s", str(aParams_in))
+    aAllBetReq = []
+    for aBetReq, aPoint in aParams_in.items():
+        aBetId = int(re.search('user_bet_(\d+)', aBetReq).group(1))
+        aPoint = int(aPoint)
+        aAllBetReq.append({"id" : aBetId, "points" : aPoint})
+
+    for aReq in aAllBetReq:
+        db.user_bet.update_or_insert((db.user_bet.bet_id == aReq["id"]), 
+                                            bet_id = aReq["id"], 
+                                            predictor_id = aUserId_in,
+                                            points = aReq["points"])
+
+
+
+def GetActiveBetsAdmin():
+    
+    return db(db.bet_offer.bet_state == 'open').select()
 
     
+def UpdateAdminBets(aParams_in):
+
+    aAllBetReq = dict()
+    for aBetReq, aValue in aParams_in.items():
+        matchObj = re.search('bet_([a-zA-Z]+)_(\d+)', aBetReq)
+        aFieldName = matchObj.group(1)
+        aBetId = int(matchObj.group(2))
+        
+        if aBetId not in aAllBetReq:
+            aAllBetReq[aBetId] = {"result": 'unknown', "state": 'unopen'}
+        
+        aAllBetReq[aBetId][aFieldName] = aValue
+
+    for aKey, aVal in aAllBetReq.items():
+        db(db.bet_offer.id == aKey).update(bet_state = aVal["state"],
+                                            bet_result = aVal["result"])
+
+
+
+
+
+
+
+
+
+
     
     

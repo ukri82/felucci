@@ -1,0 +1,72 @@
+<h4 style="text-align:center;">Active bets</h4>
+
+<form action = "/fulecci/default/submit_admin_bets" id = "AdminBetForm" method="post">
+
+<table  style = "margin-left: auto;margin-right: auto;">
+<tbody>
+<tr> 
+<td> 
+
+<table class="table1">
+    <thead>
+        <tr>
+            <th scope="col" abbr="BetMatchId">Game</th>
+            <th scope="col" abbr="BetOffer">Offer</th>
+            <th scope="col" abbr="BetOdd">Odd</th>
+            <th scope="col" abbr="BetState">State</th>
+            <th scope="col" abbr="BetResult">Result</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{for item in ActiveBets:}}
+        <tr>
+            <td>{{=item['match_id']}}</td>
+            <td>{{=item['offer']}} </td>
+            <td>{{=item['odd']}} </td>
+            <td>
+                {{aPossibleStates = ['unopen', 'open', 'closed', 'archived']}}
+                <select name="bet_state_{{=item['id']}}" class="test"> 
+                    {{for aState in aPossibleStates:}}
+                    {{if aState == item['bet_state'] :}}
+                        <option value="{{=aState}}" selected>{{=aState}}</option>
+                    {{else:}}
+                        <option value="{{=aState}}">{{=aState}}</option>
+                    {{pass}}
+                    {{pass}}
+                </select>
+            </td>
+            
+            <td>
+                {{aPossibleResults = ['met', 'not_met', 'unknown']}}
+                <select name="bet_result_{{=item['id']}}" class="test"> 
+                    {{for aResult in aPossibleResults:}}
+                    {{if aState == item['bet_state'] :}}
+                        <option value="{{=aResult}}" selected>{{=aResult}}</option>
+                    {{else:}}
+                        <option value="{{=aResult}}">{{=aResult}}</option>
+                    {{pass}}
+                    {{pass}}
+                </select>
+            </td>
+            
+        </tr>
+    {{pass}}    
+    </tbody>
+</table>
+
+</td>
+</tr>
+<tr >
+<td style = "text-align:center;">
+
+<input type="submit" value="Submit Bets">
+<input type="reset" value="Reset all values" >
+
+</td>
+</tr>
+</tbody>
+</table>
+
+</form>
+

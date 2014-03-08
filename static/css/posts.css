@@ -50,13 +50,11 @@
 .post .links {
 	margin: 0;
 	padding: 10px 30px 35px 30px;
-	background: url(../images/img06.gif) repeat-x left bottom;
 	border-top: 1px solid #2872A6;
 }
 
 .post .links a {
 	padding-left: 10px;
-	background: url(../images/img08.gif) no-repeat left center;
 	text-decoration: none;
 	font-weight: bold;
 	color: #0A416B;

@@ -1,26 +1,24 @@
 var startItems;
 var request;
 
+function initializeValues()
+{
+   var $form = $("#PredictionForm");
 
-$(document).ready(function() {
+    startItems = convertSerializedArrayToHash($form.serializeArray()); 
 
-var $form = $("#PredictionForm");
+    Object.size = function(obj) {
+        var size = 0, key;
+        for (key in obj) {
+            if (obj.hasOwnProperty(key)) size++;
+        }
+        return size;
+    };
 
-startItems = convertSerializedArrayToHash($form.serializeArray()); 
-
-Object.size = function(obj) {
-    var size = 0, key;
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) size++;
-    }
-    return size;
-};
-
-});
+}
 
 
 function submitForm(){
-    
     if (request) {
         request.abort();
     }

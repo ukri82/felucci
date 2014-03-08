@@ -181,6 +181,23 @@ db.define_table('prediction_score',
     Field('score','integer'), redefine=migrate_flag
 )
 
+db.define_table('bet_offer',
+    Field('match_id',db.fixture),
+    Field('offer','text'),
+    Field('odd','double'), 
+    Field('bet_state','string', length=10, requires=IS_IN_SET(('unopen','open','closed','archived'))),
+    Field('bet_result','string', length=10, requires=IS_IN_SET(('met','not_met','unknown'))), 
+    redefine=migrate_flag
+)
+
+db.define_table('user_bet',
+    Field('predictor_id',db.auth_user),
+    Field('bet_id', db.bet_offer),
+    Field('points','integer'),
+    Field('scored_points','integer'), 
+    redefine=migrate_flag
+)
+
 
 
 '''
