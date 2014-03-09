@@ -95,7 +95,7 @@ def UpdatePredictions(aUserId_in, aParams_in, aPredictionType_in):
     for aPredictReq in aParams_in:
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aPredictReq)
       
-        #logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
+        logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
         if aMatchId not in aPredData:
             aPredData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0, 'team1_id' : 0, 'team2_id' : 0}
         
@@ -262,9 +262,9 @@ def GetComments(aTargetType_in, aTargetId_in):
     return sorted(aResults, key=lambda k: k['comment']["date_time"])
 
 def SubmitComment(aUserId_in, aTargetType_in, aTargetId_in, aComment_in):
-
+    #logger.info("value of aUserId_in,aTargetType_in, aTargetId_in, aComment_in  is %s, %s, %s, %s", str(aUserId_in), str(aTargetType_in), str(aTargetId_in), str(aComment_in))
     db.user_comment.insert(author_id = aUserId_in, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
-
+    
 def ConvertURLArgs(anArgs_in):
     
     aResDict = dict()

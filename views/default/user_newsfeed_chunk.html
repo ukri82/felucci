@@ -8,7 +8,9 @@
 <p class="byline"><small>Posted on {{=newsItem.date_time}} by {{=newsItem.author_id}}</small></p>
 
 <div class="entry"> 
-{{=IMG(_src=URL('download', newsItem.image),_alt=newsItem.title, _class="left", _width="122", _height="122")}}
+{{if newsItem.image is not "":}}
+    {{=IMG(_src=URL('download', newsItem.image),_alt=newsItem.title, _class="left", _width="122", _height="122")}}
+{{pass}}
 <p>{{=newsItem.body}}</p>
 </div>
 

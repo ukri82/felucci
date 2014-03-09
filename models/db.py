@@ -90,6 +90,7 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> rows=db(db.mytable.myfield=='value').select(db.mytable.ALL)
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
+# type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
 
 db.define_table('news_item',
     Field('title','string', requires=IS_NOT_EMPTY()),
@@ -101,13 +102,12 @@ db.define_table('news_item',
 )
 
 db.define_table('user_comment',
-    Field('body','string', requires=IS_NOT_EMPTY()),
+    Field('body','text', requires=IS_NOT_EMPTY()),
     Field('target_type','string', length=50),
-    Field('target_id','id'),
+    Field('target_id',db.news_item),
     Field('author_id',db.auth_user),
     Field('date_time','datetime'), redefine=migrate_flag
 )
-# type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
 
 db.define_table('match_result',
     Field('match_id','integer'),
