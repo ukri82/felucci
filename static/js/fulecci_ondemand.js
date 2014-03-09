@@ -9,6 +9,7 @@ function LoadNextChunk(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in,
     $.web2py.component(aURL, aTargetDivId_in);
     
     (function () {
+        
         if ($.active == 0)  //  Are still some ajax calls active?
         {
             aMoreFlag = $("#" + aTargetDivId_in + " input").filter("#" + aMoreFlagId_in).val();

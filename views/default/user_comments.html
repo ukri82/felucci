@@ -1,7 +1,6 @@
-<link rel="stylesheet" type="text/css" href="../static/css/comments.css" />
 {{aCommentFormId = TargetType + str(TargetId)}}
 <div id="comments_{{=aCommentFormId}}" class="comments-area">
-<form id="commentform">
+<form id="commentform_{{=aCommentFormId}}">
 
 <h4 class="comments-title"> <a href="#" onclick="jQuery('#commentlist_{{=aCommentFormId}}').slideToggle();return false;">{{= len(CommentData)}} comments </a></h4>
 <ol class="commentlist" id="commentlist_{{=aCommentFormId}}" style="display:{{=ToggleState}}"> 
@@ -37,21 +36,31 @@
           
           <input type="submit" id="UserCommentSubmit_{{=aCommentFormId}}" />
           <script>
-            $('#UserCommentSubmit_{{=aCommentFormId}}').click(function(){
-                        if(jQuery('#UserComment_{{=aCommentFormId}}').prop("value") == "")
+            $('#commentform_{{=aCommentFormId}}').submit(function() {
+                if($('#UserComment_{{=aCommentFormId}}').prop("value") == "")
                         {
                             alert("Please enter a valid comment");
                             return false;
                         }
-                        jQuery('#ToggleState_{{=aCommentFormId}}').prop("value", String(jQuery('#commentlist_{{=aCommentFormId}}').css("display")));
+                        $('#ToggleState_{{=aCommentFormId}}').prop("value", String($('#commentlist_{{=aCommentFormId}}').css("display")));
                         ajax('{{=URL('submit_comment')}}',
                         ['UserComment_{{=aCommentFormId}}', 
                          'TargetType_{{=aCommentFormId}}', 
                          'TargetId_{{=aCommentFormId}}',
                          'ToggleState_{{=aCommentFormId}}'],
-                         '{{='comments_' + aCommentFormId}}');
+                         $('#comments_{{=aCommentFormId}}').parent().attr('id'));
+                         
+                         // Workaround for disappearing last comment problem
+                         ajax('{{=URL('get_comments')}}',
+                        ['UserComment_{{=aCommentFormId}}', 
+                         'TargetType_{{=aCommentFormId}}', 
+                         'TargetId_{{=aCommentFormId}}',
+                         'ToggleState_{{=aCommentFormId}}'],
+                         $('#comments_{{=aCommentFormId}}').parent().attr('id'));
+                         
                          return false;
-            });
+                    });
+                    
            </script>     
     </div>
 </div>

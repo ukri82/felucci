@@ -90,6 +90,7 @@ use_janrain(auth, filename='private/janrain.key')
 ## >>> rows=db(db.mytable.myfield=='value').select(db.mytable.ALL)
 ## >>> for row in rows: print row.id, row.myfield
 #########################################################################
+# type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
 
 db.define_table('news_item',
     Field('title','string', requires=IS_NOT_EMPTY()),
@@ -101,13 +102,12 @@ db.define_table('news_item',
 )
 
 db.define_table('user_comment',
-    Field('body','string', requires=IS_NOT_EMPTY()),
+    Field('body','text', requires=IS_NOT_EMPTY()),
     Field('target_type','string', length=50),
-    Field('target_id','id'),
+    Field('target_id',db.news_item),
     Field('author_id',db.auth_user),
     Field('date_time','datetime'), redefine=migrate_flag
 )
-# type = 'news_item', 'match_result', 'fixture', 'player', 'prediction', 'team' 
 
 db.define_table('match_result',
     Field('match_id','integer'),
@@ -178,6 +178,23 @@ db.define_table('team',
 db.define_table('user_point',
     Field('match_prediction_id', db.match_prediction),
     Field('points','integer'), redefine=migrate_flag
+)
+
+db.define_table('bet_offer',
+    Field('match_id',db.fixture),
+    Field('offer','text'),
+    Field('odd','double'), 
+    Field('bet_state','string', length=10, requires=IS_IN_SET(('unopen','open','closed','archived'))),
+    Field('bet_result','string', length=10, requires=IS_IN_SET(('met','not_met','unknown'))), 
+    redefine=migrate_flag
+)
+
+db.define_table('user_bet',
+    Field('predictor_id',db.auth_user),
+    Field('bet_id', db.bet_offer),
+    Field('points','integer'),
+    Field('scored_points','integer'), 
+    redefine=migrate_flag
 )
 
 

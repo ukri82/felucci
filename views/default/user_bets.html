@@ -1,0 +1,7 @@
+<h2 style="text-align:center;">User bets</h2>
+<div id="UserBetsActiveGlobal">
+{{=LOAD('default','get_user_bets_active',ajax=True, ajax_trap=True, target = "UserBetsActiveGlobal")}}
+</div>
+<div id="UserBetsOld">
+{{=LOAD('default','get_user_bets_old',ajax=True, ajax_trap=True, target = "UserBetsOld")}}
+</div>

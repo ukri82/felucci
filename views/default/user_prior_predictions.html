@@ -24,7 +24,13 @@
     {{pass}}
 {{return aTextForGroup}}
 
-<script language="javascript" type="text/javascript" src="../static/js/form_submit.js"/>
+<script>
+$(document).ready(function() 
+{
+    initializeValues();
+});
+</script>
+
 <form action = "/fulecci/default/{{=SubmitURL}}" id = "PredictionForm" method="post">
 
 <table>
@@ -185,7 +191,7 @@
 <tr >
 <td style = "text-align:center;">
 
-<input type="submit" value="{{=SubmitButtonText}}" onclick="submitForm(); return false;">
+<input type="button" value="{{=SubmitButtonText}}" onclick="submitForm(); return false;">
 <input type="reset" value="Reset all values" >
 
 </td>
