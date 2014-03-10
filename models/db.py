@@ -111,8 +111,8 @@ db.define_table('user_comment',
 
 db.define_table('match_result',
     Field('match_id','integer'),
-    Field('team1_goals','integer'),
-    Field('team2_goals','integer'), redefine=migrate_flag
+    Field('team1_goals','integer', IS_INT_IN_RANGE(0, 100)),
+    Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), redefine=migrate_flag
 )
 
 db.define_table('fixture',
@@ -147,11 +147,11 @@ db.define_table('player',
 db.define_table('match_prediction',
     Field('predictor_id',db.auth_user),
     Field('match_id', db.fixture),
-    Field('pred_type','string', length=10),
+    Field('pred_type','string', length=10, requires=IS_IN_SET(('prior','spot'))),
     Field('team1_id','integer'),
     Field('team2_id','integer'),
-    Field('team1_goals','integer'),
-    Field('team2_goals','integer'), redefine=migrate_flag
+    Field('team1_goals','integer', IS_INT_IN_RANGE(0, 100)),
+    Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), redefine=migrate_flag
 )
 
 db.define_table('stadium',

@@ -27,8 +27,8 @@ def index():
 def get_prior_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetPredictions(auth.user.id, "prior"), 
-                PositionPredictionData = GetPositionPredictions(auth.user.id), 
+    return dict(MacthPredictionData = GetPredictions("prior"), 
+                PositionPredictionData = GetPositionPredictions(), 
                 SubmitButtonText = "Submit Prior Predictions",
                 SubmitURL = "submit_prior_predictions",
                 PredictionFormId = "PriorPredictionFormId"
@@ -37,7 +37,7 @@ def get_prior_predictions():
 def get_spot_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetPredictions(auth.user.id, "spot"), 
+    return dict(MacthPredictionData = GetPredictions("spot"), 
                 SubmitButtonText = "Submit Spot Predictions",
                 SubmitURL = "submit_spot_predictions",
                 PredictionFormId = "SpotPredictionFormId"
@@ -55,7 +55,7 @@ def get_results():
     
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetResults(), 
-                PositionPredictionData = GetPositionPredictions(auth.user.id),
+                PositionPredictionData = GetPositionPredictions(),
                 SubmitButtonText = "Submit Results",
                 SubmitURL = "submit_results",
                 PredictionFormId = "ResultFormId"
@@ -122,7 +122,7 @@ def get_newsfeed():
 @auth.requires_login()  
 def submit_prior_predictions():
    
-    UpdatePredictions(auth.user.id, request.vars, "prior")
+    UpdatePredictions(request.vars, "prior")
     
     response.flash = T("Predictions updated...")
     
@@ -131,7 +131,7 @@ def submit_prior_predictions():
 @auth.requires_login()  
 def submit_spot_predictions():
    
-    UpdatePredictions(auth.user.id, request.vars, "spot")
+    UpdatePredictions(request.vars, "spot")
     
     response.flash = T("Predictions updated...")
     
@@ -152,7 +152,7 @@ def get_comments():
 def submit_comment():    
     aResultsDict = ConvertURLArgs(request.vars)
     
-    SubmitComment(auth.user.id, aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
+    SubmitComment(aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
     return get_comments()
 
 @auth.requires_login()    
@@ -174,18 +174,18 @@ def get_user_bets():
 @auth.requires_login()    
 def get_user_bets_active():
     response.view = 'default/user_global_bets.html'
-    anActiveBets = GetActiveBets(auth.user)
+    anActiveBets = GetActiveBets()
     return dict(ActiveBets = anActiveBets)    
     
 @auth.requires_login()    
 def get_user_bets_old():
     response.view = 'default/user_old_bets.html'
-    aUserBets = GetOldBets(auth.user)
+    aUserBets = GetOldBets()
     return dict(OldBets = aUserBets) 
 
 @auth.requires_login()
 def submit_bets():
-    UpdateUserBets(auth.user, request.vars)
+    UpdateUserBets(request.vars)
     
     response.flash = T("Bets updated...")
     

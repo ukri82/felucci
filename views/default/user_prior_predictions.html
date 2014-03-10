@@ -59,7 +59,7 @@ $(document).ready(function()
         
         {{pass}}
         {{if 'PositionPredictionData' in vars():}}
-            <li><a href="#SecondStage" data-toggle="pill" style = "font-size: 12px;"><b>Second Stage</b></a></li>
+            <li><a href="#{{=('SecondStage_' + PredictionFormId)}}" data-toggle="pill" style = "font-size: 12px;"><b>Second Stage</b></a></li>
         {{pass}}
      </ul>
 <!--  Tabs header definition ends --->
@@ -102,14 +102,14 @@ $(document).ready(function()
                 {{if item['team1_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
                 {{pass}}
-                    {{=INPUT(_type='number', _name="match_%s_score1" % item['fixture_id'], _value = item['team1_goals'], _style="width: 50px;")}} 
+                    {{=INPUT(_type='number', _name="%s_match_%s_score1" % (PredictionFormId, item['fixture_id']), _value = item['team1_goals'], _style="width: 50px;")}} 
             </td>
             <td>
                 {{=item['team2_short_name']}}
                 {{if item['team2_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
                 {{pass}}
-                    {{=INPUT(_type='number', _name="match_%s_score2" % item['fixture_id'], _value = item['team2_goals'], _style="width: 50px;")}}
+                    {{=INPUT(_type='number', _name="%s_match_%s_score2" % (PredictionFormId, item['fixture_id']), _value = item['team2_goals'], _style="width: 50px;")}}
             </td>
             
             <td>{{=item['date_time']}}</td>
@@ -126,7 +126,7 @@ $(document).ready(function()
 
 
 {{if 'PositionPredictionData' in vars():}}
-<div class="tab-pane" id="SecondStage" style="border: 2px solid #E7EFE0;">
+<div class="tab-pane" id="{{=('SecondStage_' + PredictionFormId)}}" style="border: 2px solid #E7EFE0;">
 {{keylist = PositionPredictionData.keys()}}
 {{keylist.sort()}}
 
@@ -142,7 +142,7 @@ $(document).ready(function()
             {{pass}}
             
             <td>{{=predData['team1_desc']}}
-                {{aName1 = "pos_%s_team1" % predData['fixture_id']}}
+                {{aName1 = "%s_pos_%s_team1" % (PredictionFormId, predData['fixture_id'])}}
                 <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test">
                 {{for aTeamData in predData['possible_team1']:}}
                     {{if predData['team1_id'] == aTeamData['id'] :}}
@@ -158,7 +158,7 @@ $(document).ready(function()
                 <td>X</td>
                 
                 <td>{{=predData['team2_desc']}}
-                    {{aName2 = "pos_%s_team2" % predData['fixture_id']}}
+                    {{aName2 = "%s_pos_%s_team2" % (PredictionFormId, predData['fixture_id'])}}
                     <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test">
                     {{for aTeamData in predData['possible_team2']:}}
                         {{if predData['team2_id'] == aTeamData['id'] :}}

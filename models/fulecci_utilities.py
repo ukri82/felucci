@@ -9,6 +9,8 @@ def CacheData():
     session.TeamTable = db().select(db.team.ALL).as_dict( key = 'team_id')
     session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
     session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
+    session.PriorPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
+    session.SpotPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "spot").select().as_dict(key = 'match_id')
     
 def ParseResultStr(aResult_in):
     
@@ -16,15 +18,15 @@ def ParseResultStr(aResult_in):
     aTeamIndexStr = ''
     aMatchOrPos = 'match'
     try:
-        matchObj = re.search('match_(\d*)_score(\d)', aResult_in)
-        aMatchIdStr = matchObj.group(1)
-        aTeamIndexStr = matchObj.group(2)
+        matchObj = re.search('([a-zA-Z]+)_match_(\d*)_score(\d)', aResult_in)
+        aMatchIdStr = matchObj.group(2)
+        aTeamIndexStr = matchObj.group(3)
     except AttributeError:
         try:
-            matchObj = re.search('pos_(\d*)_team(\d)', aResult_in)
+            matchObj = re.search('([a-zA-Z]+)_pos_(\d*)_team(\d)', aResult_in)
             aMatchOrPos = 'pos'
-            aMatchIdStr = matchObj.group(1)
-            aTeamIndexStr = matchObj.group(2)
+            aMatchIdStr = matchObj.group(2)
+            aTeamIndexStr = matchObj.group(3)
         except AttributeError:
             logging.error("Error ins parsing the input values. value of aResult_in is %s", str(aResult_in))
     
@@ -44,7 +46,7 @@ def UpdateResults(aParams_in):
         
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aUpdateReq)
          
-        #logger.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
+        logger.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
         
         
         
@@ -84,7 +86,7 @@ def UpdateResults(aParams_in):
                                             team1 = aTeam1,
                                             team2 = aTeam2)
             
-def UpdatePredictions(aUserId_in, aParams_in, aPredictionType_in):
+def UpdatePredictions(aParams_in, aPredictionType_in):
 
     '''
     process each team results for each match
@@ -97,7 +99,11 @@ def UpdatePredictions(aUserId_in, aParams_in, aPredictionType_in):
       
         logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
         if aMatchId not in aPredData:
-            aPredData[aMatchId] = {'team1_goals' : 0, 'team2_goals' : 0, 'team1_id' : 0, 'team2_id' : 0}
+            aCacheTable = session.PriorPredictionTable if aPredictionType_in == "prior" else session.SpotPredictionTable
+            aPredData[aMatchId] = {'team1_goals' : aCacheTable[aMatchId]['team1_goals'],
+                                        'team2_goals' : aCacheTable[aMatchId]['team2_goals'], 
+                                        'team1_id' : aCacheTable[aMatchId]['team1_id'], 
+                                        'team2_id' : aCacheTable[aMatchId]['team2_id']}
         
         if aMatchOrPos == "match":
             if aTeamIndex == 0:
@@ -113,17 +119,23 @@ def UpdatePredictions(aUserId_in, aParams_in, aPredictionType_in):
     for aMatchId, aData in aPredData.items():
     
         db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & 
-                                             (db.match_prediction.predictor_id == aUserId_in) & 
+                                             (db.match_prediction.predictor_id == auth.user) & 
                                              (db.match_prediction.pred_type == aPredictionType_in), 
                                                 match_id = aMatchId, 
                                                 pred_type = aPredictionType_in,
-                                                predictor_id = aUserId_in, 
+                                                predictor_id = auth.user, 
                                                 team1_goals = aData['team1_goals'],
                                                 team2_goals = aData['team2_goals'],
                                                 team1_id = aData['team1_id'],
                                                 team2_id = aData['team2_id']
                                             )
-    
+        # synch back the cache without additional db query
+        aCacheTable = session.PriorPredictionTable if aPredictionType_in == "prior" else session.SpotPredictionTable
+        aCacheTable[aMatchId] = {'team1_goals' : aData['team1_goals'],
+                                 'team2_goals' : aData['team2_goals'],
+                                 'team1_id' : aData['team1_id'],
+                                 'team2_id' : aData['team2_id']
+                                }
 
 def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
     
@@ -161,15 +173,15 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  }
     return aPredData
     
-def GetPredictions(aUserId_in, aPredictionType_in):
+def GetPredictions(aPredictionType_in):
     
-    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == aPredictionType_in).select().as_dict(key = 'match_id')
+    aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
     
     return JoinFixtureWith(aPredTableData)
     
 def JoinFixtureWith(aSourceData_in):
     
-    aFixtureData = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
+    aFixtureData = session.FixtureTable
     
     aResults = dict()
     for fixtureId, aFixtureData in aFixtureData.items():
@@ -188,11 +200,10 @@ def JoinFixtureWith(aSourceData_in):
 
     
     
-def GetPositionPredictions(aUserId_in):
+def GetPositionPredictions():
     
-    #aFixtureData = db(db.fixture.stage != "Group").select().as_dict(key = 'fixture_id')
-    aFixtureData = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
-    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
+    aFixtureData = session.FixtureTable
+    aPredTableData = session.PriorPredictionTable
     
     aPredResults = dict()
     for fixtureId, aFixtureData in aFixtureData.items():
@@ -261,9 +272,9 @@ def GetComments(aTargetType_in, aTargetId_in):
     #logger.info("value of aResults is %s", str(aResults))
     return sorted(aResults, key=lambda k: k['comment']["date_time"])
 
-def SubmitComment(aUserId_in, aTargetType_in, aTargetId_in, aComment_in):
-    #logger.info("value of aUserId_in,aTargetType_in, aTargetId_in, aComment_in  is %s, %s, %s, %s", str(aUserId_in), str(aTargetType_in), str(aTargetId_in), str(aComment_in))
-    db.user_comment.insert(author_id = aUserId_in, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
+def SubmitComment(aTargetType_in, aTargetId_in, aComment_in):
+    #logger.info("value of auth.user,aTargetType_in, aTargetId_in, aComment_in  is %s, %s, %s, %s", str(auth.user), str(aTargetType_in), str(aTargetId_in), str(aComment_in))
+    db.user_comment.insert(author_id = auth.user, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
     
 def ConvertURLArgs(anArgs_in):
     
@@ -301,10 +312,10 @@ def RecreateData(aCSVFileName_in):
     db.import_from_csv_file(aCSVFileName_in)
     CacheData()
 
-def GetActiveBets(aUserId_in):
+def GetActiveBets():
     
     allOpenBets = db(db.bet_offer.bet_state == 'open').select()
-    aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select().as_dict(key = 'bet_id')
+    aUserBetTable = db(db.user_bet.predictor_id == auth.user).select().as_dict(key = 'bet_id')
     
     aBetData = []
     
@@ -324,10 +335,10 @@ def GetActiveBets(aUserId_in):
     return aBetData
     
     
-def GetOldBets(aUserId_in):
+def GetOldBets():
     
     aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
-    aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select()
+    aUserBetTable = db(db.user_bet.predictor_id == auth.user).select()
     
     aUserBetData = []
     for aUserBet in aUserBetTable:
@@ -347,7 +358,7 @@ def GetOldBets(aUserId_in):
         
     return aUserBetData
     
-def UpdateUserBets(aUserId_in, aParams_in):
+def UpdateUserBets(aParams_in):
 
     logger.info("The bet params are : %s", str(aParams_in))
     aAllBetReq = []
@@ -359,7 +370,7 @@ def UpdateUserBets(aUserId_in, aParams_in):
     for aReq in aAllBetReq:
         db.user_bet.update_or_insert((db.user_bet.bet_id == aReq["id"]), 
                                             bet_id = aReq["id"], 
-                                            predictor_id = aUserId_in,
+                                            predictor_id = auth.user,
                                             points = aReq["points"])
 
 

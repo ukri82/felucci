@@ -5,8 +5,7 @@ function initializeValues(aPredFormId_in)
 {
     var $form = $(aPredFormId_in);
     
-    startItems = convertSerializedArrayToHash($form.serializeArray()); 
-    theStartItemsDict[aPredFormId_in] = startItems;
+    theStartItemsDict[$form.attr("id")] = convertSerializedArrayToHash($form.serializeArray()); 
     
     Object.size = function(obj) {
         var size = 0, key;
@@ -15,7 +14,6 @@ function initializeValues(aPredFormId_in)
         }
         return size;
     };
-
 }
 
 
@@ -29,7 +27,7 @@ function submitForm(aPredFormId_in){
     
     var currentItems = convertSerializedArrayToHash($form.serializeArray());
     
-    var itemsToSubmit = hashDiff( theStartItemsDict[aPredFormId_in], currentItems);
+    var itemsToSubmit = hashDiff( theStartItemsDict[$form.attr("id")], currentItems);
     
     if (Object.size(itemsToSubmit) > 0)
     {
@@ -56,7 +54,7 @@ function submitForm(aPredFormId_in){
         request.always(function () {
             // reenable the inputs
             $inputs.prop("disabled", false);
-            startItems = convertSerializedArrayToHash($form.serializeArray());
+            theStartItemsDict[aPredFormId_in] = convertSerializedArrayToHash($form.serializeArray());
         });
     }
     return false;
