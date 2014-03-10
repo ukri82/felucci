@@ -27,16 +27,21 @@ def index():
 def get_prior_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetPriorPredictions(auth.user.id), 
+    return dict(MacthPredictionData = GetPredictions(auth.user.id, "prior"), 
                 PositionPredictionData = GetPositionPredictions(auth.user.id), 
                 SubmitButtonText = "Submit Prior Predictions",
-                SubmitURL = "submit_predictions"
+                SubmitURL = "submit_prior_predictions",
+                PredictionFormId = "PriorPredictionFormId"
                 )
 @auth.requires_login()
 def get_spot_predictions():
     
-    response.view = 'default/user_spot_predictions.html'
-    return dict()
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetPredictions(auth.user.id, "spot"), 
+                SubmitButtonText = "Submit Spot Predictions",
+                SubmitURL = "submit_spot_predictions",
+                PredictionFormId = "SpotPredictionFormId"
+                )
     
 @auth.requires_login()
 def get_predictions():
@@ -52,7 +57,8 @@ def get_results():
     return dict(MacthPredictionData = GetResults(), 
                 PositionPredictionData = GetPositionPredictions(auth.user.id),
                 SubmitButtonText = "Submit Results",
-                SubmitURL = "submit_results"
+                SubmitURL = "submit_results",
+                PredictionFormId = "ResultFormId"
                 )
                 
   
@@ -114,9 +120,18 @@ def get_newsfeed():
     return dict()
     
 @auth.requires_login()  
-def submit_predictions():
+def submit_prior_predictions():
    
     UpdatePredictions(auth.user.id, request.vars, "prior")
+    
+    response.flash = T("Predictions updated...")
+    
+    return get_predictions()
+    
+@auth.requires_login()  
+def submit_spot_predictions():
+   
+    UpdatePredictions(auth.user.id, request.vars, "spot")
     
     response.flash = T("Predictions updated...")
     

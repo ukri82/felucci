@@ -1,12 +1,13 @@
-var startItems;
 var request;
+var theStartItemsDict = {};
 
-function initializeValues()
+function initializeValues(aPredFormId_in)
 {
-   var $form = $("#PredictionForm");
-
+    var $form = $(aPredFormId_in);
+    
     startItems = convertSerializedArrayToHash($form.serializeArray()); 
-
+    theStartItemsDict[aPredFormId_in] = startItems;
+    
     Object.size = function(obj) {
         var size = 0, key;
         for (key in obj) {
@@ -18,16 +19,17 @@ function initializeValues()
 }
 
 
-function submitForm(){
+function submitForm(aPredFormId_in){
     if (request) {
         request.abort();
     }
     
-    var $form = $("#PredictionForm");
+    var $form = $(aPredFormId_in);
     var $inputs = $form.find("input, select, button, textarea");
     
     var currentItems = convertSerializedArrayToHash($form.serializeArray());
-    var itemsToSubmit = hashDiff( startItems, currentItems);
+    
+    var itemsToSubmit = hashDiff( theStartItemsDict[aPredFormId_in], currentItems);
     
     if (Object.size(itemsToSubmit) > 0)
     {

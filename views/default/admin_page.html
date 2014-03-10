@@ -5,10 +5,10 @@
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4>{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
       <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i>Results</a></li>
-      <li><a href="#Database"  data-toggle="tab"><i class="icon-book"></i> Database </a></li>
-      <li><a href="#ActiveBets"  data-toggle="tab"><i class="icon-briefcase"></i> Bets </a></li>
+      <li><a href="#Database"  data-toggle="tab" ><i class="icon-book"></i> Database </a></li>
+      <li><a href="#ActiveBets"  data-toggle="tab" onclick="$.web2py.component('default/get_bet_admin', 'ActiveBets');"><i class="icon-briefcase"></i> Bets </a></li>
       <li class="divider"></li>
-      <li><a href="#Help"  data-toggle="tab"><i class="icon-flag"></i> Help</a></li>
+      <li><a href="#Help"  data-toggle="tab" onclick="$.web2py.component('default/get_help', 'Help');"><i class="icon-flag"></i> Help</a></li>
 </ul>
 
 </div>
@@ -30,10 +30,10 @@
 
 </div>
 <div class="tab-pane" id="ActiveBets">
-{{=LOAD('default','get_bet_admin',ajax=True)}}
+
 </div>
 <div class="tab-pane" id="Help">
-{{=LOAD('default','get_help',ajax=True)}}
+
 </div>
 
 </div>

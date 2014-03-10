@@ -161,9 +161,9 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  }
     return aPredData
     
-def GetPriorPredictions(aUserId_in):
+def GetPredictions(aUserId_in, aPredictionType_in):
     
-    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
+    aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == aPredictionType_in).select().as_dict(key = 'match_id')
     
     return JoinFixtureWith(aPredTableData)
     

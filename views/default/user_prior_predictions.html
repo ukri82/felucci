@@ -27,11 +27,11 @@
 <script>
 $(document).ready(function() 
 {
-    initializeValues();
+    initializeValues({{=PredictionFormId}});
 });
 </script>
 
-<form action = "/fulecci/default/{{=SubmitURL}}" id = "PredictionForm" method="post">
+<form action = "/fulecci/default/{{=SubmitURL}}" id = "{{=PredictionFormId}}" method="post">
 
 <table>
 <tbody>
@@ -48,7 +48,7 @@ $(document).ready(function()
         {{index = 0}}
         {{for aGroupName in keylist:}}
             {{aLinkTxt = GetTextForGroup(aGroupName)}}
-            {{aLinkName = 'Group' + aGroupName}}
+            {{aLinkName = PredictionFormId + '_Group_' + aGroupName}}
             
             {{if index == 0 :}}
                 <li class="active"><a href="#{{=aLinkName}}" data-toggle="pill" style = "font-size: 12px;"><b>{{=aLinkTxt}}</b></a></li>
@@ -70,7 +70,7 @@ $(document).ready(function()
 {{index = 0}}
  
 {{for aGroupName in keylist:}}
-    {{aLinkName = 'Group' + aGroupName}}
+    {{aLinkName = PredictionFormId + '_Group_' + aGroupName}}
     {{if index == 0 :}}
         <div class="tab-pane active" id="{{=aLinkName}}" style="border: 2px solid #E7EFE0;">
     {{else:}}
@@ -191,7 +191,7 @@ $(document).ready(function()
 <tr >
 <td style = "text-align:center;">
 
-<input type="button" value="{{=SubmitButtonText}}" onclick="submitForm(); return false;">
+<input type="button" value="{{=SubmitButtonText}}" onclick="submitForm({{=PredictionFormId}}); return false;">
 <input type="reset" value="Reset all values" >
 
 </td>
