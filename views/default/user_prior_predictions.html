@@ -72,9 +72,9 @@ $(document).ready(function()
 {{for aGroupName in keylist:}}
     {{aLinkName = PredictionFormId + '_Group_' + aGroupName}}
     {{if index == 0 :}}
-        <div class="tab-pane active" id="{{=aLinkName}}" style="border: 2px solid #E7EFE0;">
+        <div class="tab-pane active" id="{{=aLinkName}}" style="border: 2px solid #959B90;">
     {{else:}}
-        <div class="tab-pane" id="{{=aLinkName}}" style="border: 2px solid #E7EFE0;">
+        <div class="tab-pane" id="{{=aLinkName}}" style="border: 2px solid #959B90;">
     {{pass}}
                      
 <table class="table1">
@@ -126,13 +126,13 @@ $(document).ready(function()
 
 
 {{if 'PositionPredictionData' in vars():}}
-<div class="tab-pane" id="{{=('SecondStage_' + PredictionFormId)}}" style="border: 2px solid #E7EFE0;">
+<div class="tab-pane" id="{{=('SecondStage_' + PredictionFormId)}}" style="border: 2px solid #959B90;">
 {{keylist = PositionPredictionData.keys()}}
 {{keylist.sort()}}
 
 {{for aStage in keylist:}}
 {{aStagePredictionData = PositionPredictionData[aStage]}}
-<div id="StageData" style="border: 2px solid #E7EFE0;">
+<div id="StageData" style="border: 2px solid #959B90;">
     <h4 style = "text-align:center;">{{=GetTextForGroup(aStage)}}</h4>
     <table class="table1">
         {{for predData in aStagePredictionData:}}
