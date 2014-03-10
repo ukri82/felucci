@@ -70,11 +70,11 @@
   {{block head}}{{end}}
 </head>
 
-<body style="background-image: linear-gradient(rgb(34, 34, 34), rgb(176, 197, 15));color: #FFF;">
+<body style="background-color: rgb(64, 68, 22);color: #FFF;">
   <!-- Navbar ================================================== -->
   <div class="navbar navbar-inverse">
     <div class="flash">{{=response.flash or ''}}</div>
-    <div class="navbar-inner" style="background-image: linear-gradient(rgb(34, 34, 34), rgb(239, 255, 118));">
+    <div class="navbar-inner" style="background: rgb(79, 90, 44);">
       <div class="container">
         {{is_mobile=request.user_agent().is_mobile}}
         <!-- the next tag is necessary for bootstrap menus, do not remove -->
@@ -111,7 +111,7 @@
 	{{pass}}
     </header>
 
-    <section id="main" class="main row">
+    <section id="main" class="main row" style="background-color: rgb(225, 235, 195);color: rgb(0, 0, 0);">
         {{if left_sidebar_enabled:}}
         <div class="span3 left-sidebar">
             {{block left_sidebar}}

@@ -2,13 +2,13 @@
 <div class="container">
 <div class="span2 left-sidebar">
 <ul class="nav nav-list" data-tabs="tabs" id="AdminTabs">
-      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4>{{=auth.user.nickname}}</h4></li>
+      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2)">{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
-      <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i>Results</a></li>
-      <li><a href="#Database"  data-toggle="tab" ><i class="icon-book"></i> Database </a></li>
-      <li><a href="#ActiveBets"  data-toggle="tab" onclick="$.web2py.component('default/get_bet_admin', 'ActiveBets');"><i class="icon-briefcase"></i> Bets </a></li>
+      <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i> <b>Results</b></a></li>
+      <li><a href="#Database"  data-toggle="tab" ><i class="icon-book"></i> <b>Database </a></li>
+      <li><a href="#ActiveBets"  data-toggle="tab" onclick="$.web2py.component('default/get_bet_admin', 'ActiveBets');"><i class="icon-briefcase"></i> <b>Bets </b></a></li>
       <li class="divider"></li>
-      <li><a href="#Help"  data-toggle="tab" onclick="$.web2py.component('default/get_help', 'Help');"><i class="icon-flag"></i> Help</a></li>
+      <li><a href="#Help"  data-toggle="tab" onclick="$.web2py.component('default/get_help', 'Help');"><i class="icon-flag"></i> <b>Help</a></b></li>
 </ul>
 
 </div>

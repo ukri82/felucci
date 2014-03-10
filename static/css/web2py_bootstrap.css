@@ -141,6 +141,14 @@ textarea { width:90%}
 .dropdown-menu > .active > a > [class*=" icon-"] {
   background-image:url("../images/glyphicons-halflings-white.png");
 }
+
+.nav-list > li > a:hover {
+background-color: #0BCBF0;
+}
+.nav-tabs > li > a:hover {
+background-color: #E6F8A7;
+}
+
 /* bootstrap has a label as input's wrapper while web2py has a div */
 div>input[type="radio"],div>input[type="checkbox"]{margin:0;}
 /* bootstrap has button instead of input */
@@ -231,7 +239,7 @@ td.w2p_fw ul{margin-left:0px;}
 div.controls .error {
     width: auto;
 }
-
+/*
 .nav-tabs>.active>a{
 padding:15px;
     color:#fff;
@@ -252,7 +260,9 @@ padding:15px;
     -moz-border-radius:5px 5px 0px 0px;
     border-top-left-radius:5px;
     border-top-right-radius:5px;}
+*/
 
+/*
 .nav-tabs > li > a{padding:15px;
     color:#fff;
     text-shadow:1px 1px 1px #568F23;
@@ -272,7 +282,19 @@ padding:15px;
     -moz-border-radius:5px 5px 0px 0px;
     border-top-left-radius:5px;
     border-top-right-radius:5px;}
+*/
+.nav-tabs > li > a{
+    background: none repeat scroll 0 0 #CEE7A2;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 0 0 1px #FFFFFF inset, 0 1px 2px rgba(0, 0, 0, 0.2);
+    color: #354121;
+}
 
+.nav-tabs>.active>a{
+    background: none repeat scroll 0 0 #D5F566;
+ }
+
+    /*
 .nav-list>.active>a, .nav-list>.active>a:hover, .nav-list>.active>a:focus {
 color: #fff;
 text-shadow: 0 -1px 0 rgba(0,0,0,0.2);
@@ -284,7 +306,12 @@ font-weight:bold;
 color:#fff;
 text-shadow: 0 -1px 0 rgba(0,0,0,0);
 font-weight:bold;
+}*/
+
+a {
+color: #15660A;
 }
+
 /*=============================================================
                        MEDIA QUERIES
 ==============================================================*/
