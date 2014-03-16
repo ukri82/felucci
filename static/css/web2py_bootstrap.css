@@ -4,6 +4,10 @@
 
 body{height:auto;} /* to avoid vertical scroll bar */
 
+.nav-list>.active>a, .nav-list>.active>a:hover, .nav-list>.active>a:focus {
+background-color: #40720A;
+}
+
 a{}
 a:visited{}
 a:hover{}
@@ -143,7 +147,7 @@ textarea { width:90%}
 }
 
 .nav-list > li > a:hover {
-background-color: #0BCBF0;
+background-color: #A7CEA7;
 }
 .nav-tabs > li > a:hover {
 background-color: #E6F8A7;

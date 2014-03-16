@@ -398,6 +398,150 @@ def UpdateAdminBets(aParams_in):
                                             bet_result = aVal["result"])
 
 
+def GetUserNotifications():
+    
+    allMessages = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).select()
+    
+    aMessageData = []
+    for aMessageItem in allMessages:
+        aMessage = {"id" : aMessageItem.id,
+                        "date_time" : aMessageItem.date_time,
+                        "source_id" : db.auth_user[aMessageItem.source_id].first_name,
+                        "subject" : aMessageItem.subject,
+                        "notification_body" : aMessageItem.notification_body,
+                        "read_state" : aMessageItem.read_state
+                        }
+        aMessageData.append(aMessage)
+    
+    return sorted(aMessageData, key=lambda k: k["date_time"])
+    
+def ReadNotification(aNotificationId_in):
+    
+    
+    db(db.notification.id == aNotificationId_in).update(read_state = "opened")
+    
+def DeleteNotification(aNotificationId_in):
+    
+    db(db.notification.id == aNotificationId_in).update(read_state = "deleted")    
+
+
+def GetLeagues():  
+    aUserLeagues = GetUserLeagues()
+    anAllLeaguesOrig = GetAllLeagues()
+    anAllLeagues = []
+    for aLeague in anAllLeaguesOrig:
+        if next((item for item in aUserLeagues if item["league_id"] == aLeague["league_id"]), None) == None:
+            anAllLeagues.append(aLeague)
+    anAdminLeagues = GetAdminLeagues()
+    
+    return aUserLeagues, anAllLeagues, anAdminLeagues
+    
+def GetUserLeagues():
+
+    allUserLeagues = db(db.league_member.member_id == auth.user.id & ~(db.league_member.membership_state == "removed")).select()
+    
+    aLeagueData = []
+    for aLeague in allUserLeagues:
+        aLeagueDetails = db(db.league.id == aLeague.league_id).select()[0]
+        if aLeagueDetails.league_state != "deleted":
+            aNumMembers = len(db(db.league_member.league_id == aLeague.league_id).select())
+            aLeagueItem = {"league_id" : aLeagueDetails.id,
+                            "league_member_id" : aLeague.id,
+                            "league_name" : aLeagueDetails.name,
+                            "owner_id" : aLeagueDetails.owner_id,
+                            "owner_name" : db.auth_user[aLeagueDetails.owner_id].first_name,
+                            "membership_state" : aLeague.membership_state,
+                            "num_members" : aNumMembers
+                            }
+            aLeagueData.append(aLeagueItem)
+    
+    
+    return aLeagueData   
+    
+def GetAdminLeagues():
+
+    allAdminLeagues = db(db.league.owner_id == auth.user.id).select()
+    
+    aLeagueData = []
+    for aLeague in allAdminLeagues:
+        aMembers = db(db.league_member.league_id == aLeague.id).select()
+        
+        aMemberData = []
+        for aMember in aMembers:
+            aMemberItem = {"id" : aMember.id,
+                            "member_id" : aMember.member_id,
+                            "member_name" : db.auth_user[aMember.member_id].first_name,
+                            "membership_state" : aMember.membership_state
+                        }
+            aMemberData.append(aMemberItem)
+            
+        aLeagueItem = {"league_id" : aLeague.id,
+                        "league_name" : aLeague.name,
+                        "league_desc" : aLeague.league_desc,
+                        "league_state" : aLeague.league_state,
+                        "all_members" : aMemberData
+                        }         
+        aLeagueData.append(aLeagueItem)
+    
+    
+    return aLeagueData 
+    
+def GetAllLeagues():
+
+    allLeagues = db(db.league.league_state != "deleted").select()   
+    
+    aLeagueData = []
+    for aLeague in allLeagues:
+        aNumMembers = len(db(db.league_member.league_id == aLeague.id).select())
+        aLeagueItem = {"league_id" : aLeague.id,
+                        "league_name" : aLeague.name,
+                        "league_desc" : aLeague.league_desc,
+                        "owner_id" : aLeague.owner_id,
+                        "owner_name" : db.auth_user[aLeague.owner_id].first_name,
+                        "num_members" : aNumMembers
+                        }
+        aLeagueData.append(aLeagueItem)
+
+    return aLeagueData 
+
+def JoinLeague(aLeagueId_in):
+    
+    db.league_member.insert(league_id = aLeagueId_in, member_id = auth.user.id, membership_state = 'pending')   
+    aLeagueDetails = db(db.league.id == aLeagueId_in).select()[0]
+    db.notification.insert(source_id = auth.user.id, traget_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
+                            subject = 'I want to join your league', notification_body = 'Please approve', read_state = 'unopened')   
+
+def LeaveLeague(aLeagueMemberId_in):
+    
+    db(db.league_member.id == aLeagueMemberId_in).update(membership_state = "removed") 
+
+
+def ModifyMembership(aMembershipId_in, aNewState_in, aBody_in):
+    aMembershipDetails = db.league_member[aMembershipId_in]
+    aMembershipDetails.update_record(membership_state = aNewState_in)
+    
+    db.notification.insert(source_id = auth.user.id, traget_id = aMembershipDetails.member_id, date_time = datetime.datetime.now(),
+                            subject = '[%s] : %s' % (db.league[aMembershipDetails.league_id].name, aNewState_in), notification_body = aBody_in, read_state = 'unopened')
+
+
+def ModifyLeagueState(aLeagueId_in, aState_in):
+    
+    db(db.league.id == aLeagueId_in).update(league_state = aState_in)
+
+def CreateLeague(aLeagueName_in, aLeagueDesc_in):
+    
+    db.league.insert(owner_id = auth.user.id, name = aLeagueName_in, league_desc = aLeagueDesc_in, league_state = 'active')   
+
+def AddUserToLeague(aLeagueId_in, aUserId_in):
+    db.league_member.insert(league_id = aLeagueId_in, member_id = aUserId_in, membership_state = 'approved')
+    db.notification.insert(source_id = auth.user.id, traget_id = aUserId_in, date_time = datetime.datetime.now(),
+                            subject = '[%s] : added to league' % db.league[aLeagueId_in].name, notification_body = "Happy to inform that you have been added to the league", read_state = 'unopened')
+    
+def GetUsersStartingWith(aFirstPart_in):
+    anAllUsers = db().select(db.auth_user.ALL)
+    selected = [{'id': m['id'], 'name' : m['first_name']} for m in anAllUsers if bool(re.match(aFirstPart_in, m['first_name'], re.I))]
+    
+    return selected
 
 
 
@@ -406,5 +550,9 @@ def UpdateAdminBets(aParams_in):
 
 
 
+
+
+
+                            
     
     

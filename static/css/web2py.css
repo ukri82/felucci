@@ -342,6 +342,28 @@ li.w2p_grid_breadcrumb_elem {
         font-weight: bold; 
         color: rgb(81, 92, 70);
 	}
+    
+table.mail_table { 
+		width: 100%; 
+		border-collapse: collapse; 
+	}
+	/* Zebra striping */
+	.mail_table tr:nth-of-type(odd) { 
+		background: #ECF0C5; 
+	}
+	.mail_table th { 
+		background: #91A762; 
+		color: white; 
+		font-weight: bold; 
+        text-align:center;
+	}
+	.mail_table td{ 
+		padding: 6px; 
+		border: 1px solid #ccc; 
+		text-align: center; 
+        color: rgb(81, 92, 70);
+	}
+    
 
 .w2p_fw {padding: 5px;}
 

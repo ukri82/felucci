@@ -7,6 +7,8 @@
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2);">{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
       <li class="active" ><a href="#UserHome"  data-toggle="tab"><i class="icon icon-home"></i> <b> Home </b></a></li>
+      <li><a href="#UserNotifications"  data-toggle="tab"  onclick="$.web2py.component('default/get_notifications', 'UserNotifications');"><i class="icon icon-envelope"></i> <b> Notifications </b></a></li>
+      <li><a href="#UserLeagues"  data-toggle="tab"  onclick="$.web2py.component('default/get_leagues', 'UserLeagues');"><i class="icon icon-book"></i> <b> Leagues</b></a></li>
       <li><a href="#UserStatistics"  data-toggle="tab"  onclick="$.web2py.component('default/get_stats', 'UserStatistics');"><i class="icon icon-book"></i> <b> Statistics</b></a></li>
       <li><a href="#UserPredictions"  data-toggle="tab" onclick="$.web2py.component('default/get_predictions', 'UserPredictions');"><i class="icon icon-pencil"></i> <b>Predictions</b></a></li>
       <li><a href="#UserBets"  data-toggle="tab" onclick="$.web2py.component('default/get_user_bets', 'UserBets');"><i class="icon icon-briefcase"></i> <b>Bets</b></a></li>
@@ -28,7 +30,15 @@
 {{=LOAD('default','get_newsfeed',ajax=True, ajax_trap=True, target = "UserHome")}}
 </div>
 
+<div class="tab-pane" id="UserLeagues">
+
+</div>
+
 <div class="tab-pane" id="UserStatistics">
+
+</div>
+
+<div class="tab-pane" id="UserNotifications">
 
 </div>
 

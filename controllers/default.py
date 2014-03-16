@@ -192,12 +192,116 @@ def submit_bets():
     return get_user_bets_active()
  
 @auth.requires_login() 
+def profile():
+    response.view = 'default/user_profile.html'
+    return dict(form=auth.profile())
+
+@auth.requires_login()    
+def get_notifications():
+    response.view = 'default/user_notifications.html'
+    return dict(Notifications = GetUserNotifications()) 
+    
+@auth.requires_login()    
+def read_notification():
+    ReadNotification(request.vars.Id)
+    return dict() 
+    
+@auth.requires_login()    
+def delete_notification():
+    DeleteNotification(request.vars.Id)
+    return dict()     
+    
+    
+@auth.requires_login()    
+def get_leagues():
+    response.view = 'default/user_leagues.html'
+    aUserLeagueData, aAllLeagueData, aAdminLeagues = GetLeagues()
+    return dict(UserLeagueData = aUserLeagueData, AllLeagueData = aAllLeagueData, AdminLeagues = aAdminLeagues)   
+    
+@auth.requires_login()    
+def join_league():
+    JoinLeague(request.vars.Id)
+    response.flash = T("A request is posted to the league admin...")
+    return get_leagues()
+  
+@auth.requires_login()    
+def leave_league():
+    logger.info("leave %s", request.vars.Id)
+    LeaveLeague(request.vars.Id)
+    response.flash = T("Left the league...")
+    return get_leagues()
+
+@auth.requires_login()    
+def approve_membership():
+    ModifyMembership(request.vars.Id, 'approved', 'Your membership request is approved')
+    response.flash = T("Approved the membership...")
+    return get_leagues()
+    
+@auth.requires_login()    
+def reject_membership():
+    ModifyMembership(request.vars.Id, 'rejected', 'Your membership request is rejected')
+    response.flash = T("Rejected the membership...")
+    return get_leagues()
+
+@auth.requires_login()    
+def remove_membership():
+    ModifyMembership(request.vars.Id, 'removed', 'Your membership request is removed')
+    response.flash = T("Removed the membership...")
+    return get_leagues()
+    
+@auth.requires_login()    
+def rejoin_membership():
+    ModifyMembership(request.vars.Id, 'approved', 'Your membership request is approved')
+    response.flash = T("Rejoined the membership...")
+    return get_leagues()
+
+@auth.requires_login()    
+def delete_league():
+    ModifyLeagueState(request.vars.Id, "deleted")
+    response.flash = T("Deleted the league...")
+    return get_leagues()
+    
+@auth.requires_login()    
+def activate_league():
+    ModifyLeagueState(request.vars.Id, "active")
+    response.flash = T("Activated the league...")
+    return get_leagues()
+    
+    
+@auth.requires_login()    
+def create_league():
+    CreateLeague(request.vars.LeagueName, request.vars.LeagueDesc)
+    response.flash = T("Created the league...")
+    return get_leagues()
+
+@auth.requires_login()    
+def add_user_to_leage():
+    AddUserToLeague(request.vars.LeagueId, request.vars.UserId)
+    response.flash = T("User is added...")
+    return get_leagues()
+
+@auth.requires_login()    
+def name_suggestions():
+    
+    selected = GetUsersStartingWith(request.vars.LeagueUserAddInput)
+    return DIV(*[DIV(k['name'],
+                     _onclick="jQuery('#LeagueUserAddInput_%s').val('%s');jQuery('#LeagueUserAddInputIdHidden').val('%s');jQuery('#UserSearchUpdateId_%s').hide()" % 
+                     (request.vars.LeagueId, k['name'], k['id'], request.vars.LeagueId),
+                     _onmouseover="this.style.backgroundColor='yellow'",
+                     _onmouseout="this.style.backgroundColor='white'"
+                     ) for k in selected]) 
+
+
+    
+#   Admin stuff
+
+@auth.requires_membership('admin')
 def get_bet_admin():
     response.view = 'default/admin_global_bets.html'
     anActiveBets = GetActiveBetsAdmin()
     return dict(ActiveBets = anActiveBets)  
     
-@auth.requires_login()
+@auth.requires_membership('admin')
 def submit_admin_bets():
     UpdateAdminBets(request.vars)
     
@@ -206,12 +310,12 @@ def submit_admin_bets():
     return get_bet_admin()
     
     
-@auth.requires_login()
+@auth.requires_membership('admin')
 def admin_page():
     response.view = 'default/admin_page.html'
     return dict()
     
-@auth.requires_login()
+@auth.requires_membership('admin')
 def submit_results():
     UpdateResults(request.vars)
     
@@ -219,12 +323,9 @@ def submit_results():
     
     return get_results()
 
- 
-@auth.requires_login() 
-def profile():
-    response.view = 'default/user_profile.html'
-    return dict(form=auth.profile())
-     
+#admin stuff ends.
+
+    
 def user():
     """
     exposes:

@@ -197,6 +197,30 @@ db.define_table('user_bet',
     redefine=migrate_flag
 )
 
+db.define_table('league',
+    Field('owner_id',db.auth_user),
+    Field('name','string', length=50),
+    Field('league_desc','string', length=300),
+    Field('league_state','string', length=10, requires=IS_IN_SET(('active','deleted'))),
+    redefine=migrate_flag
+)
+
+db.define_table('league_member',
+    Field('league_id',db.league),
+    Field('member_id',db.auth_user),
+    Field('membership_state','string', length=10, requires=IS_IN_SET(('pending','approved','rejected','removed'))),
+    redefine=migrate_flag
+)
+
+db.define_table('notification',
+    Field('source_id',db.auth_user),
+    Field('traget_id',db.auth_user),
+    Field('date_time','datetime'),
+    Field('subject','string', length=200),
+    Field('notification_body','text'),
+    Field('read_state','string', length=10, requires=IS_IN_SET(('unopened','opened','deleted'))),
+    redefine=migrate_flag
+)
 
 
 '''

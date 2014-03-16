@@ -1,0 +1,65 @@
+
+<div id="NotificationsArea" class="comments-area">
+<h4 style="text-align:center;font-weight: bold; ">Messages</h4>
+
+<ol class="commentlist" id="NotificationsList"> 
+<table class="mail_table">
+<thead>
+    <th>Notification</th>
+    <th>From</th>
+    <th>Date</th>
+    <th>Delete</th>
+</thead>
+<tbody>
+{{for item in Notifications:}}
+    {{aBoldStyle = ""}}
+        {{if item['read_state'] == 'unopened':}}
+            {{aBoldStyle = "font-weight:bold;"}}
+        {{pass}}
+    <tr style="{{=aBoldStyle}}">
+    <td style="width: 60%">
+        
+        <a href="#" id="NotificationTitleItem_{{=item['id']}}" >{{=item['subject']}} </a>
+        <li class="comment even thread-even depth-1" id="NotificationBody_{{=item['id']}}" style="display:none;">
+            <article id="NotificationBodyItem_{{=item['id']}}" class="comment">
+                <div class="comment-content"><p>{{=item['notification_body']}}</p></div>
+            </article>
+        </li>
+    </td>
+    <td style="width: 15%">
+        {{=item['source_id']}}
+    </td>
+    <td style="width: 20%">
+        {{=item['date_time']}}
+    </td>
+    <td style="width: 5%">
+        <a href="#" id="NotificationDeleteItem_{{=item['id']}}" class="icon icon-trash" title="Delete"></a>
+    </td>
+    </tr>
+    <script>
+    $('#NotificationTitleItem_{{=item['id']}}').click(function() {
+        jQuery('#NotificationBody_{{=item['id']}}').slideToggle(); 
+        $(this).parent().parent().css('fontWeight', 'normal');
+        $.ajax({  type: "POST",  
+                    url: '{{=URL('read_notification')}}',  
+                    data: { Id: '{{=item['id']}}'}}); 
+        return false;
+     });
+     
+     $('#NotificationDeleteItem_{{=item['id']}}').click(function() {
+        $.ajax({  type: "POST",  
+                    url: '{{=URL('delete_notification')}}',  
+                    data: { Id: '{{=item['id']}}'}})  
+                    .done(function( msg ) {
+                        $('#NotificationBody_{{=item['id']}}').parent().parent().remove(); 
+                    }); 
+        return false;
+     });
+     
+   </script>     
+{{pass}}	
+</tbody>
+</table>
+ </ol>
+  
+</div>
