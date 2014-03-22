@@ -8,19 +8,23 @@
         {{if LeagueDetail['league_state'] == 'active':}}
         <a href="#" id="AdminLeageDelete_{{=LeagueDetail['league_id']}}" class="icon icon-trash" title="Delete"></a>
         <script>
-            attatchAjax('#AdminLeageDelete_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('delete_league')}}', '#AdminLeaguesArea');                
+            $('#AdminLeageDelete_{{=LeagueDetail['league_id']}}').ready(function() {
+                attatchAjax('#AdminLeageDelete_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('delete_league')}}', '#' + $('#AdminLeageDelete_{{=LeagueDetail['league_id']}}').parent().parent().parent().attr('id'));
+            });
         </script>
         {{else:}}
         <a href="#" id="AdminLeageActivate_{{=LeagueDetail['league_id']}}" class="icon icon-user" title="Activate"></a>
         <script>
-            attatchAjax('#AdminLeageActivate_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('activate_league')}}', '#AdminLeaguesArea');                
+            $('#AdminLeageActivate_{{=LeagueDetail['league_id']}}').ready(function() {
+                attatchAjax('#AdminLeageActivate_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('activate_league')}}', '#' + $('#AdminLeageActivate_{{=LeagueDetail['league_id']}}').parent().parent().parent().attr('id'));
+            });
         </script>
         {{pass}}
     </td>
 </tr>
 <tr>
 <td>
-<form id="LeagueAddForm">
+<form id="LeagueAddForm_{{=LeagueDetail['league_id']}}">
 
 <table style="border-collapse:collapse">
 <tr>
@@ -34,44 +38,46 @@
 </tr>
 </table>
 <script>
-            $('#LeagueUserAddButton_{{=LeagueDetail['league_id']}}').click(function() {
-                $.ajax({  type: "POST",  
-                    url: '{{=URL('add_user_to_leage')}}',  
-                    data: { LeagueId: {{=LeagueDetail['league_id']}}, UserId: $('#LeagueUserAddInputIdHidden').val() }}).done(function( data ) {
-                            $('#LeagueUserAddInputIdHidden').val("");
-                            $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val("");
-                            });  
-                return false;
-            });
-            $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").keyup(function (e){
-                $('#LeagueUserAddInputIdHidden').val('');
-                $.ajax({  type: "POST",  
-                    url: '{{=URL('name_suggestions')}}',  
-                    data: { LeagueId: {{=LeagueDetail['league_id']}}, LeagueUserAddInput: $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val() }})
-                    .done(function( data ) {
-                            if(data != "<div></div>")
-                            {
-                                $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').html(data);
-                                $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').show();
-                                aPos = $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').position();
-                                $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').css('top', aPos.top + 10 + $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').height());
-                                $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').css('width', $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').width());
-                            }
-                            else
-                            {
-                                $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').hide();
-                            }
-                                                       
-                    }); 
-                
-            });
-            $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").focusout(function (e){
-                /*alert(e.currentTarget.nodeName);
-                if($('div:focus') != $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}') && $('#LeagueUserAddInputIdHidden').val() == '')
-                {
-                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').hide();
-                    $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val('');
-                }*/
+            $('#LeagueAddForm_{{=LeagueDetail['league_id']}}').ready(function() {
+            
+                $('#LeagueUserAddButton_{{=LeagueDetail['league_id']}}').click(function() {
+                    $.ajax({  type: "POST",  
+                        url: '{{=URL('add_user_to_leage')}}',  
+                        data: { Id: {{=LeagueDetail['league_id']}}, UserId: $('#LeagueUserAddInputIdHidden').val() }}).done(function( data ) {
+                                $('#LeagueAddForm_{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
+                                });  
+                    return false;
+                });
+                $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").keyup(function (e){
+                    $('#LeagueUserAddInputIdHidden').val('');
+                    $.ajax({  type: "POST",  
+                        url: '{{=URL('name_suggestions')}}',  
+                        data: { LeagueId: {{=LeagueDetail['league_id']}}, LeagueUserAddInput: $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val() }})
+                        .done(function( data ) {
+                                if(data != "<div></div>")
+                                {
+                                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').html(data);
+                                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').show();
+                                    aPos = $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').position();
+                                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').css('top', aPos.top + 10 + $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').height());
+                                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').css('width', $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').width());
+                                }
+                                else
+                                {
+                                    $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').hide();
+                                }
+                                                           
+                        }); 
+                    
+                });
+                $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").focusout(function (e){
+                    /*alert(e.currentTarget.nodeName);
+                    if($('div:focus') != $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}') && $('#LeagueUserAddInputIdHidden').val() == '')
+                    {
+                        $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').hide();
+                        $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val('');
+                    }*/
+                });
             });
 
 </script>
@@ -97,15 +103,45 @@
             <td > <a href="#" id="AdminLeageApprove_{{=item['id']}}" class="icon icon-user" title="Approve"></a>   </td>
             <td > <a href="#" id="AdminLeageReject_{{=item['id']}}" class="icon icon-user" title="Reject"></a>   </td>
             <script>
-                attatchAjax('#AdminLeageApprove_{{=item['id']}}', '{{=item['id']}}', '{{=URL('approve_membership')}}', '#AdminLeaguesArea');
-                attatchAjax('#AdminLeageReject_{{=item['id']}}', '{{=item['id']}}', '{{=URL('reject_membership')}}', '#AdminLeaguesArea');                
+                $('#AdminLeageApprove_{{=item['id']}}').ready(function() {
+                    $('#AdminLeageApprove_{{=item['id']}}').click(function() {
+                        $.ajax({  type: "POST",  
+                                    url: '{{=URL('approve_membership')}}',  
+                                    data: { Id:'{{=LeagueDetail['league_id']}}',
+                                            ItemId: '{{=item['id']}}'}}).done(function( data ) {
+                                            $('#admin_leagues_table__{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
+                                            });  
+                        return false;
+                     });
+                });
+                $('#AdminLeageReject_{{=item['id']}}').ready(function() {
+                    $('#AdminLeageReject_{{=item['id']}}').click(function() {
+                        $.ajax({  type: "POST",  
+                                    url: '{{=URL('reject_membership')}}',  
+                                    data: { Id:'{{=LeagueDetail['league_id']}}',
+                                            ItemId: '{{=item['id']}}'}}).done(function( data ) {
+                                            $('#admin_leagues_table__{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
+                                            });  
+                        return false;
+                     });
+                });
             </script>
         {{pass}}
         {{if item['membership_state'] == 'approved':}}
             <td > <a href="#" id="AdminLeageRemove_{{=item['id']}}" class="icon icon-user" title="Remove"></a>   </td>
             <td />
             <script>
-                attatchAjax('#AdminLeageRemove_{{=item['id']}}', '{{=item['id']}}', '{{=URL('remove_membership')}}', '#AdminLeaguesArea');  
+                $('#AdminLeageRemove_{{=item['id']}}').ready(function() {
+                    $('#AdminLeageRemove_{{=item['id']}}').click(function() {
+                        $.ajax({  type: "POST",  
+                                    url: '{{=URL('remove_membership')}}',  
+                                    data: { Id:'{{=LeagueDetail['league_id']}}',
+                                            ItemId: '{{=item['id']}}'}}).done(function( data ) {
+                                            $('#admin_leagues_table__{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
+                                            });  
+                        return false;
+                     });
+                });
             </script>
         {{pass}}
         
@@ -113,8 +149,18 @@
             <td > <a href="#" id="AdminLeageRejoin_{{=item['id']}}" class="icon icon-user" title="Rejoin"></a>   </td>
             <td />
             <script>
-                attatchAjax('#AdminLeageRejoin_{{=item['id']}}', '{{=item['id']}}', '{{=URL('rejoin_membership')}}', '#AdminLeaguesArea');  
-            </script>
+                $('#AdminLeageRejoin_{{=item['id']}}').ready(function() {
+                    $('#AdminLeageRejoin_{{=item['id']}}').click(function() {
+                        $.ajax({  type: "POST",  
+                                    url: '{{=URL('rejoin_membership')}}',  
+                                    data: { Id:'{{=LeagueDetail['league_id']}}',
+                                            ItemId: '{{=item['id']}}'}}).done(function( data ) {
+                                            $('#admin_leagues_table__{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
+                                            });  
+                        return false;
+                     });
+                });
+           </script>
         {{pass}}
         
     </td>

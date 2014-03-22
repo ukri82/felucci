@@ -1,6 +1,7 @@
 <script>
 function attatchAjax(anElementId_in, anItemId_in, aURL_in, aTarget_in)
 {
+    
     $(anElementId_in).click(function() {
         $.ajax({  type: "POST",  
                     url: aURL_in,  

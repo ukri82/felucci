@@ -36,17 +36,13 @@ $.ajax({  type: "POST",
                     url: '{{=URL('get_users_leagues')}}',  
                     data: { Id: {{=aLeagueDetail['league_id']}}}}).done(function( data ) {
                             $('#AdminLeaguesArea_{{=aLeagueDetail['league_id']}}').html(data);
-                            }); 
+    }); 
 </script>
 </div>
 {{else:}}
-<div class="tab-pane" id = "AdminLeaguesArea_{{=aLeagueDetail['league_id']}}">
+<div class="tab-pane" id = "AdminLeaguesArea_{{=aLeagueDetail['league_id']}}"/>
 {{pass}}
 {{aLeagueIndex = aLeagueIndex + 1}}
-
-</div>
-
-
 
 {{pass}}
 
