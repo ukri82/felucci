@@ -1,0 +1,54 @@
+
+<h2 style="text-align:center;">Administer my leagues</h2>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="LeagueAdminTabs">
+{{aLeagueIndex = 0}}
+{{for aLeagueDetail in AdminLeagues:}}
+{{if aLeagueIndex == 0:}}
+<li class="active"><a href="#AdminLeaguesArea_{{=aLeagueDetail['league_id']}}"  id = "AdminLeaguesTabLink_{{=aLeagueDetail['league_id']}}" data-toggle="tab" ><h5> {{=aLeagueDetail['league_name']}} </h5></a></li>
+{{else:}}
+<li><a href="#AdminLeaguesArea_{{=aLeagueDetail['league_id']}}" id = "AdminLeaguesTabLink_{{=aLeagueDetail['league_id']}}" data-toggle="tab"><h5> {{=aLeagueDetail['league_name']}} </h5></a></li>
+{{pass}}
+<script>
+    $('#AdminLeaguesTabLink_{{=aLeagueDetail['league_id']}}').click(function() {
+        $.ajax({  type: "POST",  
+                    url: '{{=URL('get_users_leagues')}}',  
+                    data: { Id: {{=aLeagueDetail['league_id']}}}}).done(function( data ) {
+                            $('#AdminLeaguesArea_{{=aLeagueDetail['league_id']}}').html(data);
+                            });  
+     });               
+</script>
+{{aLeagueIndex = aLeagueIndex + 1}}
+{{pass}}
+</ul>
+
+
+<div id="LeagueTabsAdmin_content" class="tab-content">
+
+
+{{aLeagueIndex = 0}}
+{{for aLeagueDetail in AdminLeagues:}}
+
+{{if aLeagueIndex == 0:}}
+<div class="tab-pane active" id = "AdminLeaguesArea_{{=aLeagueDetail['league_id']}}">
+<script>
+$.ajax({  type: "POST",  
+                    url: '{{=URL('get_users_leagues')}}',  
+                    data: { Id: {{=aLeagueDetail['league_id']}}}}).done(function( data ) {
+                            $('#AdminLeaguesArea_{{=aLeagueDetail['league_id']}}').html(data);
+                            }); 
+</script>
+</div>
+{{else:}}
+<div class="tab-pane" id = "AdminLeaguesArea_{{=aLeagueDetail['league_id']}}">
+{{pass}}
+{{aLeagueIndex = aLeagueIndex + 1}}
+
+</div>
+
+
+
+{{pass}}
+
+
+</div>

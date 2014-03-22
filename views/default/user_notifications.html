@@ -61,5 +61,47 @@
 </tbody>
 </table>
  </ol>
+
+ 
+ <script>
+    function attachClickFunction(aButtonId_in, aParam_in)
+    {
+        $(aButtonId_in).click(function() {
+            $.ajax({  type: "POST",  
+                        url: '{{=URL('get_notifications')}}',  
+                        data: { Direction: aParam_in}}).done(function( msg ) {
+                            $('#NotificationsArea').parent().html(msg); 
+                        });
+            return false;
+         });
+     }
+</script> 
+
+ <div>
+ <input value="" type="hidden" id="UserNotificationOffset" value="{{=NotificationsOffset}}"/>
+ <input value="" type="hidden" id="UserNotificationMoreLeftFlag" value="{{=MoreLeftFlag}}"/>
+ <input value="" type="hidden" id="UserNotificationMoreRightFlag" value="{{=MoreRightFlag}}"/>
+{{if MoreLeftFlag == True:}}
+<a href="#" id="UserNotificationBackwardMost" class="icon icon-fast-backward" title="First"></a>
+<script>
+    attachClickFunction('#UserNotificationBackwardMost', 'LeftMost');
+</script>   
+<a href="#" id="UserNotificationBackward" class="icon icon-backward" title="Previous"></a>
+<script>
+    attachClickFunction('#UserNotificationBackward', 'Left');
+</script>   
+{{pass}}
+{{if MoreRightFlag == True:}}
+<div style = "text-align:right;"><a href="#" id="UserNotificationForward" class="icon icon-forward" title="Next"></a>
+<script>
+    attachClickFunction('#UserNotificationForward', 'Right');
+</script>   
+<a href="#" id="UserNotificationForwardMost" class="icon icon-fast-forward" title="Last"></a>
+<script>
+    attachClickFunction('#UserNotificationForwardMost', 'RightMost');
+</script>   
+</div>
+{{pass}}
   
+</div>
 </div>

@@ -5,59 +5,24 @@ function attatchAjax(anElementId_in, anItemId_in, aURL_in, aTarget_in)
         $.ajax({  type: "POST",  
                     url: aURL_in,  
                     data: { Id: anItemId_in}}).done(function( data ) {
-                            $(aTarget_in).parent().parent().html(data);
+                            $(aTarget_in).html(data);
                             });  
         return false;
      });
 }
 </script> 
-<style>
-.UserSearchUpdateClass { position: relative; background: white; border: solid 1px #55A6C8; }
-.UserSearchUpdateClass DIV { padding: 2px 4px 2px 4px; }
-</style>
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="LeagueTabs">
-<li class="active"><a href="#UserLeaguesArea"  data-toggle="tab" ><h4> Member </h4></a></li>
-<li><a href="#AllLeaguesArea"  data-toggle="tab"><h4> All </h4></a></li>
+<li class="active"><a href="#UserLeaguesArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_leagues', 'UserLeaguesArea');"><h4> Member </h4></a></li>
+<li><a href="#AllLeaguesArea"  data-toggle="tab" onclick="$.web2py.component('default/get_all_leagues', 'AllLeaguesArea');"><h4> All </h4></a></li>
 <li><a href="#LeagueCreationArea"  data-toggle="tab"><h4> Create </h4></a></li>
-<li><a href="#AdminLeaguesArea"  data-toggle="tab"><h4> Administer </h4></a></li>
+<li><a href="#AdminLeaguesArea"  data-toggle="tab" onclick="$.web2py.component('default/get_admin_leagues', 'AdminLeaguesArea');"><h4> Administer </h4></a></li>
 </ul>
 
 <div id="LeagueTabs_content" class="tab-content">
 
 <div class="tab-pane active" id = "UserLeaguesArea">
-<h2 style="text-align:center;">Leagues for the user</h2>
-
-<table class="table1" id = "user_leagues_table">
-    <thead>
-        <tr>
-            <th scope="col" abbr="LeagueName">League Name</th>
-            <th scope="col" abbr="LeagueOwner">League Owner</th>
-            <th scope="col" abbr="LeagueNumMembers">Number of members</th>
-            <th scope="col" abbr="LeagueUnjoin">Leave</th>
-        </tr>
-    </thead>
-    
-    <tbody>
-    {{for item in UserLeagueData:}}
-    <tr>
-        <td style="width: 40%"> {{=item['league_name']}}   </td>
-        <td style="width: 40%"> {{=item['owner_name']}}   </td>
-        <td style="width: 10%"> {{=item['num_members']}}   </td>
-        <td style="width: 10%">
-        {{if item['membership_state'] == 'approved':}}
-            <a href="#" id="LeagueItemLeave_{{=item['league_member_id']}}" class="icon icon-user" title="Leave"></a>
-        {{else:}}
-            Pending
-        {{pass}}
-        </td>
-    </tr>
-    <script>
-    attatchAjax('#LeagueItemLeave_{{=item['league_member_id']}}', '{{=item['league_member_id']}}', '{{=URL('leave_league')}}', '#UserLeaguesArea');
-    </script>
-    {{pass}}
-    </tbody>
-</table>  
+{{=LOAD('default','get_user_leagues',ajax=True, ajax_trap=True, target = "UserLeaguesArea")}}
 </div>
 
 <div class="tab-pane" id = "LeagueCreationArea">
@@ -70,7 +35,9 @@ League Description : <input value="" type="text" id="LeagueDescInput"/>
                 $.ajax({  type: "POST",  
                     url: '{{=URL('create_league')}}',  
                     data: { LeagueName: $('#LeagueNameInput').val(), LeagueDesc: $('#LeagueDescInput').val() }}).done(function( data ) {
-                            $('#LeagueCreationArea').parent().parent().html(data);
+                            $('#LeagueNameInput').val("");
+                            $('#LeagueDescInput').val("");
+                            //  Doing nothing
                             });  
                 return false;
             });
@@ -78,179 +45,6 @@ League Description : <input value="" type="text" id="LeagueDescInput"/>
 </form>
 </div>
 
-<div class="tab-pane" id = "AllLeaguesArea">
-<h2 style="text-align:center;">All leagues</h2>
-
-<table class="table1" id = "all_leagues_table">
-    <thead>
-        <tr>
-            <th scope="col" abbr="LeagueName">League Name</th>
-            <th scope="col" abbr="LeagueOwner">League Owner</th>
-            <th scope="col" abbr="LeagueNumMembers">Number of members</th>
-            <th scope="col" abbr="LeagueJoin">Join</th>
-        </tr>
-    </thead>
-    
-    <tbody>
-    {{for item in AllLeagueData:}}
-    <tr>
-        <td style="width: 40%"> {{=item['league_name']}}   </td>
-        <td style="width: 40%"> {{=item['owner_name']}}   </td>
-        <td style="width: 10%"> {{=item['num_members']}}   </td>
-        <td style="width: 10%">
-        <a href="#" id="LeagueItemJoin_{{=item['league_id']}}" class="icon icon-user" title="Join"></a></td>
-    </td>
-    </tr>
-    <script>
-    attatchAjax('#LeagueItemJoin_{{=item['league_id']}}', '{{=item['league_id']}}', '{{=URL('join_league')}}', '#AllLeaguesArea');
-    </script>
-    {{pass}}
-    </tbody>
-</table>
-
-</div>
-
-<div class="tab-pane" id = "AdminLeaguesArea">
-<h2 style="text-align:center;">Administer my leagues</h2>
-
-<table class="table1">
-
-{{for aLeagueDetail in AdminLeagues:}}
-
-
-<div id = "AdminLeaguesArea_{{=aLeagueDetail['league_id']}}">
-
-<tr>
-
-    <td>
-        <h4 style="text-align:center;">League : {{=aLeagueDetail['league_name']}}</h4>
-    </td>
-    <td>
-        {{if aLeagueDetail['league_state'] == 'active':}}
-        <a href="#" id="AdminLeageDelete_{{=aLeagueDetail['league_id']}}" class="icon icon-trash" title="Delete"></a>
-        <script>
-            attatchAjax('#AdminLeageDelete_{{=aLeagueDetail['league_id']}}', '{{=aLeagueDetail['league_id']}}', '{{=URL('delete_league')}}', '#AdminLeaguesArea');                
-        </script>
-        {{else:}}
-        <a href="#" id="AdminLeageActivate_{{=aLeagueDetail['league_id']}}" class="icon icon-user" title="Activate"></a>
-        <script>
-            attatchAjax('#AdminLeageActivate_{{=aLeagueDetail['league_id']}}', '{{=aLeagueDetail['league_id']}}', '{{=URL('activate_league')}}', '#AdminLeaguesArea');                
-        </script>
-        {{pass}}
-    </td>
-</tr>
-<tr>
-<td>
-<form id="LeagueAddForm">
-
-<table style="border-collapse:collapse">
-<tr>
-<td style="border:none;outline:none;"> User First Name : </td>
-<td style="border:none;outline:none;"> <input value="" type="text" id="LeagueUserAddInput_{{=aLeagueDetail['league_id']}}"/> <input value="" type="hidden" id="LeagueUserAddInputIdHidden"/></td>
-<td style="border:none;outline:none;"> <input type="button" value="Add" id="LeagueUserAddButton_{{=aLeagueDetail['league_id']}}"> </td>
-</tr>
-<tr>
-<td style="border:none;outline:none;"/>
-<td style="border:none;outline:none;"><div style="position: absolute;" id="UserSearchUpdateId_{{=aLeagueDetail['league_id']}}" class="UserSearchUpdateClass"></div></td>
-</tr>
-</table>
-<script>
-            $('#LeagueUserAddButton_{{=aLeagueDetail['league_id']}}').click(function() {
-                $.ajax({  type: "POST",  
-                    url: '{{=URL('add_user_to_leage')}}',  
-                    data: { LeagueId: {{=aLeagueDetail['league_id']}}, UserId: $('#LeagueUserAddInputIdHidden').val() }}).done(function( data ) {
-                            $('#LeagueCreationArea').parent().parent().html(data);
-                            });  
-                return false;
-            });
-            $("#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}").keyup(function (e){
-                $('#LeagueUserAddInputIdHidden').val('');
-                $.ajax({  type: "POST",  
-                    url: '{{=URL('name_suggestions')}}',  
-                    data: { LeagueId: {{=aLeagueDetail['league_id']}}, LeagueUserAddInput: $('#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}').val() }})
-                    .done(function( data ) {
-                            if(data != "<div></div>")
-                            {
-                                $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').html(data);
-                                $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').show();
-                                aPos = $('#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}').position();
-                                $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').css('top', aPos.top + 10 + $('#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}').height());
-                                $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').css('width', $('#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}').width());
-                            }
-                            else
-                            {
-                                $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').hide();
-                            }
-                                                       
-                    }); 
-                
-            });
-            $("#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}").focusout(function (e){
-                /*alert(e.currentTarget.nodeName);
-                if($('div:focus') != $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}') && $('#LeagueUserAddInputIdHidden').val() == '')
-                {
-                    $('#UserSearchUpdateId_{{=aLeagueDetail['league_id']}}').hide();
-                    $('#LeagueUserAddInput_{{=aLeagueDetail['league_id']}}').val('');
-                }*/
-            });
-
-</script>
-</form>
-</td>
-</tr>
-<tr><td colspan="2">
-<table class="table1" id = "admin_leagues_table__{{=aLeagueDetail['league_id']}}">
-    <thead>
-        <tr>
-            <th scope="col" abbr="LeagueName">Member</th>
-            <th scope="col" abbr="LeagueOwner">Membership State</th>
-            <th scope="col" colspan="2">Approve/Remove</th>
-        </tr>
-    </thead>
-    
-    <tbody>
-    {{for item in aLeagueDetail['all_members']:}}
-    <tr>
-        <td style="width: 40%"> {{=item['member_name']}}   </td>
-        <td style="width: 40%"> {{=item['membership_state']}}   </td>
-        {{if item['membership_state'] == 'pending':}}
-            <td > <a href="#" id="AdminLeageApprove_{{=item['id']}}" class="icon icon-user" title="Approve"></a>   </td>
-            <td > <a href="#" id="AdminLeageReject_{{=item['id']}}" class="icon icon-user" title="Reject"></a>   </td>
-            <script>
-                attatchAjax('#AdminLeageApprove_{{=item['id']}}', '{{=item['id']}}', '{{=URL('approve_membership')}}', '#AdminLeaguesArea');
-                attatchAjax('#AdminLeageReject_{{=item['id']}}', '{{=item['id']}}', '{{=URL('reject_membership')}}', '#AdminLeaguesArea');                
-            </script>
-        {{pass}}
-        {{if item['membership_state'] == 'approved':}}
-            <td > <a href="#" id="AdminLeageRemove_{{=item['id']}}" class="icon icon-user" title="Remove"></a>   </td>
-            <td />
-            <script>
-                attatchAjax('#AdminLeageRemove_{{=item['id']}}', '{{=item['id']}}', '{{=URL('remove_membership')}}', '#AdminLeaguesArea');  
-            </script>
-        {{pass}}
-        
-        {{if item['membership_state'] == 'rejected' or item['membership_state'] == 'removed' :}}
-            <td > <a href="#" id="AdminLeageRejoin_{{=item['id']}}" class="icon icon-user" title="Rejoin"></a>   </td>
-            <td />
-            <script>
-                attatchAjax('#AdminLeageRejoin_{{=item['id']}}', '{{=item['id']}}', '{{=URL('rejoin_membership')}}', '#AdminLeaguesArea');  
-            </script>
-        {{pass}}
-        
-    </td>
-    </tr>
-   {{pass}}
-    </tbody>
-</table>
-
-</td></tr>
-
-</div>
-
-
-
-{{pass}}
-
-</table>
-</div>
+<div class="tab-pane" id = "AllLeaguesArea"/>
+<div class="tab-pane" id = "AdminLeaguesArea"/>
 </div>

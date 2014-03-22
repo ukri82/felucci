@@ -376,6 +376,8 @@ img.profile_image {
     /*  to center the table horizontally */
 }
 
+.UserSearchUpdateClass { position: relative; background: white; border: solid 1px #55A6C8; }
+.UserSearchUpdateClass DIV { padding: 2px 4px 2px 4px; }
 
 
 /* fix some IE problems */

@@ -1,0 +1,29 @@
+
+<h2 style="text-align:center;">All leagues</h2>
+
+<table class="table1" id = "all_leagues_table">
+    <thead>
+        <tr>
+            <th scope="col" abbr="LeagueName">League Name</th>
+            <th scope="col" abbr="LeagueOwner">League Owner</th>
+            <th scope="col" abbr="LeagueNumMembers">Number of members</th>
+            <th scope="col" abbr="LeagueJoin">Join</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{for item in AllLeagueData:}}
+    <tr>
+        <td style="width: 40%"> {{=item['league_name']}}   </td>
+        <td style="width: 40%"> {{=item['owner_name']}}   </td>
+        <td style="width: 10%"> {{=item['num_members']}}   </td>
+        <td style="width: 10%">
+        <a href="#" id="LeagueItemJoin_{{=item['league_id']}}" class="icon icon-user" title="Join"></a></td>
+    </td>
+    </tr>
+    <script>
+    attatchAjax('#LeagueItemJoin_{{=item['league_id']}}', '{{=item['league_id']}}', '{{=URL('join_league')}}', '#AllLeaguesArea');
+    </script>
+    {{pass}}
+    </tbody>
+</table>

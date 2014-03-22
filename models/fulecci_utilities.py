@@ -398,10 +398,30 @@ def UpdateAdminBets(aParams_in):
                                             bet_result = aVal["result"])
 
 
-def GetUserNotifications():
+def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    allMessages = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).select()
+    aNumEntries = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).count()
     
+    if aDirection_in == 'Left':
+        anOffset_in = max(0, anOffset_in - 1)
+    elif aDirection_in == 'Right':
+        anOffset_in = min(aNumEntries // aCount_in, anOffset_in + 1)
+    elif aDirection_in == 'LeftMost':
+        anOffset_in = 0
+    elif aDirection_in == 'RightMost':
+        anOffset_in = aNumEntries // aCount_in
+        
+    aLeft = anOffset_in * aCount_in
+    aRight = (anOffset_in + 1) * aCount_in
+    
+    logger.info("anOffset_in = %s", str(anOffset_in))
+    logger.info("aLeft = %s", str(aLeft))
+    logger.info("aRight = %s", str(aRight))
+    
+    aMoreLeftFlag = aLeft > 0
+    aMoreRightFlag = aRight < aNumEntries
+            
+    allMessages = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
     aMessageData = []
     for aMessageItem in allMessages:
         aMessage = {"id" : aMessageItem.id,
@@ -413,7 +433,7 @@ def GetUserNotifications():
                         }
         aMessageData.append(aMessage)
     
-    return sorted(aMessageData, key=lambda k: k["date_time"])
+    return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"])
     
 def ReadNotification(aNotificationId_in):
     
@@ -425,16 +445,6 @@ def DeleteNotification(aNotificationId_in):
     db(db.notification.id == aNotificationId_in).update(read_state = "deleted")    
 
 
-def GetLeagues():  
-    aUserLeagues = GetUserLeagues()
-    anAllLeaguesOrig = GetAllLeagues()
-    anAllLeagues = []
-    for aLeague in anAllLeaguesOrig:
-        if next((item for item in aUserLeagues if item["league_id"] == aLeague["league_id"]), None) == None:
-            anAllLeagues.append(aLeague)
-    anAdminLeagues = GetAdminLeagues()
-    
-    return aUserLeagues, anAllLeagues, anAdminLeagues
     
 def GetUserLeagues():
 
@@ -464,43 +474,58 @@ def GetAdminLeagues():
     
     aLeagueData = []
     for aLeague in allAdminLeagues:
-        aMembers = db(db.league_member.league_id == aLeague.id).select()
-        
-        aMemberData = []
-        for aMember in aMembers:
-            aMemberItem = {"id" : aMember.id,
-                            "member_id" : aMember.member_id,
-                            "member_name" : db.auth_user[aMember.member_id].first_name,
-                            "membership_state" : aMember.membership_state
-                        }
-            aMemberData.append(aMemberItem)
-            
         aLeagueItem = {"league_id" : aLeague.id,
                         "league_name" : aLeague.name,
                         "league_desc" : aLeague.league_desc,
-                        "league_state" : aLeague.league_state,
-                        "all_members" : aMemberData
-                        }         
+                        "league_state" : aLeague.league_state
+                      }         
         aLeagueData.append(aLeagueItem)
     
     
     return aLeagueData 
     
+def GetLeagueDetails(aLeagueId_in):
+
+    aLeague = db.league[aLeagueId_in]
+    
+    aMembers = db(db.league_member.league_id == aLeague.id).select()
+        
+    aMemberData = []
+    for aMember in aMembers:
+        aMemberItem = {"id" : aMember.id,
+                        "member_id" : aMember.member_id,
+                        "member_name" : db.auth_user[aMember.member_id].first_name,
+                        "membership_state" : aMember.membership_state
+                    }
+        aMemberData.append(aMemberItem)
+            
+    aLeagueItem = {"league_id" : aLeague.id,
+                    "league_name" : aLeague.name,
+                    "league_desc" : aLeague.league_desc,
+                    "league_state" : aLeague.league_state,
+                    "all_members" : aMemberData
+                    }       
+                    
+    logger.info("aLeagueItem = %s", str(aLeagueItem))
+    return aLeagueItem 
+    
 def GetAllLeagues():
 
+    aUserLeagues = GetUserLeagues()
     allLeagues = db(db.league.league_state != "deleted").select()   
     
     aLeagueData = []
     for aLeague in allLeagues:
-        aNumMembers = len(db(db.league_member.league_id == aLeague.id).select())
-        aLeagueItem = {"league_id" : aLeague.id,
-                        "league_name" : aLeague.name,
-                        "league_desc" : aLeague.league_desc,
-                        "owner_id" : aLeague.owner_id,
-                        "owner_name" : db.auth_user[aLeague.owner_id].first_name,
-                        "num_members" : aNumMembers
-                        }
-        aLeagueData.append(aLeagueItem)
+        if next((item for item in aUserLeagues if item["league_id"] == aLeague["id"]), None) == None:
+            aNumMembers = len(db(db.league_member.league_id == aLeague.id).select())
+            aLeagueItem = {"league_id" : aLeague.id,
+                            "league_name" : aLeague.name,
+                            "league_desc" : aLeague.league_desc,
+                            "owner_id" : aLeague.owner_id,
+                            "owner_name" : db.auth_user[aLeague.owner_id].first_name,
+                            "num_members" : aNumMembers
+                            }
+            aLeagueData.append(aLeagueItem)
 
     return aLeagueData 
 

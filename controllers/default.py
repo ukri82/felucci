@@ -183,6 +183,7 @@ def get_user_bets_old():
     aUserBets = GetOldBets()
     return dict(OldBets = aUserBets) 
 
+    
 @auth.requires_login()
 def submit_bets():
     UpdateUserBets(request.vars)
@@ -198,8 +199,17 @@ def profile():
 
 @auth.requires_login()    
 def get_notifications():
+    logger.info("request.vars.Direction = %s", str(request.vars.Direction))
+    if request.vars.Direction is None:
+        session.myNotificationOffset = 0
+    
+    if session.myNotificationOffset is None:
+        session.myNotificationOffset = 0
+    aMoreLeftFlag, aMoreRightFlag, session.myNotificationOffset, aNot = GetUserNotifications(session.myNotificationOffset, 2, request.vars.Direction)
+    logger.info("aMoreLeftFlag = %s", str(aMoreLeftFlag))
+    logger.info("aMoreRightFlag = %s", str(aMoreRightFlag))
     response.view = 'default/user_notifications.html'
-    return dict(Notifications = GetUserNotifications()) 
+    return dict(Notifications = aNot, NotificationsOffset = session.myNotificationOffset, MoreLeftFlag = aMoreLeftFlag, MoreRightFlag = aMoreRightFlag)
     
 @auth.requires_login()    
 def read_notification():
@@ -215,57 +225,77 @@ def delete_notification():
 @auth.requires_login()    
 def get_leagues():
     response.view = 'default/user_leagues.html'
-    aUserLeagueData, aAllLeagueData, aAdminLeagues = GetLeagues()
-    return dict(UserLeagueData = aUserLeagueData, AllLeagueData = aAllLeagueData, AdminLeagues = aAdminLeagues)   
+    return dict()   
+    
+@auth.requires_login()    
+def get_user_leagues():
+    response.view = 'default/user_user_leagues.html'
+    return dict(UserLeagueData = GetUserLeagues())   
+
+@auth.requires_login()    
+def get_admin_leagues():
+    response.view = 'default/user_admin_leagues.html'
+    return dict(AdminLeagues = GetAdminLeagues())     
+    
+@auth.requires_login()    
+def get_all_leagues():
+    response.view = 'default/user_all_leagues.html'
+    return dict(AllLeagueData = GetAllLeagues()) 
+
+
+@auth.requires_login()    
+def get_users_leagues():
+    response.view = 'default/user_admin_leagues_all_users.html'
+    return dict(LeagueDetail = GetLeagueDetails(request.vars.Id)) 
     
 @auth.requires_login()    
 def join_league():
     JoinLeague(request.vars.Id)
     response.flash = T("A request is posted to the league admin...")
-    return get_leagues()
+    return get_all_leagues()
   
 @auth.requires_login()    
 def leave_league():
     logger.info("leave %s", request.vars.Id)
     LeaveLeague(request.vars.Id)
     response.flash = T("Left the league...")
-    return get_leagues()
+    return get_user_leagues()
 
 @auth.requires_login()    
 def approve_membership():
     ModifyMembership(request.vars.Id, 'approved', 'Your membership request is approved')
     response.flash = T("Approved the membership...")
-    return get_leagues()
+    return get_admin_leagues()
     
 @auth.requires_login()    
 def reject_membership():
     ModifyMembership(request.vars.Id, 'rejected', 'Your membership request is rejected')
     response.flash = T("Rejected the membership...")
-    return get_leagues()
+    return get_admin_leagues()
 
 @auth.requires_login()    
 def remove_membership():
     ModifyMembership(request.vars.Id, 'removed', 'Your membership request is removed')
     response.flash = T("Removed the membership...")
-    return get_leagues()
+    return get_admin_leagues()
     
 @auth.requires_login()    
 def rejoin_membership():
     ModifyMembership(request.vars.Id, 'approved', 'Your membership request is approved')
     response.flash = T("Rejoined the membership...")
-    return get_leagues()
+    return get_admin_leagues()
 
 @auth.requires_login()    
 def delete_league():
     ModifyLeagueState(request.vars.Id, "deleted")
     response.flash = T("Deleted the league...")
-    return get_leagues()
+    return get_admin_leagues()
     
 @auth.requires_login()    
 def activate_league():
     ModifyLeagueState(request.vars.Id, "active")
     response.flash = T("Activated the league...")
-    return get_leagues()
+    return get_admin_leagues()
     
     
 @auth.requires_login()    
@@ -278,7 +308,7 @@ def create_league():
 def add_user_to_leage():
     AddUserToLeague(request.vars.LeagueId, request.vars.UserId)
     response.flash = T("User is added...")
-    return get_leagues()
+    return dict()
 
 @auth.requires_login()    
 def name_suggestions():
