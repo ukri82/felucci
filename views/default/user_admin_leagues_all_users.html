@@ -6,14 +6,14 @@
     </td>
     <td>
         {{if LeagueDetail['league_state'] == 'active':}}
-        <a href="#" id="AdminLeageDelete_{{=LeagueDetail['league_id']}}" class="icon icon-trash" title="Delete"></a>
+        <a href="#" id="AdminLeageDelete_{{=LeagueDetail['league_id']}}" title="Delete League">{{=IMG(_src=URL('static/images', 'league-delete.ico'))}}</a>
         <script>
             $('#AdminLeageDelete_{{=LeagueDetail['league_id']}}').ready(function() {
                 attatchAjax('#AdminLeageDelete_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('delete_league')}}', '#' + $('#AdminLeageDelete_{{=LeagueDetail['league_id']}}').parent().parent().parent().attr('id'));
             });
         </script>
         {{else:}}
-        <a href="#" id="AdminLeageActivate_{{=LeagueDetail['league_id']}}" class="icon icon-user" title="Activate"></a>
+        <a href="#" id="AdminLeageActivate_{{=LeagueDetail['league_id']}}" title="Activate">{{=IMG(_src=URL('static/images', 'league-activate.ico'))}}</a>
         <script>
             $('#AdminLeageActivate_{{=LeagueDetail['league_id']}}').ready(function() {
                 attatchAjax('#AdminLeageActivate_{{=LeagueDetail['league_id']}}', '{{=LeagueDetail['league_id']}}', '{{=URL('activate_league')}}', '#' + $('#AdminLeageActivate_{{=LeagueDetail['league_id']}}').parent().parent().parent().attr('id'));
@@ -100,8 +100,8 @@
         <td style="width: 40%"> {{=item['member_name']}}   </td>
         <td style="width: 40%"> {{=item['membership_state']}}   </td>
         {{if item['membership_state'] == 'pending':}}
-            <td > <a href="#" id="AdminLeageApprove_{{=item['id']}}" class="icon icon-user" title="Approve"></a>   </td>
-            <td > <a href="#" id="AdminLeageReject_{{=item['id']}}" class="icon icon-user" title="Reject"></a>   </td>
+            <td > <a href="#" id="AdminLeageApprove_{{=item['id']}}" title="Approve">{{=IMG(_src=URL('static/images', 'league-user-approve.ico'))}}</a>   </td>
+            <td > <a href="#" id="AdminLeageReject_{{=item['id']}}" title="Reject">{{=IMG(_src=URL('static/images', 'league-user-reject.ico'))}}</a>   </td>
             <script>
                 $('#AdminLeageApprove_{{=item['id']}}').ready(function() {
                     $('#AdminLeageApprove_{{=item['id']}}').click(function() {
@@ -128,7 +128,7 @@
             </script>
         {{pass}}
         {{if item['membership_state'] == 'approved':}}
-            <td > <a href="#" id="AdminLeageRemove_{{=item['id']}}" class="icon icon-user" title="Remove"></a>   </td>
+            <td > <a href="#" id="AdminLeageRemove_{{=item['id']}}" title="Remove">{{=IMG(_src=URL('static/images', 'league-user-remove.ico'))}}</a>   </td>
             <td />
             <script>
                 $('#AdminLeageRemove_{{=item['id']}}').ready(function() {
@@ -146,7 +146,7 @@
         {{pass}}
         
         {{if item['membership_state'] == 'rejected' or item['membership_state'] == 'removed' :}}
-            <td > <a href="#" id="AdminLeageRejoin_{{=item['id']}}" class="icon icon-user" title="Rejoin"></a>   </td>
+            <td > <a href="#" id="AdminLeageRejoin_{{=item['id']}}" title="Rejoin">{{=IMG(_src=URL('static/images', 'league-user-rejoin.ico'))}}</a>   </td>
             <td />
             <script>
                 $('#AdminLeageRejoin_{{=item['id']}}').ready(function() {
