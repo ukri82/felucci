@@ -299,28 +299,23 @@ def activate_league():
     
 @auth.requires_login()    
 def create_league():
-    CreateLeague(request.vars.LeagueName, request.vars.LeagueDesc)
-    response.flash = T("Created the league...")
+    aMessage = CreateLeague(request.vars.LeagueName, request.vars.LeagueDesc)
+    response.flash = aMessage
     return get_leagues()
 
 @auth.requires_login()    
-def add_user_to_leage():
-    AddUserToLeague(request.vars.Id, request.vars.UserId)
-    response.flash = T("User is added...")
+def add_users_to_leage():
+    aMessage = AddUserToLeague(request.vars.Id, request.vars.items()[0][1])
+    response.flash = aMessage
     return get_users_leagues()
 
 @auth.requires_login()    
 def name_suggestions():
-    
+    response.view = 'default/search_user_list.html'
     selected = GetUsersStartingWith(request.vars.LeagueUserAddInput)
-    return DIV(*[DIV(k['name'],
-                     _onclick="jQuery('#LeagueUserAddInput_%s').val('%s');jQuery('#LeagueUserAddInputIdHidden').val('%s');jQuery('#UserSearchUpdateId_%s').hide()" % 
-                     (request.vars.LeagueId, k['name'], k['id'], request.vars.LeagueId),
-                     _onmouseover="this.style.backgroundColor='yellow'",
-                     _onmouseout="this.style.backgroundColor='white'"
-                     ) for k in selected]) 
+    return dict(UserList = selected, LeagueId = request.vars.LeagueId) 
 
-
+                     
     
 #   Admin stuff
 

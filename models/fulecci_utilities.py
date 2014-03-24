@@ -506,7 +506,7 @@ def GetLeagueDetails(aLeagueId_in):
                     "all_members" : aMemberData
                     }       
                     
-    logger.info("aLeagueItem = %s", str(aLeagueItem))
+    #logger.info("aLeagueItem = %s", str(aLeagueItem))
     return aLeagueItem 
     
 def GetAllLeagues():
@@ -554,17 +554,43 @@ def ModifyLeagueState(aLeagueId_in, aState_in):
     db(db.league.id == aLeagueId_in).update(league_state = aState_in)
 
 def CreateLeague(aLeagueName_in, aLeagueDesc_in):
+    existing = db(db.league.name == aLeagueName_in).select()
+    aResultMessage = "Successfully created the league"
+    if len(existing) == 0:
+        db.league.insert(owner_id = auth.user.id, name = aLeagueName_in, league_desc = aLeagueDesc_in, league_state = 'active')
+    else:
+        aResultMessage = "The league with the same name already exists"
+    return aResultMessage
     
-    db.league.insert(owner_id = auth.user.id, name = aLeagueName_in, league_desc = aLeagueDesc_in, league_state = 'active')   
+def AddUserToLeague(aLeagueId_in, aUserIds_in):
 
-def AddUserToLeague(aLeagueId_in, aUserId_in):
-    db.league_member.insert(league_id = aLeagueId_in, member_id = aUserId_in, membership_state = 'approved')
-    db.notification.insert(source_id = auth.user.id, traget_id = aUserId_in, date_time = datetime.datetime.now(),
+    aUserIds = []
+    if not isinstance(aUserIds_in, list):
+        aUserIds.append(aUserIds_in)
+    else:
+        aUserIds.extend(aUserIds_in)
+    
+    aMessage = "All users are added to the league"
+    for aUserIdStr in aUserIds:
+        
+        matchObj = re.search('AdminLeageUserDivId_(\d*)_(\d*)', aUserIdStr)
+        aUserId = matchObj.group(2)
+        
+        
+        aMembership = db((db.league_member.member_id == aUserId) & (db.league_member.league_id == aLeagueId_in)).select()
+        
+        if len(aMembership) == 0:
+            db.league_member.insert(league_id = aLeagueId_in, member_id = aUserId, membership_state = 'approved')
+            db.notification.insert(source_id = auth.user.id, traget_id = aUserId, date_time = datetime.datetime.now(),
                             subject = '[%s] : added to league' % db.league[aLeagueId_in].name, notification_body = "Happy to inform that you have been added to the league", read_state = 'unopened')
+        else:
+            aMessage = "Some users are already in the league and they are not added again"
+            
+    return aMessage
     
 def GetUsersStartingWith(aFirstPart_in):
     anAllUsers = db().select(db.auth_user.ALL)
-    selected = [{'id': m['id'], 'name' : m['first_name']} for m in anAllUsers if bool(re.match(aFirstPart_in, m['first_name'], re.I))]
+    selected = [{'id': m['id'], 'name' : m['first_name']} for m in anAllUsers if bool(re.match(aFirstPart_in, m['first_name'], re.I) or re.match(aFirstPart_in, m['last_name'], re.I) or re.match(aFirstPart_in, m['nickname'], re.I))]
     
     return selected
 

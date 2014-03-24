@@ -29,21 +29,45 @@
 <table style="border-collapse:collapse">
 <tr>
 <td style="border:none;outline:none;"> User First Name : </td>
-<td style="border:none;outline:none;"> <input value="" type="text" id="LeagueUserAddInput_{{=LeagueDetail['league_id']}}"/> <input value="" type="hidden" id="LeagueUserAddInputIdHidden"/></td>
+<td style="border:none;outline:none;"> 
+
+    <div class="user-editor" >
+    <div style="" id="LeagueUserAddSpan_{{=LeagueDetail['league_id']}}">
+    </div>
+    </div>
+    <input value="" type="text" id="LeagueUserAddInput_{{=LeagueDetail['league_id']}}"/> 
+    
+    
+    <input value="" type="hidden" id="LeagueUserAddInputIdHidden"/>
+</td>
 <td style="border:none;outline:none;"> <input type="button" value="Add" id="LeagueUserAddButton_{{=LeagueDetail['league_id']}}"> </td>
 </tr>
 <tr>
 <td style="border:none;outline:none;"/>
-<td style="border:none;outline:none;"><div style="position: absolute;" id="UserSearchUpdateId_{{=LeagueDetail['league_id']}}" class="UserSearchUpdateClass"></div></td>
+<td style="border:none;outline:none;">
+
+<div style="position: absolute;" id="UserSearchUpdateId_{{=LeagueDetail['league_id']}}" class="UserSearchUpdateClass"></div>
+
+</td>
 </tr>
 </table>
 <script>
             $('#LeagueAddForm_{{=LeagueDetail['league_id']}}').ready(function() {
             
                 $('#LeagueUserAddButton_{{=LeagueDetail['league_id']}}').click(function() {
+                    aSelectedUsers = $('#LeagueUserAddSpan_{{=LeagueDetail['league_id']}} div');
+                    aSelectedUsersId = new Array();
+                    aSelectedUsers.each(function(index) {
+                        aSelectedUsersId.push($(this).attr("id"));
+                    });
+                    if(aSelectedUsersId.length == 0)
+                    {
+                        alert("Please select some users");
+                        return false;
+                    }
                     $.ajax({  type: "POST",  
-                        url: '{{=URL('add_user_to_leage')}}',  
-                        data: { Id: {{=LeagueDetail['league_id']}}, UserId: $('#LeagueUserAddInputIdHidden').val() }}).done(function( data ) {
+                        url: '{{=URL('add_users_to_leage')}}',  
+                        data: { Id: {{=LeagueDetail['league_id']}}, UserIds: aSelectedUsersId }}).done(function( data ) {
                                 $('#LeagueAddForm_{{=LeagueDetail['league_id']}}').parent().parent().parent().html(data);
                                 });  
                     return false;
@@ -57,6 +81,7 @@
                                 if(data != "<div></div>")
                                 {
                                     $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').html(data);
+                                    
                                     $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').show();
                                     aPos = $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').position();
                                     $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').css('top', aPos.top + 10 + $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').height());
@@ -90,7 +115,7 @@
         <tr>
             <th scope="col" abbr="LeagueName">Member</th>
             <th scope="col" abbr="LeagueOwner">Membership State</th>
-            <th scope="col" colspan="2">Approve/Remove</th>
+            <th scope="col" colspan="2">Modify Membership</th>
         </tr>
     </thead>
     

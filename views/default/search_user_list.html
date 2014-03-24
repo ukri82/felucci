@@ -1,0 +1,64 @@
+<div>
+
+{{for item in UserList:}}
+{{aUserId = item['id']}}
+{{aUserName = item['name']}}
+    
+<div id = "UserItem_{{=LeagueId}}_{{=aUserId}}">
+{{=aUserName}}
+</div>
+
+<script>
+
+$('#UserItem_{{=LeagueId}}_{{=aUserId}}').click(function() {
+
+    jQuery('#LeagueUserAddInput_{{=LeagueId}}').val('');
+    jQuery('#UserSearchUpdateId_{{=LeagueId}}').hide();
+    jQuery('#LeagueUserAddInput_{{=LeagueId}}').focus();
+    
+    var found = false;
+    aSelectedUsers = $('#LeagueUserAddSpan_{{=LeagueId}} div');
+    aSelectedUsers.each(function(index) {
+        if ($(this).attr("id") == "AdminLeageUserDivId_{{=LeagueId}}_{{=aUserId}}")
+        {
+           found = true;
+        }
+    });
+    if (found)
+        return false;
+    
+    var anAppendCode = '<div1 class=\"user-tag\" id=\"AdminLeageUserDivId_{{=LeagueId}}_{{=aUserId}}\">{{=aUserName}} \
+        <span class=\"delete-user\" title=\"remove this user\">\
+        <a href=\"#\" id=\"AdminLeageDeleteUser_{{=LeagueId}}_{{=aUserId}}\">\
+            <i class=\"icon icon-remove\"></i>\
+        </a>\
+        </span>\
+        </div1>\
+        <script1>\
+        jQuery(\"#AdminLeageDeleteUser_{{=LeagueId}}_{{=aUserId}}\").click(function() {\
+            jQuery(\"#AdminLeageUserDivId_{{=LeagueId}}_{{=aUserId}}\").remove();\
+            return false;\
+        });\
+        </script1>';
+        
+    anAppendCode = anAppendCode.replace(/div1/g, 'div'); 
+    anAppendCode = anAppendCode.replace(/script1/g, 'script');
+
+    jQuery('#LeagueUserAddSpan_{{=LeagueId}}').append(anAppendCode);
+    
+
+});
+
+$('#UserItem_{{=LeagueId}}_{{=aUserId}}').mouseover(function() {
+    this.style.backgroundColor='yellow';
+});
+
+$('#UserItem_{{=LeagueId}}_{{=aUserId}}').mouseout(function() {
+    this.style.backgroundColor='white';
+});
+
+</script>
+
+{{pass}}
+
+</div>
