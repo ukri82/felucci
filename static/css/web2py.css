@@ -340,7 +340,10 @@ li.w2p_grid_breadcrumb_elem {
 		border: 1px solid #ccc; 
 		text-align: center; 
         font-weight: bold; 
-        color: rgb(81, 92, 70);
+        color: rgb(42, 48, 37);
+        background-clip: padding-box;
+        border-radius: 5px;
+        background-color: #C3CE9A;
 	}
     
 table.mail_table { 
@@ -381,6 +384,7 @@ img.profile_image {
 
 .user-editor {
     background-color: #FFFFFF;
+    height: 30px;
     border: 1px solid #999999;
     cursor: text;
     overflow: hidden;
@@ -414,6 +418,9 @@ img.profile_image {
     
 }
 
+#HeaderContainer {
+width: 1200px;
+}
 
 
 /* fix some IE problems */

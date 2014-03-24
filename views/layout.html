@@ -93,14 +93,14 @@
       </div>
     </div>
   </div><!--/top navbar -->
-  <div class="container">
-   {{=IMG(_src=URL('static/images', 'stadium.jpg'),_alt='2014 Fifa World Cup')}}
+  <div class="container" id = "HeaderContainer">
+   {{=IMG(_src=URL('static/images', 'stadium.jpg'),_alt='2014 Fifa World Cup', _style='margin-left: -15px;')}}
   </div>
   <div class="container" >
     <!-- Masthead ================================================== -->
     <header class="mastheader row" id="header">
       {{if response.title:}}
-        <div class="span12">
+        <div class="span12" style="margin-left: 0px; width: 1200px;">
             <div class="page-header">
                 <h2>
                     {{=response.title}}

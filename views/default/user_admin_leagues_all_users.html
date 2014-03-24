@@ -27,29 +27,33 @@
 <form id="LeagueAddForm_{{=LeagueDetail['league_id']}}">
 
 <table style="border-collapse:collapse">
-<tr>
-<td style="border:none;outline:none;"> User First Name : </td>
-<td style="border:none;outline:none;"> 
+    <tr>
+        <td style="border:none;outline:none;"/>
 
-    <div class="user-editor" >
-    <div style="" id="LeagueUserAddSpan_{{=LeagueDetail['league_id']}}">
-    </div>
-    </div>
-    <input value="" type="text" id="LeagueUserAddInput_{{=LeagueDetail['league_id']}}"/> 
-    
-    
-    <input value="" type="hidden" id="LeagueUserAddInputIdHidden"/>
-</td>
-<td style="border:none;outline:none;"> <input type="button" value="Add" id="LeagueUserAddButton_{{=LeagueDetail['league_id']}}"> </td>
-</tr>
-<tr>
-<td style="border:none;outline:none;"/>
-<td style="border:none;outline:none;">
+        <td style="border:none;outline:none;"> 
 
-<div style="position: absolute;" id="UserSearchUpdateId_{{=LeagueDetail['league_id']}}" class="UserSearchUpdateClass"></div>
+            <div class="user-editor" >
+            <div style="" id="LeagueUserAddSpan_{{=LeagueDetail['league_id']}}">
+            </div>
+            </div>
+        </td>
 
-</td>
-</tr>
+        <td> <input type="button" value="Add" id="LeagueUserAddButton_{{=LeagueDetail['league_id']}}"> </td>
+    </tr>
+    <tr>
+        <td style="border:none;outline:none;"> User Name : </td>
+        <td> 
+            <input value="" type="text" id="LeagueUserAddInput_{{=LeagueDetail['league_id']}}"/> 
+
+        </td>
+        
+    </tr>
+    <tr>
+        <td style="border:none;outline:none;"/>
+        <td style="border:none;outline:none;">
+            <div style="position: absolute;" id="UserSearchUpdateId_{{=LeagueDetail['league_id']}}" class="UserSearchUpdateClass"></div>
+        </td>
+    </tr>
 </table>
 <script>
             $('#LeagueAddForm_{{=LeagueDetail['league_id']}}').ready(function() {
@@ -73,7 +77,6 @@
                     return false;
                 });
                 $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").keyup(function (e){
-                    $('#LeagueUserAddInputIdHidden').val('');
                     $.ajax({  type: "POST",  
                         url: '{{=URL('name_suggestions')}}',  
                         data: { LeagueId: {{=LeagueDetail['league_id']}}, LeagueUserAddInput: $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val() }})
@@ -95,14 +98,7 @@
                         }); 
                     
                 });
-                $("#LeagueUserAddInput_{{=LeagueDetail['league_id']}}").focusout(function (e){
-                    /*alert(e.currentTarget.nodeName);
-                    if($('div:focus') != $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}') && $('#LeagueUserAddInputIdHidden').val() == '')
-                    {
-                        $('#UserSearchUpdateId_{{=LeagueDetail['league_id']}}').hide();
-                        $('#LeagueUserAddInput_{{=LeagueDetail['league_id']}}').val('');
-                    }*/
-                });
+                
             });
 
 </script>

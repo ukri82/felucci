@@ -528,10 +528,16 @@ def GetAllLeagues():
 
 def JoinLeague(aLeagueId_in):
     
-    db.league_member.insert(league_id = aLeagueId_in, member_id = auth.user.id, membership_state = 'pending')   
-    aLeagueDetails = db(db.league.id == aLeagueId_in).select()[0]
-    db.notification.insert(source_id = auth.user.id, traget_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
-                            subject = 'I want to join your league', notification_body = 'Please approve', read_state = 'unopened')   
+    aMessage = "A request is posted to the league admin..."
+    aMembership = db((db.league_member.member_id == auth.user.id) & (db.league_member.league_id == aLeagueId_in)).select()
+    if len(aMembership) == 0:
+        db.league_member.insert(league_id = aLeagueId_in, member_id = auth.user.id, membership_state = 'pending')   
+        aLeagueDetails = db(db.league.id == aLeagueId_in).select()[0]
+        db.notification.insert(source_id = auth.user.id, traget_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
+                                subject = 'I want to join your league', notification_body = 'Please approve', read_state = 'unopened')
+    else:
+        aMessage = "You are already member of the league"
+    return aMessage
 
 def LeaveLeague(aLeagueMemberId_in):
     

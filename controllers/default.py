@@ -259,8 +259,8 @@ def get_users_leagues():
 @auth.requires_login()    
 def join_league():
     logger.info("[%s] : The person %s joined the league", auth.user.id, str(request.vars.Id))
-    JoinLeague(request.vars.Id)
-    response.flash = T("A request is posted to the league admin...")
+    aMessage = JoinLeague(request.vars.Id)
+    response.flash = aMessage
     return get_all_leagues()
   
 @auth.requires_login()    
