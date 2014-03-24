@@ -313,7 +313,7 @@ def add_users_to_leage():
 @auth.requires_login()    
 def name_suggestions():
     response.view = 'default/search_user_list.html'
-    selected = GetUsersStartingWith(request.vars.LeagueUserAddInput)
+    selected = GetUsersStartingWith(str(request.vars.LeagueUserAddInput))
     return dict(UserList = selected, LeagueId = request.vars.LeagueId) 
 
                      

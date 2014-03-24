@@ -48,7 +48,7 @@ def get_configured_logger(name):
             # Create RotatingFileHandler
             import os
             formatter="%(asctime)s %(levelname)s %(process)s %(thread)s %(funcName)s():%(lineno)d %(message)s"
-            handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'private/app.log'),maxBytes=1024,backupCount=2)
+            handler = logging.handlers.RotatingFileHandler(os.path.join(request.folder,'private/app.log'),maxBytes=20000,backupCount=20)
             handler.setFormatter(logging.Formatter(formatter))
 
         handler.setLevel(logging.DEBUG)

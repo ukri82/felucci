@@ -592,8 +592,13 @@ def AddUserToLeague(aLeagueId_in, aUserIds_in):
     return aMessage
     
 def GetUsersStartingWith(aFirstPart_in):
+    logger.info("first part is : %s", str(aFirstPart_in))
     anAllUsers = db().select(db.auth_user.ALL)
-    selected = [{'id': m['id'], 'name' : m['first_name']} for m in anAllUsers if bool(re.match(aFirstPart_in, m['first_name'], re.I) or re.match(aFirstPart_in, m['last_name'], re.I) or re.match(aFirstPart_in, m['nickname'], re.I))]
+    selected = [{'id': m['id'], 'name' : str(m['first_name']) + ' ' + str(m['last_name']) + ' (' + str(m['nickname']) + ')'} 
+                for m in anAllUsers 
+                    if bool(re.match(aFirstPart_in, m['first_name'] or '', re.I)) or 
+                        bool(re.match(aFirstPart_in, m['last_name'] or '', re.I)) or
+                        bool(re.match(aFirstPart_in, m['nickname'] or '', re.I))]
     
     return selected
 
