@@ -360,7 +360,6 @@ def GetOldBets():
     
 def UpdateUserBets(aParams_in):
 
-    logger.info("The bet params are : %s", str(aParams_in))
     aAllBetReq = []
     for aBetReq, aPoint in aParams_in.items():
         aBetId = int(re.search('user_bet_(\d+)', aBetReq).group(1))
@@ -415,10 +414,6 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
         
     aLeft = anOffset_in * aCount_in
     aRight = (anOffset_in + 1) * aCount_in
-    
-    logger.info("anOffset_in = %s", str(anOffset_in))
-    logger.info("aLeft = %s", str(aLeft))
-    logger.info("aRight = %s", str(aRight))
     
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
@@ -509,7 +504,6 @@ def GetLeagueDetails(aLeagueId_in):
                     "all_members" : aMemberData
                     }       
                     
-    #logger.info("aLeagueItem = %s", str(aLeagueItem))
     return aLeagueItem 
     
 def GetAllLeagues():
@@ -560,7 +554,8 @@ def CreateLeague(aLeagueName_in, aLeagueDesc_in):
     existing = db(db.league.name == aLeagueName_in).select()
     aResultMessage = "Successfully created the league"
     if len(existing) == 0:
-        db.league.insert(owner_id = auth.user.id, name = aLeagueName_in, league_desc = aLeagueDesc_in, league_state = 'active')
+        aLeagueId = db.league.insert(owner_id = auth.user.id, name = aLeagueName_in, league_desc = aLeagueDesc_in, league_state = 'active')
+        db.league_member.insert(league_id = aLeagueId, member_id = auth.user.id, membership_state = 'approved')
     else:
         aResultMessage = "The league with the same name already exists"
     return aResultMessage
@@ -592,13 +587,13 @@ def AddUserToLeague(aLeagueId_in, aUserIds_in):
     return aMessage
     
 def GetUsersStartingWith(aFirstPart_in):
-    logger.info("first part is : %s", str(aFirstPart_in))
+    
     anAllUsers = db().select(db.auth_user.ALL)
     selected = [{'id': m['id'], 'name' : str(m['first_name']) + ' ' + str(m['last_name']) + ' (' + str(m['nickname']) + ')'} 
                 for m in anAllUsers 
-                    if bool(re.match(aFirstPart_in, m['first_name'] or '', re.I)) or 
+                    if (bool(re.match(aFirstPart_in, m['first_name'] or '', re.I)) or 
                         bool(re.match(aFirstPart_in, m['last_name'] or '', re.I)) or
-                        bool(re.match(aFirstPart_in, m['nickname'] or '', re.I))]
+                        bool(re.match(aFirstPart_in, m['nickname'] or '', re.I))) and m['id'] != auth.user.id]
     
     return selected
 

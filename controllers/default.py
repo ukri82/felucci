@@ -122,6 +122,8 @@ def get_newsfeed():
 @auth.requires_login()  
 def submit_prior_predictions():
    
+    logger.info("[%s] : Prior predictions are submitted: %s", auth.user.id, str(request.vars))
+    
     UpdatePredictions(request.vars, "prior")
     
     response.flash = T("Predictions updated...")
@@ -131,6 +133,8 @@ def submit_prior_predictions():
 @auth.requires_login()  
 def submit_spot_predictions():
    
+    logger.info("[%s] : Spot predictions are submitted: %s", auth.user.id, str(request.vars))
+    
     UpdatePredictions(request.vars, "spot")
     
     response.flash = T("Predictions updated...")
@@ -149,7 +153,9 @@ def get_comments():
     
     return dict(CommentData = aComments, TargetType = aResultsDict['TargetType'], TargetId = aResultsDict['TargetId'], ToggleState = aResultsDict['ToggleState'] if 'ToggleState' in aResultsDict else "none")
     
-def submit_comment():    
+def submit_comment():   
+    logger.info("[%s] : The following comments are submitted: %s", auth.user.id, str(request.vars))
+    
     aResultsDict = ConvertURLArgs(request.vars)
     
     SubmitComment(aResultsDict['TargetType'], int(aResultsDict['TargetId']), aResultsDict['UserComment'])
@@ -157,7 +163,7 @@ def submit_comment():
 
 @auth.requires_login()    
 def submit_data_file():  
- 
+    logger.info("[%s] : The data file was imported: %s", auth.user.id, str(request.vars.csv_file.file))
     RecreateData(request.vars.csv_file.file)
     
     return "The file is successfully imported"
@@ -186,6 +192,7 @@ def get_user_bets_old():
     
 @auth.requires_login()
 def submit_bets():
+    logger.info("[%s] : The following bets are submitted : %s", auth.user.id, str(request.vars))
     UpdateUserBets(request.vars)
     
     response.flash = T("Bets updated...")
@@ -199,25 +206,26 @@ def profile():
 
 @auth.requires_login()    
 def get_notifications():
-    logger.info("request.vars.Direction = %s", str(request.vars.Direction))
+    
     if request.vars.Direction is None:
         session.myNotificationOffset = 0
     
     if session.myNotificationOffset is None:
         session.myNotificationOffset = 0
     aMoreLeftFlag, aMoreRightFlag, session.myNotificationOffset, aNot = GetUserNotifications(session.myNotificationOffset, 2, request.vars.Direction)
-    logger.info("aMoreLeftFlag = %s", str(aMoreLeftFlag))
-    logger.info("aMoreRightFlag = %s", str(aMoreRightFlag))
+    
     response.view = 'default/user_notifications.html'
     return dict(Notifications = aNot, NotificationsOffset = session.myNotificationOffset, MoreLeftFlag = aMoreLeftFlag, MoreRightFlag = aMoreRightFlag)
     
 @auth.requires_login()    
 def read_notification():
+    logger.info("[%s] : The notification %s was read", auth.user.id, str(request.vars.Id))
     ReadNotification(request.vars.Id)
     return dict() 
     
 @auth.requires_login()    
 def delete_notification():
+    logger.info("[%s] : The notification %s was deleted", auth.user.id, str(request.vars.Id))
     DeleteNotification(request.vars.Id)
     return dict()     
     
@@ -250,48 +258,56 @@ def get_users_leagues():
     
 @auth.requires_login()    
 def join_league():
+    logger.info("[%s] : The person %s joined the league", auth.user.id, str(request.vars.Id))
     JoinLeague(request.vars.Id)
     response.flash = T("A request is posted to the league admin...")
     return get_all_leagues()
   
 @auth.requires_login()    
 def leave_league():
+    logger.info("[%s] : The person %s left the league", auth.user.id, str(request.vars.Id))
     LeaveLeague(request.vars.Id)
     response.flash = T("Left the league...")
     return get_user_leagues()
 
 @auth.requires_login()    
 def approve_membership():
+    logger.info("[%s] : The membership %s approved", auth.user.id, str(request.vars.ItemId))
     ModifyMembership(request.vars.ItemId, 'approved', 'Your membership request is approved')
     response.flash = T("Approved the membership...")
     return get_users_leagues()
     
 @auth.requires_login()    
 def reject_membership():
+    logger.info("[%s] : The membership %s rejected", auth.user.id, str(request.vars.ItemId))
     ModifyMembership(request.vars.ItemId, 'rejected', 'Your membership request is rejected')
     response.flash = T("Rejected the membership...")
     return get_users_leagues()
 
 @auth.requires_login()    
 def remove_membership():
+    logger.info("[%s] : The membership %s removed", auth.user.id, str(request.vars.ItemId))
     ModifyMembership(request.vars.ItemId, 'removed', 'Your membership request is removed')
     response.flash = T("Removed the membership...")
     return get_users_leagues()
     
 @auth.requires_login()    
 def rejoin_membership():
+    logger.info("[%s] : The membership %s rejoined", auth.user.id, str(request.vars.ItemId))
     ModifyMembership(request.vars.ItemId, 'approved', 'Your membership request is approved')
     response.flash = T("Rejoined the membership...")
     return get_users_leagues()
 
 @auth.requires_login()    
 def delete_league():
+    logger.info("[%s] : Deleting league %s", auth.user.id, str(request.vars.Id))
     ModifyLeagueState(request.vars.Id, "deleted")
     response.flash = T("Deleted the league...")
     return get_users_leagues()
     
 @auth.requires_login()    
 def activate_league():
+    logger.info("[%s] : Activating league %s", auth.user.id, str(request.vars.Id))
     ModifyLeagueState(request.vars.Id, "active")
     response.flash = T("Activated the league...")
     return get_users_leagues()
@@ -299,13 +315,14 @@ def activate_league():
     
 @auth.requires_login()    
 def create_league():
+    logger.info("[%s] : Creating league (%s, %s)", auth.user.id, str(request.vars.LeagueName), str(request.vars.LeagueDesc))
     aMessage = CreateLeague(request.vars.LeagueName, request.vars.LeagueDesc)
     response.flash = aMessage
     return get_leagues()
 
 @auth.requires_login()    
 def add_users_to_leage():
-    logger.info("UserID : %s", str(request.vars['UserIds[]']))
+    logger.info("[%s] : Adding users %s to league %s", auth.user.id, str(request.vars['UserIds[]']), str(request.vars.Id))
     aMessage = AddUserToLeague(request.vars.Id, request.vars['UserIds[]'])
     response.flash = aMessage
     return get_users_leagues()
@@ -328,6 +345,9 @@ def get_bet_admin():
     
 @auth.requires_membership('admin')
 def submit_admin_bets():
+
+    logger.info("[%s] : The following bet offers are submitted: %s", auth.user.id, str(request.vars))
+    
     UpdateAdminBets(request.vars)
     
     response.flash = T("Admin Bets updated...")
@@ -342,6 +362,9 @@ def admin_page():
     
 @auth.requires_membership('admin')
 def submit_results():
+
+    logger.info("[%s] : The following results are submitted: %s", auth.user.id, str(request.vars))
+    
     UpdateResults(request.vars)
     
     response.flash = T("Results updated...")
