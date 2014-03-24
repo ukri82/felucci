@@ -59,7 +59,8 @@ auth.define_tables(username=False, signature=False)
 ## configure email
 mail = auth.settings.mailer
 #mail.settings.server = 'logging' or 'smtp.gmail.com:587'
-mail.settings.server = 'smtp.gmail.com:587'
+mail.settings.server = "gae"
+mail.settings.tls=True or False
 mail.settings.sender = 'fulecci@gmail.com'
 mail.settings.login = 'fulecci:icceluf123'
 
