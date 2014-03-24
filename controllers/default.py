@@ -305,7 +305,8 @@ def create_league():
 
 @auth.requires_login()    
 def add_users_to_leage():
-    aMessage = AddUserToLeague(request.vars.Id, request.vars.items()[0][1])
+    logger.info("UserID : %s", str(request.vars['UserIds[]']))
+    aMessage = AddUserToLeague(request.vars.Id, request.vars['UserIds[]'])
     response.flash = aMessage
     return get_users_leagues()
 

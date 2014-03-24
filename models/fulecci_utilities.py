@@ -100,10 +100,10 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
         logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
         if aMatchId not in aPredData:
             aCacheTable = session.PriorPredictionTable if aPredictionType_in == "prior" else session.SpotPredictionTable
-            aPredData[aMatchId] = {'team1_goals' : aCacheTable[aMatchId]['team1_goals'],
-                                        'team2_goals' : aCacheTable[aMatchId]['team2_goals'], 
-                                        'team1_id' : aCacheTable[aMatchId]['team1_id'], 
-                                        'team2_id' : aCacheTable[aMatchId]['team2_id']}
+            aPredData[aMatchId] = {'team1_goals' : aCacheTable[aMatchId]['team1_goals'] if aMatchId in aCacheTable else None,
+                                        'team2_goals' : aCacheTable[aMatchId]['team2_goals'] if aMatchId in aCacheTable else None, 
+                                        'team1_id' : aCacheTable[aMatchId]['team1_id'] if aMatchId in aCacheTable else None, 
+                                        'team2_id' : aCacheTable[aMatchId]['team2_id'] if aMatchId in aCacheTable else None}
         
         if aMatchOrPos == "match":
             if aTeamIndex == 0:
@@ -165,8 +165,8 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  "team2_short_name" : session.TeamTable[aFixtureData_in['team2']]["short_name"],
                  "team1_icon" : session.TeamTable[aFixtureData_in['team1']]["icon_file_name"],
                  "team2_icon" : session.TeamTable[aFixtureData_in['team2']]["icon_file_name"],
-                 "team1_goals" : aSourceTableData_in[fixtureId_in]['team1_goals'] if fixtureId_in in aSourceTableData_in else 0,
-                 "team2_goals" : aSourceTableData_in[fixtureId_in]['team2_goals'] if fixtureId_in in aSourceTableData_in else 0,
+                 "team1_goals" : aSourceTableData_in[fixtureId_in]['team1_goals'] if fixtureId_in in aSourceTableData_in else None,
+                 "team2_goals" : aSourceTableData_in[fixtureId_in]['team2_goals'] if fixtureId_in in aSourceTableData_in else None,
                  "venue" : aFixtureData_in['venue'], 
                  "venue_name" : session.StadiumTable[aFixtureData_in['venue']]['name'], 
                  "venue_city" : session.StadiumTable[aFixtureData_in['venue']]['city']
@@ -400,7 +400,9 @@ def UpdateAdminBets(aParams_in):
 
 def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    aNumEntries = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).count()
+    aTotal = db(db.notification.traget_id == auth.user.id).count()
+    aDeleted = db(db.notification.read_state == "deleted").count()
+    aNumEntries = aTotal - aDeleted
     
     if aDirection_in == 'Left':
         anOffset_in = max(0, anOffset_in - 1)
@@ -421,17 +423,18 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
             
-    allMessages = db(db.notification.traget_id == auth.user.id & ~(db.notification.read_state == "deleted")).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
+    allMessages = db(db.notification.traget_id == auth.user.id).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
     aMessageData = []
     for aMessageItem in allMessages:
-        aMessage = {"id" : aMessageItem.id,
+        if aMessageItem.read_state != "deleted":
+            aMessage = {"id" : aMessageItem.id,
                         "date_time" : aMessageItem.date_time,
                         "source_id" : db.auth_user[aMessageItem.source_id].first_name,
                         "subject" : aMessageItem.subject,
                         "notification_body" : aMessageItem.notification_body,
                         "read_state" : aMessageItem.read_state
                         }
-        aMessageData.append(aMessage)
+            aMessageData.append(aMessage)
     
     return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"])
     
@@ -448,7 +451,7 @@ def DeleteNotification(aNotificationId_in):
     
 def GetUserLeagues():
 
-    allUserLeagues = db(db.league_member.member_id == auth.user.id & ~(db.league_member.membership_state == "removed")).select()
+    allUserLeagues = db((db.league_member.member_id == auth.user.id) and ~(db.league_member.membership_state == "removed")).select()
     
     aLeagueData = []
     for aLeague in allUserLeagues:
