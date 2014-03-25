@@ -448,7 +448,7 @@ def DeleteNotification(aNotificationId_in):
     
 def GetUserLeagues():
 
-    allUserLeagues = db((db.league_member.member_id == auth.user.id) and ~(db.league_member.membership_state == "removed")).select()
+    allUserLeagues = db((db.league_member.member_id == auth.user.id) & ~(db.league_member.membership_state == "removed")).select()
     
     aLeagueData = []
     for aLeague in allUserLeagues:
@@ -526,17 +526,21 @@ def GetAllLeagues():
                             }
             aLeagueData.append(aLeagueItem)
 
+    
     return aLeagueData 
 
 def JoinLeague(aLeagueId_in):
     
     aMessage = "A request is posted to the league admin..."
+    
     aMembership = db((db.league_member.member_id == auth.user.id) & (db.league_member.league_id == aLeagueId_in)).select()
     if len(aMembership) == 0:
         db.league_member.insert(league_id = aLeagueId_in, member_id = auth.user.id, membership_state = 'pending')   
         aLeagueDetails = db(db.league.id == aLeagueId_in).select()[0]
+        
+        aNotification = ("Dear %s, I want to join your league %s. Please approve my membership. Regards, %s") % (db.auth_user[aLeagueDetails.owner_id]['first_name'], aLeagueDetails['name'], auth.user['first_name'])
         db.notification.insert(source_id = auth.user.id, traget_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
-                                subject = 'I want to join your league', notification_body = 'Please approve', read_state = 'unopened')
+                                subject = 'I want to join your league', notification_body = aNotification, read_state = 'unopened')
     else:
         aMessage = "You are already member of the league"
     return aMessage
