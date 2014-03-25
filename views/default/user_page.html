@@ -1,13 +1,34 @@
 {{right_sidebar_enabled=False,('message_header' in globals(), 'message_contents' in globals())}}
 {{extend 'layout.html'}}
 
+<style>
+.NotificationCounter{
+display:inline;
+background:url({{=URL('static/images', 'balloon.png')}});
+background-repeat: no-repeat;
+background-size: auto;
+}
+</style>
+
+<script>
+    $('#UserNotifications').ready(function() {
+        $.ajax({  type: "POST",  
+                    url: '{{=URL('get_notification_count.json')}}'}).done(function( data ) {
+                        $('#NotificationCounterMain').html('<b>(' + data + ')</b>');
+                });  
+     });               
+</script>
+
+
 <div class="container">
 <div class="span2 left-sidebar">
 <ul class="nav nav-list" data-tabs="tabs" id="UserTabs">
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2);">{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
       <li class="active" ><a href="#UserHome"  data-toggle="tab"><i class="icon icon-home"></i> <b> Home </b></a></li>
-      <li><a href="#UserNotifications"  data-toggle="tab"  onclick="$.web2py.component('default/get_notifications', 'UserNotifications');"><i class="icon icon-envelope"></i> <b> Notifications </b></a></li>
+      <li><a href="#UserNotifications"  data-toggle="tab"  onclick="$('#NotificationCounterMain').hide();$.web2py.component('default/get_notifications', 'UserNotifications');"><i class="icon icon-envelope"></i> <b> Notification </b>
+                                            <div class="NotificationCounter" id = "NotificationCounterMain"> 10 </div> </a>
+       </li>
       <li><a href="#UserLeagues"  data-toggle="tab"  onclick="$.web2py.component('default/get_leagues', 'UserLeagues');">{{=IMG(_src=URL('static/images', 'user-group.ico'))}} <b> Leagues</b></a></li>
       <li><a href="#UserStatistics"  data-toggle="tab"  onclick="$.web2py.component('default/get_stats', 'UserStatistics');"><i class="icon icon-book"></i> <b> Statistics</b></a></li>
       <li><a href="#UserPredictions"  data-toggle="tab" onclick="$.web2py.component('default/get_predictions', 'UserPredictions');">{{=IMG(_src=URL('static/images', 'crystallball.png'))}} <b>Predictions</b></a></li>

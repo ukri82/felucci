@@ -83,6 +83,8 @@ def get_user_stats_chunk():
     response.view = 'default/user_stats_chunk.html'
     return dict(UserStats = aStatsData, MoreFlag = aMoreFlag)
     
+
+    
 @auth.requires_login()
 def get_stats():
     response.view = 'default/user_stats.html'
@@ -212,7 +214,7 @@ def get_notifications():
     
     if session.myNotificationOffset is None:
         session.myNotificationOffset = 0
-    aMoreLeftFlag, aMoreRightFlag, session.myNotificationOffset, aNot = GetUserNotifications(session.myNotificationOffset, 2, request.vars.Direction)
+    aMoreLeftFlag, aMoreRightFlag, session.myNotificationOffset, aNot = GetUserNotifications(session.myNotificationOffset, 20, request.vars.Direction)
     
     response.view = 'default/user_notifications.html'
     return dict(Notifications = aNot, NotificationsOffset = session.myNotificationOffset, MoreLeftFlag = aMoreLeftFlag, MoreRightFlag = aMoreRightFlag)
@@ -228,7 +230,11 @@ def delete_notification():
     logger.info("[%s] : The notification %s was deleted", auth.user.id, str(request.vars.Id))
     DeleteNotification(request.vars.Id)
     return dict()     
+
+@auth.requires_login()
+def get_notification_count():
     
+    return response.json([GetNumUnreadNotifications()])    
     
 @auth.requires_login()    
 def get_leagues():

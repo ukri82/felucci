@@ -396,12 +396,14 @@ def UpdateAdminBets(aParams_in):
         db(db.bet_offer.id == aKey).update(bet_state = aVal["state"],
                                             bet_result = aVal["result"])
 
-
+def GetNumUnreadNotifications():
+    
+    return db((db.notification.traget_id == auth.user.id) & (db.notification.read_state == "unopened")).count()
+    
+    
 def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    aTotal = db(db.notification.traget_id == auth.user.id).count()
-    aDeleted = db(db.notification.read_state == "deleted").count()
-    aNumEntries = aTotal - aDeleted
+    aNumEntries = db(db.notification.traget_id == auth.user.id & ((db.notification.read_state == "unopened") | (db.notification.read_state == "opened"))).count()
     
     if aDirection_in == 'Left':
         anOffset_in = max(0, anOffset_in - 1)
