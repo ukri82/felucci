@@ -173,9 +173,12 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  }
     return aPredData
     
-def GetPredictions(aPredictionType_in):
+def GetGoalPredictions(aPredictionType_in, aUserId_in = auth.user):
     
-    aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
+    if aUserId_in == auth.user.id:
+        aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
+    else:
+        aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == aPredictionType_in).select().as_dict(key = 'match_id')
     
     return JoinFixtureWith(aPredTableData)
     
@@ -398,12 +401,16 @@ def UpdateAdminBets(aParams_in):
 
 def GetNumUnreadNotifications():
     
-    return db((db.notification.traget_id == auth.user.id) & (db.notification.read_state == "unopened")).count()
+    return db((db.notification.target_id == auth.user.id) & (db.notification.read_state == "unopened")).count()
     
     
 def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    aNumEntries = db(db.notification.traget_id == auth.user.id & ((db.notification.read_state == "unopened") | (db.notification.read_state == "opened"))).count()
+    if request.env.web2py_runtime_gae:
+        aNumEntries = db((db.notification.target_id == auth.user.id) and ~(db.notification.read_state == "deleted")).count()
+    else:
+        aNumEntries = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).count()
+    
     
     if aDirection_in == 'Left':
         anOffset_in = max(0, anOffset_in - 1)
@@ -415,14 +422,24 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
         anOffset_in = aNumEntries // aCount_in
         
     aLeft = anOffset_in * aCount_in
-    aRight = (anOffset_in + 1) * aCount_in
+    aRight = min((anOffset_in + 1) * aCount_in, aNumEntries)
+    
+    logger.info("====================================================================" );
+    logger.info("aNumEntries : %s" , str(aNumEntries))
+    logger.info("aLeft : %s" , str(aLeft));
+    logger.info("aRight : %s" , str(aRight));
     
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
             
-    allMessages = db(db.notification.traget_id == auth.user.id).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
+    if request.env.web2py_runtime_gae:
+        allMessages = db(db.notification.target_id == auth.user.id).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
+    else:
+        allMessages = db((db.notification.target_id == auth.user.id) and (db.notification.read_state != "deleted")).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
+        
     aMessageData = []
     for aMessageItem in allMessages:
+        logger.info("aMessageItem.target_id : %s" , str(aMessageItem.target_id));
         if aMessageItem.read_state != "deleted":
             aMessage = {"id" : aMessageItem.id,
                         "date_time" : aMessageItem.date_time,
@@ -432,8 +449,10 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
                         "read_state" : aMessageItem.read_state
                         }
             aMessageData.append(aMessage)
-    
-    return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"])
+            
+    logger.info("====================================================================" );
+    logger.info("aMessageData : %s" , str(aMessageData));
+    return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"], reverse = True)
     
 def ReadNotification(aNotificationId_in):
     
@@ -495,7 +514,8 @@ def GetLeagueDetails(aLeagueId_in):
         aMemberItem = {"id" : aMember.id,
                         "member_id" : aMember.member_id,
                         "member_name" : db.auth_user[aMember.member_id].first_name,
-                        "membership_state" : aMember.membership_state
+                        "membership_state" : aMember.membership_state,
+                        "last_score" : db.auth_user[aMember.member_id].last_score
                     }
         aMemberData.append(aMemberItem)
             
@@ -539,7 +559,7 @@ def JoinLeague(aLeagueId_in):
         aLeagueDetails = db(db.league.id == aLeagueId_in).select()[0]
         
         aNotification = ("Dear %s, I want to join your league %s. Please approve my membership. Regards, %s") % (db.auth_user[aLeagueDetails.owner_id]['first_name'], aLeagueDetails['name'], auth.user['first_name'])
-        db.notification.insert(source_id = auth.user.id, traget_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
+        db.notification.insert(source_id = auth.user.id, target_id = aLeagueDetails.owner_id, date_time = datetime.datetime.now(),
                                 subject = 'I want to join your league', notification_body = aNotification, read_state = 'unopened')
     else:
         aMessage = "You are already member of the league"
@@ -554,7 +574,7 @@ def ModifyMembership(aMembershipId_in, aNewState_in, aBody_in):
     aMembershipDetails = db.league_member[aMembershipId_in]
     aMembershipDetails.update_record(membership_state = aNewState_in)
     
-    db.notification.insert(source_id = auth.user.id, traget_id = aMembershipDetails.member_id, date_time = datetime.datetime.now(),
+    db.notification.insert(source_id = auth.user.id, target_id = aMembershipDetails.member_id, date_time = datetime.datetime.now(),
                             subject = '[%s] : %s' % (db.league[aMembershipDetails.league_id].name, aNewState_in), notification_body = aBody_in, read_state = 'unopened')
 
 
@@ -591,7 +611,7 @@ def AddUserToLeague(aLeagueId_in, aUserIds_in):
         
         if len(aMembership) == 0:
             db.league_member.insert(league_id = aLeagueId_in, member_id = aUserId, membership_state = 'approved')
-            db.notification.insert(source_id = auth.user.id, traget_id = aUserId, date_time = datetime.datetime.now(),
+            db.notification.insert(source_id = auth.user.id, target_id = aUserId, date_time = datetime.datetime.now(),
                             subject = '[%s] : added to league' % db.league[aLeagueId_in].name, notification_body = "Happy to inform that you have been added to the league", read_state = 'unopened')
         else:
             aMessage = "Some users are already in the league and they are not added again"
@@ -610,10 +630,16 @@ def GetUsersStartingWith(aFirstPart_in):
     return selected
 
 
-
-
-
-
+def GetUserDetails(aUserId_in):
+    
+    aUserDetailsRec = db.auth_user[aUserId_in]
+    aUserDetails = {"id" : aUserDetailsRec.id,
+                    "last_name" : aUserDetailsRec.last_name,
+                    "first_name" : aUserDetailsRec.first_name,
+                    "last_score" : aUserDetailsRec.last_score,
+                    "image" : aUserDetailsRec.image,
+                    }
+    return aUserDetails
 
 
 

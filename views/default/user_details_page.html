@@ -1,0 +1,25 @@
+<table class="InvisibleTable">
+    <tr>
+        <td style="text-align:left;"><h4> {{=(UserDetails['first_name'] + ' ' + UserDetails['last_name'])}} </h4></td>
+        <td rowspan = '2'>{{=IMG(_src=URL('download', UserDetails['image']),_alt=UserDetails['first_name'], _class="profile_image", _style="float: right;")}}</td>
+    </tr>
+    <tr>
+        <td style="text-align:left;"><h4> Current Score = {{=(UserDetails['last_score'])}} </h4></td>
+    </tr>
+</table>
+
+<ul class="nav nav-tabs" data-tabs="tabs" id="UserDetailTabs">
+<li class="active"><a href="#UserDetailsPriorPredictionsViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_prior_pred?UserId=' + {{=UserDetails['id']}}, 'UserDetailsPriorPredictionsViewArea');"><h4> Prior Predictions </h4></a></li>
+<li><a href="#UserDetailsSpotPredictionsViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_spot_pred', 'UserDetailsSpotPredictionsViewArea');"><h4> Spot Predictions </h4></a></li>
+<li><a href="#UserDetailsBetViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_bets', 'UserDetailsBetViewArea');"><h4> Bets </h4></a></li>
+</ul>
+
+<div id="UserDetailTabs_content" class="tab-content">
+
+<div class="tab-pane active" id = "UserDetailsPriorPredictionsViewArea">
+{{=LOAD('default','get_user_details_prior_pred',ajax=True, ajax_trap=True, vars={'UserId':UserDetails['id']}, target = "UserDetailsPriorPredictionsViewArea")}}
+</div>
+<div class="tab-pane" id = "UserDetailsSpotPredictionsViewArea"/>
+<div class="tab-pane" id = "UserDetailsBetViewArea"/>
+
+</div>

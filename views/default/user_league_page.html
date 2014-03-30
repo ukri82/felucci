@@ -1,0 +1,42 @@
+<div id="UserLeaguesLeageDetailsPage">
+
+<input id="UserLeaguesLeageLinkBackVal" value="{{=PreviousDivId}}" type="hidden"/>
+
+<a href="#" id="UserLeaguesLeageLinkBack" title="Back"> 
+Back
+</a> 
+<script>
+$('#UserLeaguesLeageLinkBack').click(function() {
+    var aPrevDivId = $('#UserLeaguesLeageLinkBackVal').val();
+    
+    $('#UserLeaguesLeageDetailsPage').parent().html($('#'+ aPrevDivId).html());
+    $('#'+ aPrevDivId).remove();
+    
+    return false;
+});
+</script>
+
+<h4 style="text-align:center;"> Scoresheet of the members </h4>
+
+{{aSortedLeageDetails = sorted(LeagueDetails['all_members'], key=lambda k: k['last_score'], reverse=True)}}
+<table class="table1" id = "user_leagues_table__{{=LeagueDetails['league_id']}}">
+    <thead>
+        <tr>
+            <th scope="col" abbr="LeagueName">Member</th>
+            <th scope="col" abbr="LeagueOwner">Score</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    {{for item in aSortedLeageDetails:}}
+    {{if item['membership_state'] == 'approved':}}
+    <tr>
+        <td style="width: 40%"> {{=item['member_name']}}   </td>
+        <td style="width: 40%"> {{=item['last_score']}}   </td>
+    </tr>
+    {{pass}}
+   {{pass}}
+    </tbody>
+</table>
+
+</div>

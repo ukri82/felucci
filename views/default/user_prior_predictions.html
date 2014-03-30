@@ -24,6 +24,8 @@
     {{pass}}
 {{return aTextForGroup}}
 
+
+{{if ReadOnlyFlag == 'False' :}}
 <script>
 $(document).ready(function() 
 {
@@ -31,7 +33,9 @@ $(document).ready(function()
 });
 </script>
 
+
 <form action = "/fulecci/default/{{=SubmitURL}}" id = "{{=PredictionFormId}}" method="post">
+{{pass}}
 
 <table>
 <tbody>
@@ -102,14 +106,22 @@ $(document).ready(function()
                 {{if item['team1_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
                 {{pass}}
-                    {{=INPUT(_type='number', _name="%s_match_%s_score1" % (PredictionFormId, item['fixture_id']), _value = item['team1_goals'], _style="width: 50px;")}} 
+                    {{if ReadOnlyFlag == 'False' :}}
+                        {{=INPUT(_type='number', _name="%s_match_%s_score1" % (PredictionFormId, item['fixture_id']), _value = item['team1_goals'], _style="width: 50px;")}} 
+                    {{else:}}
+                        {{=LABEL(item['team1_goals'], _class="PredictionViewGoals")}}
+                    {{pass}}
             </td>
             <td>
                 {{=item['team2_short_name']}}
                 {{if item['team2_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
                 {{pass}}
-                    {{=INPUT(_type='number', _name="%s_match_%s_score2" % (PredictionFormId, item['fixture_id']), _value = item['team2_goals'], _style="width: 50px;")}}
+                    {{if ReadOnlyFlag == 'False' :}}
+                        {{=INPUT(_type='number', _name="%s_match_%s_score2" % (PredictionFormId, item['fixture_id']), _value = item['team2_goals'], _style="width: 50px;")}}
+                    {{else:}}
+                        {{=LABEL(item['team2_goals'], _class="PredictionViewGoals")}}
+                    {{pass}}
             </td>
             
             <td>{{=item['date_time']}}</td>
@@ -143,7 +155,11 @@ $(document).ready(function()
             
             <td>{{=predData['team1_desc']}}
                 {{aName1 = "%s_pos_%s_team1" % (PredictionFormId, predData['fixture_id'])}}
-                <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test">
+                {{if ReadOnlyFlag == 'False' :}}
+                    <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test">
+                {{else:}}
+                    <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test" disabled>
+                {{pass}}
                 {{for aTeamData in predData['possible_team1']:}}
                     {{if predData['team1_id'] == aTeamData['id'] :}}
                         <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
@@ -159,7 +175,12 @@ $(document).ready(function()
                 
                 <td>{{=predData['team2_desc']}}
                     {{aName2 = "%s_pos_%s_team2" % (PredictionFormId, predData['fixture_id'])}}
-                    <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test">
+                    {{if ReadOnlyFlag == 'False' :}}
+                        <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test" >
+                    {{else:}}
+                        <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test" disabled>
+                    {{pass}}
+                    
                     {{for aTeamData in predData['possible_team2']:}}
                         {{if predData['team2_id'] == aTeamData['id'] :}}
                             <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
@@ -191,14 +212,16 @@ $(document).ready(function()
 <tr >
 <td style = "text-align:center;">
 
-<input type="button" value="{{=SubmitButtonText}}" onclick="submitForm({{=PredictionFormId}}); return false;">
-<input type="reset" value="Reset all values" >
-
+{{if ReadOnlyFlag == 'False' :}}
+    <input type="button" value="{{=SubmitButtonText}}" onclick="submitForm({{=PredictionFormId}}); return false;">
+    <input type="reset" value="Reset all values" >
+{{pass}}
 </td>
 </tr>
 </tbody>
 </table>
 
+{{if ReadOnlyFlag == 'False' :}}
 </form>
-
+{{pass}}
 

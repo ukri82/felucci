@@ -27,20 +27,22 @@ def index():
 def get_prior_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetPredictions("prior"), 
+    return dict(MacthPredictionData = GetGoalPredictions("prior"), 
                 PositionPredictionData = GetPositionPredictions(), 
                 SubmitButtonText = "Submit Prior Predictions",
                 SubmitURL = "submit_prior_predictions",
-                PredictionFormId = "PriorPredictionFormId"
+                PredictionFormId = "PriorPredictionFormId",
+                ReadOnlyFlag = "False"
                 )
 @auth.requires_login()
 def get_spot_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetPredictions("spot"), 
+    return dict(MacthPredictionData = GetGoalPredictions("spot"), 
                 SubmitButtonText = "Submit Spot Predictions",
                 SubmitURL = "submit_spot_predictions",
-                PredictionFormId = "SpotPredictionFormId"
+                PredictionFormId = "SpotPredictionFormId",
+                ReadOnlyFlag = "False"
                 )
     
 @auth.requires_login()
@@ -58,7 +60,8 @@ def get_results():
                 PositionPredictionData = GetPositionPredictions(),
                 SubmitButtonText = "Submit Results",
                 SubmitURL = "submit_results",
-                PredictionFormId = "ResultFormId"
+                PredictionFormId = "ResultFormId",
+                ReadOnlyFlag = "False"
                 )
                 
   
@@ -338,9 +341,43 @@ def name_suggestions():
     response.view = 'default/search_user_list.html'
     selected = GetUsersStartingWith(str(request.vars.LeagueUserAddInput))
     return dict(UserList = selected, LeagueId = request.vars.LeagueId) 
-
-                     
     
+@auth.requires_login()    
+def get_league_page():
+    response.view = 'default/user_league_page.html'
+    return dict(PreviousDivId = request.vars.PreviousDivId, LeagueDetails = GetLeagueDetails(request.vars.LeagueId))     
+
+@auth.requires_login()    
+def get_user_details_page():
+    response.view = 'default/user_details_page.html'
+    return dict(UserDetails = GetUserDetails(request.vars.UserId),
+                UserGoalPredictions = GetGoalPredictions("prior", request.vars.UserId))
+
+@auth.requires_login()    
+def get_user_details_prior_pred():
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetGoalPredictions("prior", request.vars.UserId), 
+                PositionPredictionData = GetPositionPredictions(), 
+                PredictionFormId = "UserDetailsPriorPredictionFormId",
+                ReadOnlyFlag = "True"
+                )
+
+@auth.requires_login()    
+def get_user_details_spot_pred():
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
+                PredictionFormId = "UserDetailsSpotPredictionFormId",
+                ReadOnlyFlag = "True"
+                )       
+                
+@auth.requires_login()    
+def get_user_details_bets():
+    response.view = 'default/user_prior_predictions.html'
+    return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
+                PredictionFormId = "UserDetailsSpotPredictionFormId",
+                ReadOnlyFlag = "True"
+                )
+                
 #   Admin stuff
 
 @auth.requires_membership('admin')

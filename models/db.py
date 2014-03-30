@@ -216,7 +216,7 @@ db.define_table('league_member',
 
 db.define_table('notification',
     Field('source_id',db.auth_user),
-    Field('traget_id',db.auth_user),
+    Field('target_id',db.auth_user),
     Field('date_time','datetime'),
     Field('subject','string', length=200),
     Field('notification_body','text'),

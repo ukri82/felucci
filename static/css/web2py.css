@@ -326,7 +326,7 @@ li.w2p_grid_breadcrumb_elem {
 		border-collapse: collapse; 
 	}
 	/* Zebra striping */
-	.table1 tr:nth-of-type(odd) { 
+	.table1 tr { 
 		background: #ECF0C5; 
 	}
 	.table1 th { 
@@ -418,8 +418,25 @@ img.profile_image {
     
 }
 
+
 #HeaderContainer {
 width: 1200px;
+}
+
+table.InvisibleTable { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+.InvisibleTable td {
+    border:none;
+}
+
+.PredictionViewGoals
+{
+    text-align:center; 
+    font-weight:bold;
+    font-size: 190%;
+    color: rgb(8, 83, 77);
 }
 
 

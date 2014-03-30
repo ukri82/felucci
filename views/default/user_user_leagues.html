@@ -3,7 +3,7 @@
 <table class="table1" id = "user_leagues_table">
     <thead>
         <tr>
-            <th scope="col" abbr="LeagueName">League Name</th>
+            <th scope="col" abbr="LeagueName">  League Name</th>
             <th scope="col" abbr="LeagueOwner">League Owner</th>
             <th scope="col" abbr="LeagueNumMembers">Number of members</th>
             <th scope="col" abbr="LeagueUnjoin">Leave</th>
@@ -13,8 +13,42 @@
     <tbody>
     {{for item in UserLeagueData:}}
     <tr>
-        <td style="width: 40%"> {{=item['league_name']}}   </td>
-        <td style="width: 40%"> {{=item['owner_name']}}   </td>
+        <td style="width: 40%"> 
+            <a href="#" id="UserLeaguesLeageLink_{{=item['league_id']}}" > 
+                {{=item['league_name']}} 
+            </a> 
+            
+            <script>
+            $('#UserLeaguesLeageLink_{{=item['league_id']}}').click(function() {
+                $.ajax({  type: "POST",  
+                    url: '{{=URL('get_league_page')}}',  
+                    data: { PreviousDivId: 'UserLeaguesLeageBackupDiv', LeagueId: {{=item['league_id']}} }}).done(function( data ) {
+                            $('#user_leagues_table').parent().parent().append("<div id = 'UserLeaguesLeageBackupDiv' style='display:none'>"+ $('#user_leagues_table').parent().html() + "</div>");
+                            $('#user_leagues_table').parent().html(data);
+                            });
+                            
+                return false;
+            });
+            </script>
+        </td>
+        <td style="width: 40%"> 
+            <a href="#" id="UserLeaguesLeageLink_{{=item['league_id']}}_{{=item['owner_id']}}">
+            {{=item['owner_name']}}   
+            </a>
+            <script>
+            $('#UserLeaguesLeageLink_{{=item['league_id']}}_{{=item['owner_id']}}').click(function() {
+                /*$.ajax({  type: "POST",  
+                    url: '{{=URL('get_user_details_page')}}',  
+                    data: { UserId: {{=item['owner_id']}} }}).done(function( data ) {
+                            $('#user_leagues_table').parent().html(data);
+                            });
+                            */
+                $.web2py.component('default/get_user_details_page?UserId=' + {{=item['owner_id']}}, 'user_leagues_table');
+                return false;
+            });
+            </script>
+            
+        </td>
         <td style="width: 10%"> {{=item['num_members']}}   </td>
         <td style="width: 10%">
         {{if item['membership_state'] == 'approved':}}
@@ -29,4 +63,4 @@
     </script>
     {{pass}}
     </tbody>
-</table>  
+</table>

@@ -11,8 +11,7 @@ function attatchAjax(anElementId_in, anItemId_in, aURL_in, aTarget_in)
         return false;
      });
 }
-</script> 
-
+</script>
 <ul class="nav nav-tabs" data-tabs="tabs" id="LeagueTabs">
 <li class="active"><a href="#UserLeaguesArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_leagues', 'UserLeaguesArea');"><h4> Member </h4></a></li>
 <li><a href="#AllLeaguesArea"  data-toggle="tab" onclick="$.web2py.component('default/get_all_leagues', 'AllLeaguesArea');"><h4> All </h4></a></li>
@@ -30,7 +29,7 @@ function attatchAjax(anElementId_in, anItemId_in, aURL_in, aTarget_in)
 <form id="LeagueCreationForm">
 League Name : <input value="" type="text" id="LeagueNameInput"/>
 League Description : <input value="" type="text" id="LeagueDescInput"/>
-<input type="button" value="Create" id="LeagueNameCreateButton">
+<input type="button" value="Create" id="LeagueNameCreateButton"/>
 <script>
             $('#LeagueNameCreateButton').click(function() {
                 $.ajax({  type: "POST",  
