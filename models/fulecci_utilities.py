@@ -424,11 +424,6 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     aLeft = anOffset_in * aCount_in
     aRight = min((anOffset_in + 1) * aCount_in, aNumEntries)
     
-    logger.info("====================================================================" );
-    logger.info("aNumEntries : %s" , str(aNumEntries))
-    logger.info("aLeft : %s" , str(aLeft));
-    logger.info("aRight : %s" , str(aRight));
-    
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
             
@@ -450,8 +445,6 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
                         }
             aMessageData.append(aMessage)
             
-    logger.info("====================================================================" );
-    logger.info("aMessageData : %s" , str(aMessageData));
     return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"], reverse = True)
     
 def ReadNotification(aNotificationId_in):
