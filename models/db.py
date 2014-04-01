@@ -68,7 +68,7 @@ mail.settings.login = 'fulecci:icceluf123'
 auth.settings.registration_requires_verification = False
 auth.settings.registration_requires_approval = False
 auth.settings.reset_password_requires_verification = True
-
+auth.settings.login_after_registration = True
 
 
 ## if you need to use OpenID, Facebook, MySpace, Twitter, Linkedin, etc.
@@ -224,18 +224,13 @@ db.define_table('notification',
     redefine=migrate_flag
 )
 
-
-'''
-db.prediction.drop()
-db.team.drop()
-db.stadium.drop()
-db.match_result.drop()
-db.predicter.drop()
-db.player.drop()
-db.team_group.drop()
-db.fixture.drop()
-db.news_item.drop()
-'''
+db.define_table('preference',
+    Field('user_id',db.auth_user),
+    Field('pref_item','string', length=200),
+    Field('pref_value', 'string', length=200),
+    Field('pref_type', 'string', length=20),
+    redefine=migrate_flag
+)
 
 
 ## after defining tables, uncomment below to enable auditing

@@ -19,7 +19,7 @@
             </a> 
             
             <script>
-            $('#UserLeaguesLeageLink_{{=item['league_id']}}').click(function() {
+            /*$('#UserLeaguesLeageLink_{{=item['league_id']}}').click(function() {
                 $.ajax({  type: "POST",  
                     url: '{{=URL('get_league_page')}}',  
                     data: { PreviousDivId: 'UserLeaguesLeageBackupDiv', LeagueId: {{=item['league_id']}} }}).done(function( data ) {
@@ -27,6 +27,10 @@
                             $('#user_leagues_table').parent().html(data);
                             });
                             
+                return false;
+            });*/
+            $('#UserLeaguesLeageLink_{{=item['league_id']}}').click(function() {
+                $.web2py.component('default/get_league_page?LeagueId=' + {{=item['league_id']}}, $('#user_leagues_table').parent().attr('id'));
                 return false;
             });
             </script>
@@ -37,17 +41,10 @@
             </a>
             <script>
             $('#UserLeaguesLeageLink_{{=item['league_id']}}_{{=item['owner_id']}}').click(function() {
-                /*$.ajax({  type: "POST",  
-                    url: '{{=URL('get_user_details_page')}}',  
-                    data: { UserId: {{=item['owner_id']}} }}).done(function( data ) {
-                            $('#user_leagues_table').parent().html(data);
-                            });
-                            */
                 $.web2py.component('default/get_user_details_page?UserId=' + {{=item['owner_id']}}, 'user_leagues_table');
                 return false;
             });
             </script>
-            
         </td>
         <td style="width: 10%"> {{=item['num_members']}}   </td>
         <td style="width: 10%">

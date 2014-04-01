@@ -1,21 +1,5 @@
 <div id="UserLeaguesLeageDetailsPage">
 
-<input id="UserLeaguesLeageLinkBackVal" value="{{=PreviousDivId}}" type="hidden"/>
-
-<a href="#" id="UserLeaguesLeageLinkBack" title="Back"> 
-Back
-</a> 
-<script>
-$('#UserLeaguesLeageLinkBack').click(function() {
-    var aPrevDivId = $('#UserLeaguesLeageLinkBackVal').val();
-    
-    $('#UserLeaguesLeageDetailsPage').parent().html($('#'+ aPrevDivId).html());
-    $('#'+ aPrevDivId).remove();
-    
-    return false;
-});
-</script>
-
 <h4 style="text-align:center;"> Scoresheet of the members </h4>
 
 {{aSortedLeageDetails = sorted(LeagueDetails['all_members'], key=lambda k: k['last_score'], reverse=True)}}
@@ -31,7 +15,17 @@ $('#UserLeaguesLeageLinkBack').click(function() {
     {{for item in aSortedLeageDetails:}}
     {{if item['membership_state'] == 'approved':}}
     <tr>
-        <td style="width: 40%"> {{=item['member_name']}}   </td>
+        <td style="width: 40%">
+            <a href="#" id="user_leagues_table__Link_{{=item['id']}}_{{=item['member_id']}}">
+            {{=item['member_name']}}   
+            </a>
+            <script>
+            $('#user_leagues_table__Link_{{=item['id']}}_{{=item['member_id']}}').click(function() {
+                $.web2py.component('default/get_user_details_page?UserId=' + {{=item['member_id']}}, "user_leagues_table__{{=LeagueDetails['league_id']}}");
+                return false;
+            });
+            </script>
+        </td>
         <td style="width: 40%"> {{=item['last_score']}}   </td>
     </tr>
     {{pass}}

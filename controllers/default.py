@@ -15,14 +15,30 @@ import re
 
 
 def index():
+
     response.flash = T("Welcome to Fulecci!")
     if auth.user is not None:
         response.view = 'default/user_page.html'
         CacheData()
+        CreateUserPreferences()
     
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
-    
 
+@auth.requires_login()    
+def get_settings():
+
+    response.view = 'default/user_settings.html'
+    return dict(Settings=session.UserPrefTable)
+
+@auth.requires_login()    
+def submit_user_settings():
+
+    logger.info("[%s] : Submitting user settings (%s)", auth.user.id, str(request.vars))
+    
+    response.flash = T("The preferences are saved")
+    SavePreferences(request.vars)
+    return get_settings()
+    
 @auth.requires_login()
 def get_prior_predictions():
     
@@ -190,8 +206,10 @@ def get_user_bets_active():
     
 @auth.requires_login()    
 def get_user_bets_old():
+    logger.info("request.vars : %s :", str(request.vars))
     response.view = 'default/user_old_bets.html'
-    aUserBets = GetOldBets()
+    aUserId = request.vars.UserId if request.vars.UserId is not None else auth.user
+    aUserBets = GetOldBets(aUserId)
     return dict(OldBets = aUserBets) 
 
     
@@ -345,7 +363,7 @@ def name_suggestions():
 @auth.requires_login()    
 def get_league_page():
     response.view = 'default/user_league_page.html'
-    return dict(PreviousDivId = request.vars.PreviousDivId, LeagueDetails = GetLeagueDetails(request.vars.LeagueId))     
+    return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId))     
 
 @auth.requires_login()    
 def get_user_details_page():
@@ -355,6 +373,10 @@ def get_user_details_page():
 
 @auth.requires_login()    
 def get_user_details_prior_pred():
+    
+    if IsAllowed("Share prior prediction with public", request.vars.UserId) == "No":
+        return "<div> User doesn't want to share the prior predictions with you </div>"
+    
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetGoalPredictions("prior", request.vars.UserId), 
                 PositionPredictionData = GetPositionPredictions(), 
@@ -364,6 +386,10 @@ def get_user_details_prior_pred():
 
 @auth.requires_login()    
 def get_user_details_spot_pred():
+
+    if IsAllowed("Share spot prediction with public", request.vars.UserId) == "No":
+        return "<div> User doesn't want to share the spot predictions with you </div>"
+        
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
                 PredictionFormId = "UserDetailsSpotPredictionFormId",
@@ -372,11 +398,12 @@ def get_user_details_spot_pred():
                 
 @auth.requires_login()    
 def get_user_details_bets():
-    response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
-                PredictionFormId = "UserDetailsSpotPredictionFormId",
-                ReadOnlyFlag = "True"
-                )
+
+    if IsAllowed("Share old bet details with public", request.vars.UserId) == "No":
+        return "<div> User doesn't want to share the bet information with you </div>"
+        
+    logger.info("request.vars : %s :", str(request.vars))
+    return get_user_bets_old()
                 
 #   Admin stuff
 
@@ -415,8 +442,8 @@ def submit_results():
     return get_results()
 
 #admin stuff ends.
-
-    
+  
+  
 def user():
     """
     exposes:
@@ -432,6 +459,15 @@ def user():
         @auth.requires_permission('read','table name',record_id)
     to decorate functions that need access control
     """
+    
+    """
+    form=auth()
+    if request.args(0) == 'login':
+        logger.info("request.args : %s", str(request))
+        if form.accepts(request,session):
+            CreateUserPreferences()           
+    """        
+        
     return dict(form=auth())
 
 @cache.action()

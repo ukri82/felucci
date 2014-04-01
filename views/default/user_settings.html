@@ -1,0 +1,56 @@
+<h2 style="text-align:center;">User Seetings</h2>
+
+<div id="UserSettingsDiv">
+<form action = "/fulecci/default/submit_user_settings" id = "UserSettingsForm" method="post">
+
+<table  style = "width:100%;">
+<tbody>
+<tr> 
+<td> 
+
+
+<table class="mail_table">
+<thead>
+    <th>Setting</th>
+    <th>Value</th>
+</thead>
+<tbody>
+    {{for item in Settings:}}
+    <tr>
+        <td style="width:80%;"> {{=item['pref_item']}} </td>
+        
+        <td style="width:20%;">
+        {{if item['pref_type'] == 'bool':}}
+            
+            {{if item['pref_value'] == 'Yes':}}
+                <input type="radio" name="{{=item['id']}}" value="Yes" checked> Yes </input> <br>
+                <input type="radio" name="{{=item['id']}}" value="No"> No </input>
+            {{else:}}
+                <input type="radio" name="{{=item['id']}}" value="Yes"> Yes </input> <br>
+                <input type="radio" name="{{=item['id']}}" value="No" checked> No </input>
+            {{pass}}
+            
+        {{else:}}
+        {{pass}}
+        
+        </td>
+    </tr>
+    {{pass}}
+</tbody>
+</table>
+
+
+</td>
+</tr>
+<tr>
+<td style = "text-align:center;">
+<input type="submit" value="Save Preferences">
+<input type="reset" value="Reset all values" >
+</td>
+</tr>
+</tbody>
+</table>
+
+</form>
+</div>
+

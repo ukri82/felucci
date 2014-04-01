@@ -10,8 +10,8 @@
 
 <ul class="nav nav-tabs" data-tabs="tabs" id="UserDetailTabs">
 <li class="active"><a href="#UserDetailsPriorPredictionsViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_prior_pred?UserId=' + {{=UserDetails['id']}}, 'UserDetailsPriorPredictionsViewArea');"><h4> Prior Predictions </h4></a></li>
-<li><a href="#UserDetailsSpotPredictionsViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_spot_pred', 'UserDetailsSpotPredictionsViewArea');"><h4> Spot Predictions </h4></a></li>
-<li><a href="#UserDetailsBetViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_bets', 'UserDetailsBetViewArea');"><h4> Bets </h4></a></li>
+<li><a href="#UserDetailsSpotPredictionsViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_spot_pred?UserId=' + {{=UserDetails['id']}}, 'UserDetailsSpotPredictionsViewArea');"><h4> Spot Predictions </h4></a></li>
+<li><a href="#UserDetailsBetViewArea"  data-toggle="tab" onclick="$.web2py.component('default/get_user_details_bets?UserId=' + {{=UserDetails['id']}}, 'UserDetailsBetViewArea');"><h4> Bets </h4></a></li>
 </ul>
 
 <div id="UserDetailTabs_content" class="tab-content">

@@ -25,7 +25,7 @@ background-size: auto;
 <ul class="nav nav-list" data-tabs="tabs" id="UserTabs">
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2);">{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
-      <li class="active" ><a href="#UserHome"  data-toggle="tab"><i class="icon icon-home"></i> <b> Home </b></a></li>
+      <li class="active" ><a href="#UserHome"  data-toggle="tab" onclick="$.web2py.component('default/get_newsfeed', 'UserHome');"><i class="icon icon-home"></i> <b> Home </b></a></li>
       <li><a href="#UserNotifications"  data-toggle="tab"  onclick="$('#NotificationCounterMain').hide();$.web2py.component('default/get_notifications', 'UserNotifications');"><i class="icon icon-envelope"></i> <b> Notification </b>
                                             <div class="NotificationCounter" id = "NotificationCounterMain"> 10 </div> </a>
        </li>
@@ -35,7 +35,7 @@ background-size: auto;
       <li><a href="#UserBets"  data-toggle="tab" onclick="$.web2py.component('default/get_user_bets', 'UserBets');"><i class="icon icon-briefcase"></i> <b>Bets</b></a></li>
       <li class="divider"></li>
       <li><a href="#UserProfile"  data-toggle="tab" onclick="$.web2py.component('default/profile', 'UserProfile');"><i class="icon icon-user"></i> <b>Profile</b></a></li>
-      <li><a href="#UserSettings"  data-toggle="tab" onclick="$.web2py.component('default/profile', 'UserSettings');"><i class="icon icon-cog"></i> <b>Settings</b></a></li>
+      <li><a href="#UserSettings"  data-toggle="tab" onclick="$.web2py.component('default/get_settings', 'UserSettings');"><i class="icon icon-cog"></i> <b>Settings</b></a></li>
       <li class="divider"></li>
       <li><a href="#UserHelp"  data-toggle="tab" onclick="$.web2py.component('default/get_help', 'UserHelp');"><i class="icon icon-flag"></i> <b>Help</b></a></li>
 </ul>

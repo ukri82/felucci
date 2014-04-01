@@ -14,8 +14,28 @@
     <tbody>
     {{for item in AllLeagueData:}}
     <tr>
-        <td style="width: 40%"> {{=item['league_name']}}   </td>
-        <td style="width: 40%"> {{=item['owner_name']}}   </td>
+        <td style="width: 40%">  
+            <a href="#" id="all_leagues_tableLeageLink_{{=item['league_id']}}" > 
+                {{=item['league_name']}} 
+            </a> 
+            <script>
+            $('#all_leagues_tableLeageLink_{{=item['league_id']}}').click(function() {
+                $.web2py.component('default/get_league_page?LeagueId=' + {{=item['league_id']}}, $('#all_leagues_table').parent().attr('id'));
+                return false;
+            });
+            </script>
+        </td>
+        <td style="width: 40%">
+            <a href="#" id="user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}">
+            {{=item['owner_name']}}   
+            </a>
+            <script>
+            $('#user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}').click(function() {
+                $.web2py.component('default/get_user_details_page?UserId=' + {{=item['owner_id']}}, $('#all_leagues_table').parent().attr('id'));
+                return false;
+            });
+            </script>
+        </td>
         <td style="width: 10%"> {{=item['num_members']}}   </td>
         <td style="width: 10%">
         <a href="#" id="LeagueItemJoin_{{=item['league_id']}}" title="Join">{{=IMG(_src=URL('static/images', 'league-user-join.ico'))}}</a></td>

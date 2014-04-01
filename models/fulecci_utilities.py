@@ -3,6 +3,8 @@ import re
 import datetime
 import collections
 
+def LogVal(aVar_in):
+    logger.info("Value of aVar_in : %s", str(aVar_in))
     
 def CacheData():
     session.StadiumTable = db().select(db.stadium.ALL).as_dict( key = 'stadium_id')
@@ -11,6 +13,7 @@ def CacheData():
     session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
     session.PriorPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
     session.SpotPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "spot").select().as_dict(key = 'match_id')
+    
     
 def ParseResultStr(aResult_in):
     
@@ -338,10 +341,11 @@ def GetActiveBets():
     return aBetData
     
     
-def GetOldBets():
+def GetOldBets(aUserId_in = auth.user):
+    logger.info("aUserId_in : %s :", str(aUserId_in))
     
     aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
-    aUserBetTable = db(db.user_bet.predictor_id == auth.user).select()
+    aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select()
     
     aUserBetData = []
     for aUserBet in aUserBetTable:
@@ -438,7 +442,8 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
         if aMessageItem.read_state != "deleted":
             aMessage = {"id" : aMessageItem.id,
                         "date_time" : aMessageItem.date_time,
-                        "source_id" : db.auth_user[aMessageItem.source_id].first_name,
+                        "source_id" : aMessageItem.source_id,
+                        "source_name" : db.auth_user[aMessageItem.source_id].first_name,
                         "subject" : aMessageItem.subject,
                         "notification_body" : aMessageItem.notification_body,
                         "read_state" : aMessageItem.read_state
@@ -634,9 +639,26 @@ def GetUserDetails(aUserId_in):
                     }
     return aUserDetails
 
+def CreateUserPreferences():
+    
+    aPrefSet = db(db.preference.user_id == auth.user).select()
+    if len(aPrefSet) == 0:
+        db.preference.insert(user_id = auth.user, pref_item = "Share prior prediction with public", pref_type = 'bool', pref_value = 'No')  
+        db.preference.insert(user_id = auth.user, pref_item = "Share spot prediction with public", pref_type = 'bool', pref_value = 'No')
+        db.preference.insert(user_id = auth.user, pref_item = "Share old bet details with public", pref_type = 'bool', pref_value = 'No') 
+        
+    session.UserPrefTable = db(db.preference.user_id == auth.user).select()
 
 
+def SavePreferences(aSettings):
+    for aKey, aVal in aSettings.iteritems():
+        db(db.preference.id == aKey).update(pref_value = aVal)
+    session.UserPrefTable = db(db.preference.user_id == auth.user).select()
+    
+def IsAllowed(aPref_in, aUserId_in):
 
+    aPref = db((db.preference.user_id == aUserId_in) & (db.preference.pref_item == aPref_in)).select()
+    return aPref[0]['pref_value']
 
                             
     

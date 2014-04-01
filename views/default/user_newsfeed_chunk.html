@@ -1,11 +1,22 @@
-<div class="posts">
+<div class="posts" id = "NewsFeedItemsDiv">
 
 {{for newsItem in NewsData:}}
 
 <div class="post">
 <h3 class="title">{{=newsItem.title}}</h3>
 
-<p class="byline"><small>Posted on {{=newsItem.date_time}} by {{=newsItem.author_id}}</small></p>
+<p class="byline">
+<small>Posted on {{=newsItem.date_time}} by 
+    <a href="#" id="post_user_link_{{=newsItem.id}}">
+    {{=db.auth_user[newsItem.author_id].first_name}}
+    </a>
+    <script>
+        $('#post_user_link_{{=newsItem.id}}').click(function() {
+            $.web2py.component('default/get_user_details_page?UserId=' + {{=newsItem.author_id}}, $('#NewsFeedItemsDiv').parent().parent().attr('id'));
+            return false;
+        });
+    </script>
+</small></p>
 
 <div class="entry"> 
 {{if newsItem.image is not "":}}
