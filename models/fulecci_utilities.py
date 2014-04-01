@@ -342,7 +342,6 @@ def GetActiveBets():
     
     
 def GetOldBets(aUserId_in = auth.user):
-    logger.info("aUserId_in : %s :", str(aUserId_in))
     
     aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
     aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select()
