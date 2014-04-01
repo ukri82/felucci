@@ -28,7 +28,7 @@ def index():
 def get_settings():
 
     response.view = 'default/user_settings.html'
-    return dict(Settings=session.UserPrefTable)
+    return dict(Settings = db(db.user_preference.user_id == auth.user.id).select())
 
 @auth.requires_login()    
 def submit_user_settings():

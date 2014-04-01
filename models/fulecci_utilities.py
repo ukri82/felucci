@@ -641,23 +641,21 @@ def GetUserDetails(aUserId_in):
 
 def CreateUserPreferences():
     
-    aPrefSet = db(db.preference.user_id == auth.user).select()
+    aPrefSet = db(db.user_preference.user_id == auth.user.id).select()
     if len(aPrefSet) == 0:
-        db.preference.insert(user_id = auth.user, pref_item = "Share prior prediction with public", pref_type = 'bool', pref_value = 'No')  
-        db.preference.insert(user_id = auth.user, pref_item = "Share spot prediction with public", pref_type = 'bool', pref_value = 'No')
-        db.preference.insert(user_id = auth.user, pref_item = "Share old bet details with public", pref_type = 'bool', pref_value = 'No') 
+        db.user_preference.insert(user_id = auth.user.id, pref_item = "Share prior prediction with public", pref_type = 'bool', pref_value = 'No')  
+        db.user_preference.insert(user_id = auth.user.id, pref_item = "Share spot prediction with public", pref_type = 'bool', pref_value = 'No')
+        db.user_preference.insert(user_id = auth.user.id, pref_item = "Share old bet details with public", pref_type = 'bool', pref_value = 'No') 
         
-    session.UserPrefTable = db(db.preference.user_id == auth.user).select()
-
+    
 
 def SavePreferences(aSettings):
     for aKey, aVal in aSettings.iteritems():
-        db(db.preference.id == aKey).update(pref_value = aVal)
-    session.UserPrefTable = db(db.preference.user_id == auth.user).select()
+        db(db.user_preference.id == aKey).update(pref_value = aVal)
     
 def IsAllowed(aPref_in, aUserId_in):
 
-    aPref = db((db.preference.user_id == aUserId_in) & (db.preference.pref_item == aPref_in)).select()
+    aPref = db((db.user_preference.user_id == aUserId_in) & (db.user_preference.pref_item == aPref_in)).select()
     return aPref[0]['pref_value']
 
                             

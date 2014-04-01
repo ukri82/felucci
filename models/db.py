@@ -224,7 +224,7 @@ db.define_table('notification',
     redefine=migrate_flag
 )
 
-db.define_table('preference',
+db.define_table('user_preference',
     Field('user_id',db.auth_user),
     Field('pref_item','string', length=200),
     Field('pref_value', 'string', length=200),
