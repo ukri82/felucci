@@ -206,7 +206,6 @@ def get_user_bets_active():
     
 @auth.requires_login()    
 def get_user_bets_old():
-    logger.info("request.vars : %s :", str(request.vars))
     response.view = 'default/user_old_bets.html'
     aUserId = request.vars.UserId if request.vars.UserId is not None else auth.user
     aUserBets = GetOldBets(aUserId)
