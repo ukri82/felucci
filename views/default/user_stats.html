@@ -25,7 +25,7 @@ LoadOnDemand("default/get_user_stats_chunk", "user_stats_content_dummy", "MoreSt
 
 function ClickUserDetails(aUserId_in)
 {
-    $.web2py.component("default/get_user_details?UserId=" + aUserId_in, "user_details_content");
+    $.web2py.component("default/get_user_details_page?UserId=" + aUserId_in, "user_details_content");
     $("#user_stats_content").hide();
     $("#user_details_content").show();
 }

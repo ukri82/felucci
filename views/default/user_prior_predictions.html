@@ -90,6 +90,7 @@ $(document).ready(function()
             <th scope="col" abbr="Team2">Team 2</th>
             <th scope="col" abbr="DateTime">Date and Time</th>
             <th scope="col" abbr="Venue">Venue</th>
+            <th scope="col" abbr="Venue">Score</th>
         </tr>
     </thead>
     
@@ -126,6 +127,7 @@ $(document).ready(function()
             
             <td>{{=item['date_time']}}</td>
             <td style="max-width: 150px;">{{=item['venue_name']}}, {{=item['venue_city']}}</td>
+            <td style="max-width: 150px;">{{=item['points_scored']}}</td>
         </tr>
     {{pass}}
     

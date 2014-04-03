@@ -2,19 +2,25 @@ import logging
 import re
 import datetime
 import collections
+import math
 
-def LogVal(aVar_in):
-    logger.info("Value of aVar_in : %s", str(aVar_in))
+def LogVal(aDesc_in, aVar_in):
+    logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
     
 def CacheData():
     session.StadiumTable = db().select(db.stadium.ALL).as_dict( key = 'stadium_id')
     session.TeamTable = db().select(db.team.ALL).as_dict( key = 'team_id')
     session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
     session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
-    session.PriorPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "prior").select().as_dict(key = 'match_id')
-    session.SpotPredictionTable = db(db.match_prediction.predictor_id == auth.user and db.match_prediction.pred_type == "spot").select().as_dict(key = 'match_id')
     
-    
+    if request.env.web2py_runtime_gae:
+        session.PriorPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) and (db.match_prediction.pred_type == "prior")).select().as_dict(key = 'match_id')
+        session.SpotPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) and (db.match_prediction.pred_type == "spot")).select().as_dict(key = 'match_id')
+    else:
+        session.PriorPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "prior")).select().as_dict(key = 'match_id')
+        session.SpotPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "spot")).select().as_dict(key = 'match_id')
+
+        
 def ParseResultStr(aResult_in):
     
     aMatchIdStr = ''
@@ -88,6 +94,8 @@ def UpdateResults(aParams_in):
                                             fixture_id = aMatchId, 
                                             team1 = aTeam1,
                                             team2 = aTeam2)
+                                            
+    CalculateScores(aFixtureData, aResultData)
             
 def UpdatePredictions(aParams_in, aPredictionType_in):
 
@@ -122,11 +130,11 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
     for aMatchId, aData in aPredData.items():
     
         db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & 
-                                             (db.match_prediction.predictor_id == auth.user) & 
+                                             (db.match_prediction.predictor_id == auth.user.id) & 
                                              (db.match_prediction.pred_type == aPredictionType_in), 
                                                 match_id = aMatchId, 
                                                 pred_type = aPredictionType_in,
-                                                predictor_id = auth.user, 
+                                                predictor_id = auth.user.id, 
                                                 team1_goals = aData['team1_goals'],
                                                 team2_goals = aData['team2_goals'],
                                                 team1_id = aData['team1_id'],
@@ -140,6 +148,65 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
                                  'team2_id' : aData['team2_id']
                                 }
 
+def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
+
+    for aMatchId, aData in aFixtureData_in.items():
+        CalculatePositionScore(aMatchId)
+        
+    for aMatchId, aData in aResultData_in.items():
+        CalculateScore(aMatchId)
+
+def CalculatePositionScore(aMatchId_in):
+    anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
+    #implement the logic for position prediction scoring here
+
+        
+def CalculateGoalScore(aMatchId_in):
+
+    anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
+    aResult = db(db.match_result.match_id == aMatchId_in).select()[0]
+    aGoalDiff = aResult.team1_goals - aResult.team2_goals
+    aResultOutcome = (aGoalDiff)/abs(aGoalDiff) if aGoalDiff != 0 else 0
+    LogVal("aResultOutcome :", aResultOutcome)
+    
+    aScoreDict = dict()
+    
+    for aPrediction in anAllPredictions:
+        logger.info("team1_goals : %s, team2_goals : %s", str(aPrediction.team1_goals), str(aPrediction.team2_goals))
+        aScore = 0
+        
+        aGoalDiff = aPrediction.team1_goals - aPrediction.team2_goals
+        aPredOutcome = (aGoalDiff) / abs(aGoalDiff) if aGoalDiff != 0 else 0
+        LogVal("aPredOutcome :", aPredOutcome)
+        
+        #   Score for outcome
+        aResultScore = 7 if aPrediction.pred_type == "prior" else 3
+        aScore += aResultScore if aResultOutcome == aPredOutcome else 0
+        LogVal("aScore1 :", aScore)
+        
+        #   Score for goals
+        aDistance = math.sqrt((aPrediction.team1_goals - aResult.team1_goals) * (aPrediction.team1_goals - aResult.team1_goals) + 
+                        (aPrediction.team2_goals - aResult.team2_goals) * (aPrediction.team2_goals - aResult.team2_goals))
+
+        LogVal("aDistance :", aDistance)
+        
+        aMaxPoint = 10 if aPrediction.pred_type == "prior" else 5
+        aDistance = min(aMaxPoint, aDistance)   # anything more than aMaxPoint should get 0. No negative business
+        aDistanceScore = aMaxPoint - aDistance  #   more distance less score. inverse law
+        LogVal("aDistanceScore :", aDistanceScore)
+        
+        aScore += int(aDistanceScore + 0.5) #round
+        aScoreDict[aPrediction.id] = aScore
+     
+    #   update the score in database.
+    for aPredId, aScore in aScoreDict.items():
+    
+        db.user_point.update_or_insert((db.user_point.match_prediction_id == aPredId), 
+                                                match_prediction_id = aPredId,
+                                                points = aScore
+                                            )
+                                            
+    
 def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
     
     aFieldTag = "team" + str(aTeamPos_in) + "_gen_matches"
@@ -156,6 +223,12 @@ def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
 
 
 def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
+
+    aScore = None
+    if fixtureId_in in aSourceTableData_in:
+        aScoreRows = db(db.user_point.match_prediction_id == aSourceTableData_in[fixtureId_in]['id']).select()
+        aScore = aScoreRows[0].points if len(aScoreRows) > 0 else None
+    
     aPredData = {"fixture_id":fixtureId_in,
                  "game_number" : aFixtureData_in['game_number'], 
                  "date_time" : aFixtureData_in['date_time'], 
@@ -170,18 +243,23 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  "team2_icon" : session.TeamTable[aFixtureData_in['team2']]["icon_file_name"],
                  "team1_goals" : aSourceTableData_in[fixtureId_in]['team1_goals'] if fixtureId_in in aSourceTableData_in else None,
                  "team2_goals" : aSourceTableData_in[fixtureId_in]['team2_goals'] if fixtureId_in in aSourceTableData_in else None,
+                 "points_scored" : aScore,
                  "venue" : aFixtureData_in['venue'], 
                  "venue_name" : session.StadiumTable[aFixtureData_in['venue']]['name'], 
                  "venue_city" : session.StadiumTable[aFixtureData_in['venue']]['city']
                  }
     return aPredData
     
-def GetGoalPredictions(aPredictionType_in, aUserId_in = auth.user):
+def GetGoalPredictions(aPredictionType_in, aUserId_in):
+    
     
     if aUserId_in == auth.user.id:
         aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
     else:
-        aPredTableData = db(db.match_prediction.predictor_id == aUserId_in and db.match_prediction.pred_type == aPredictionType_in).select().as_dict(key = 'match_id')
+        if request.env.web2py_runtime_gae:
+            aPredTableData = db((db.match_prediction.predictor_id == aUserId_in) and (db.match_prediction.pred_type == aPredictionType_in)).select().as_dict(key = 'match_id')
+        else:
+            aPredTableData = db((db.match_prediction.predictor_id == aUserId_in) & (db.match_prediction.pred_type == aPredictionType_in)).select().as_dict(key = 'match_id')
     
     return JoinFixtureWith(aPredTableData)
     
@@ -201,7 +279,7 @@ def JoinFixtureWith(aSourceData_in):
                 aResults[aGroupName] = list()
             
             aResults[aGroupName].append(aPredData)
-    #logger.info("value of aResults is %s", str(aResults))
+    
     return aResults
 
     
@@ -257,7 +335,11 @@ def GetUsers(aUserIdList_in):
 
 def GetComments(aTargetType_in, aTargetId_in):
     
-    aCommentTable = db(db.user_comment.target_type == aTargetType_in and db.user_comment.target_id == aTargetId_in).select()
+    if request.env.web2py_runtime_gae:
+        aCommentTable = db((db.user_comment.target_type == aTargetType_in) and (db.user_comment.target_id == aTargetId_in)).select()
+    else:
+        aCommentTable = db((db.user_comment.target_type == aTargetType_in) & (db.user_comment.target_id == aTargetId_in)).select()
+        
     aUserIds = [item.author_id for item in aCommentTable]
     aUserData = GetUsers(aUserIds)
 
@@ -280,7 +362,7 @@ def GetComments(aTargetType_in, aTargetId_in):
 
 def SubmitComment(aTargetType_in, aTargetId_in, aComment_in):
     #logger.info("value of auth.user,aTargetType_in, aTargetId_in, aComment_in  is %s, %s, %s, %s", str(auth.user), str(aTargetType_in), str(aTargetId_in), str(aComment_in))
-    db.user_comment.insert(author_id = auth.user, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
+    db.user_comment.insert(author_id = auth.user.id, target_id = aTargetId_in, target_type = aTargetType_in, date_time = datetime.datetime.now(), body = aComment_in)
     
 def ConvertURLArgs(anArgs_in):
     
@@ -321,7 +403,7 @@ def RecreateData(aCSVFileName_in):
 def GetActiveBets():
     
     allOpenBets = db(db.bet_offer.bet_state == 'open').select()
-    aUserBetTable = db(db.user_bet.predictor_id == auth.user).select().as_dict(key = 'bet_id')
+    aUserBetTable = db(db.user_bet.predictor_id == auth.user.id).select().as_dict(key = 'bet_id')
     
     aBetData = []
     
@@ -341,7 +423,7 @@ def GetActiveBets():
     return aBetData
     
     
-def GetOldBets(aUserId_in = auth.user):
+def GetOldBets(aUserId_in):
     
     aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
     aUserBetTable = db(db.user_bet.predictor_id == aUserId_in).select()
@@ -375,7 +457,7 @@ def UpdateUserBets(aParams_in):
     for aReq in aAllBetReq:
         db.user_bet.update_or_insert((db.user_bet.bet_id == aReq["id"]), 
                                             bet_id = aReq["id"], 
-                                            predictor_id = auth.user,
+                                            predictor_id = auth.user.id,
                                             points = aReq["points"])
 
 
@@ -654,7 +736,13 @@ def SavePreferences(aSettings):
     
 def IsAllowed(aPref_in, aUserId_in):
 
+    if aUserId_in == str(auth.user.id):
+        return 'Yes'
+        
     aPref = db((db.user_preference.user_id == aUserId_in) & (db.user_preference.pref_item == aPref_in)).select()
+    if len(aPref) == 0:
+        return 'No'
+        
     return aPref[0]['pref_value']
 
                             

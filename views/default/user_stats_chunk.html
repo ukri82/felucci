@@ -1,6 +1,6 @@
 {{for aUser in UserStats:}}
 <tr>
-    <td><a href="javascript:void(0)" onclick="ClickUserDetails({{=aUser['id']}});return false" id = "UserProfileLink">{{=aUser['nickname']}}</a></td>
+    <td><a href="javascript:void(0)" onclick="ClickUserDetails({{=aUser['id']}});return false" id = "UserProfileLink">{{=aUser['first_name']}}</a></td>
     <td>{{=aUser['last_score']}}</td>
 </tr>
 {{pass}}

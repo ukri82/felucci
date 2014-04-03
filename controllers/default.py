@@ -43,7 +43,7 @@ def submit_user_settings():
 def get_prior_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetGoalPredictions("prior"), 
+    return dict(MacthPredictionData = GetGoalPredictions("prior", auth.user.id), 
                 PositionPredictionData = GetPositionPredictions(), 
                 SubmitButtonText = "Submit Prior Predictions",
                 SubmitURL = "submit_prior_predictions",
@@ -54,7 +54,7 @@ def get_prior_predictions():
 def get_spot_predictions():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetGoalPredictions("spot"), 
+    return dict(MacthPredictionData = GetGoalPredictions("spot", auth.user.id), 
                 SubmitButtonText = "Submit Spot Predictions",
                 SubmitURL = "submit_spot_predictions",
                 PredictionFormId = "SpotPredictionFormId",
@@ -108,11 +108,6 @@ def get_user_stats_chunk():
 def get_stats():
     response.view = 'default/user_stats.html'
     return dict()
-
-@auth.requires_login()
-def get_user_details():
-    response.view = 'default/user_details.html'
-    return dict(UserId = request.vars.items()[0][1])    
     
 @auth.requires_login()
 def get_newsfeed_chunk_data():
@@ -207,7 +202,7 @@ def get_user_bets_active():
 @auth.requires_login()    
 def get_user_bets_old():
     response.view = 'default/user_old_bets.html'
-    aUserId = request.vars.UserId if request.vars.UserId is not None else auth.user
+    aUserId = request.vars.UserId if request.vars.UserId is not None else auth.user.id
     aUserBets = GetOldBets(aUserId)
     return dict(OldBets = aUserBets) 
 
