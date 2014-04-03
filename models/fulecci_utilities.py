@@ -129,7 +129,7 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
         
     for aMatchId, aData in aPredData.items():
     
-        db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & 
+        anId = db.match_prediction.update_or_insert((db.match_prediction.match_id == aMatchId) & 
                                              (db.match_prediction.predictor_id == auth.user.id) & 
                                              (db.match_prediction.pred_type == aPredictionType_in), 
                                                 match_id = aMatchId, 
@@ -145,7 +145,8 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
         aCacheTable[aMatchId] = {'team1_goals' : aData['team1_goals'],
                                  'team2_goals' : aData['team2_goals'],
                                  'team1_id' : aData['team1_id'],
-                                 'team2_id' : aData['team2_id']
+                                 'team2_id' : aData['team2_id'],
+                                 'id' : anId
                                 }
 
 def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
@@ -226,6 +227,7 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
 
     aScore = None
     if fixtureId_in in aSourceTableData_in:
+        logger.info("aSourceTableData_in[fixtureId_in]['id'] %s", str(aSourceTableData_in[fixtureId_in]))
         aScoreRows = db(db.user_point.match_prediction_id == aSourceTableData_in[fixtureId_in]['id']).select()
         aScore = aScoreRows[0].points if len(aScoreRows) > 0 else None
     
