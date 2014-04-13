@@ -95,7 +95,7 @@ def UpdateResults(aParams_in):
                                             team1 = aTeam1,
                                             team2 = aTeam2)
                                             
-    CalculateScores(aFixtureData, aResultData)
+    CalculateGoalPredictionScores(aFixtureData, aResultData)
             
 def UpdatePredictions(aParams_in, aPredictionType_in):
 
@@ -151,12 +151,110 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
 
 def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
 
+    aMatchIdSet = set()
     for aMatchId, aData in aFixtureData_in.items():
         CalculatePositionScore(aMatchId)
+        aMatchIdSet.add(aMatchId)
         
     for aMatchId, aData in aResultData_in.items():
-        CalculateScore(aMatchId)
+        CalculateGoalScore(aMatchId)
+        aMatchIdSet.add(aMatchId)
+    
+    anAffectedLeagues = UpdateMatchScore(aMatchIdSet)
+    UpdateMatchRanking(anAffectedLeagues)
+    
+    UpdateUserScores(aMatchIdSet)
 
+    return 0
+    
+def UpdateMatchScore(aMatchSet_in):
+
+    aLeagueIdSet = set()
+    
+    #   Update the scores for all users.
+    for aMatchId in sorted(aMatchSet_in):
+        aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match
+        
+        aUsers = list(set(map(lambda x:x.predictor_id, aPredForMatch)))       #   Get all predictors
+        
+        aLeagueMemberships = db(db.league_member.member_id.belongs(aUsers)).select()  #   Find their league memberships
+        
+        
+        
+        for aUserId in aUsers:
+            aLastScore = 0
+            if aMatchId > 1:    #   Assumption : Match ids always start with 1
+                
+                aLastMatch = db(((db.user_ranking_history.predictor_id == aUserId) & 
+                                  (db.user_ranking_history.match_id == (aMatchId - 1))
+                                 )).select()   #add a validation for aMatchId - 1 restriction. The score will be same across all league memberships. So, ignore that in the query
+                if len(aLastMatch) > 0:
+                    aLastScore = aLastMatch[0].score
+                                 
+            aUserScore = sum(map(lambda x:x.score, filter(lambda x:x.predictor_id == aUserId, aPredForMatch)))  #   Get the total score from all predictions
+            
+            #   Update the score for all league memberships
+            for aLeagueMember in filter(lambda x:x.member_id == aUserId, aLeagueMemberships):
+                aLeagueIdSet.add(aLeagueMember.league_id)   #   find out all the leagues that are affected
+                db.user_ranking_history.update_or_insert(((db.user_ranking_history.predictor_id == aUserId) & 
+                                                          (db.user_ranking_history.match_id == aMatchId) & 
+                                                          (db.user_ranking_history.member_id == aLeagueMember.id)
+                                                         ), 
+                                                         predictor_id = aUserId,
+                                                         match_id = aMatchId,
+                                                         member_id = aLeagueMember.id,
+                                                         score = aLastScore + aUserScore
+                                                        )
+    
+    return aLeagueIdSet
+        
+def UpdateMatchRanking(aLeagueIdSet_in):
+
+    LogVal("aLeagueIdSet :", aLeagueIdSet_in)
+    anAllRankMap = []
+    #   Update the ranking of all users in all leagues orderby=~db.notification.date_time
+    for aLeagueId in aLeagueIdSet_in:
+        allMembershipsOfLeague = map(lambda x:x.id, db(db.league_member.league_id == aLeagueId).select())
+        LogVal("allMembershipsOfLeague :", allMembershipsOfLeague)
+        
+        aUserScores = db(db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)).select(orderby=~db.user_ranking_history.score)
+        LogVal("aUserScores :", aUserScores)
+        
+        anAllRankMap.extend(list(zip(  map(lambda x:x.id, aUserScores), range(len(aUserScores))  )))
+        
+    
+    LogVal("anAllRankMap :", anAllRankMap)
+    for aRank in anAllRankMap:
+        db(db.user_ranking_history.id == aRank[0]).update(match_rank = aRank[1])
+
+def UpdateUserScores(aMatchSet_in):
+    anAllPredictions = db(db.match_prediction.match_id.belongs(list(aMatchSet_in))).select()
+    
+    aUsers = set(map(lambda x:x.predictor_id, anAllPredictions))
+    
+    LogVal("aUsers :", aUsers) 
+    
+    aUserScores = db(db.user_ranking_history.predictor_id.belongs(aUsers)).select()
+    
+    for aUserId in aUsers:
+        aLastScore = max(filter(lambda x:x.predictor_id == aUserId, aUserScores), key=lambda x:x.score).score
+        LogVal("aLastScore :", aLastScore) 
+        db(db.auth_user.id == aUserId).update(last_score = aLastScore)
+
+'''        
+    anAllPredictionMap = [[y for y in anAllPredictions if y.predictor_id == x] for x in aUsers]
+    LogVal("anAllPredictionMap :", anAllPredictionMap)
+    
+    
+    for aPredUserItem in anAllPredictionMap:
+        aTotalScore = 0
+        for aPredItem in aPredUserItem:
+            LogVal("aPredItem :", aPredItem.score)
+            aTotalScore = aTotalScore + aPredItem.score
+        LogVal("aTotalScore :", aTotalScore)   
+        db.auth_user[aPredUserItem[0].predictor_id].last_score = db.auth_user[aPredUserItem[0].predictor_id].last_score + aTotalScore
+'''
+                                           
 def CalculatePositionScore(aMatchId_in):
     anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
     #implement the logic for position prediction scoring here
@@ -202,11 +300,10 @@ def CalculateGoalScore(aMatchId_in):
     #   update the score in database.
     for aPredId, aScore in aScoreDict.items():
     
-        db.user_point.update_or_insert((db.user_point.match_prediction_id == aPredId), 
-                                                match_prediction_id = aPredId,
-                                                points = aScore
+        db.match_prediction.update_or_insert((db.match_prediction.id == aPredId), 
+                                                score = aScore
                                             )
-                                            
+
     
 def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
     
@@ -225,12 +322,6 @@ def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
 
 def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
 
-    aScore = None
-    if fixtureId_in in aSourceTableData_in:
-        logger.info("aSourceTableData_in[fixtureId_in]['id'] %s", str(aSourceTableData_in[fixtureId_in]))
-        aScoreRows = db(db.user_point.match_prediction_id == aSourceTableData_in[fixtureId_in]['id']).select()
-        aScore = aScoreRows[0].points if len(aScoreRows) > 0 else None
-    
     aPredData = {"fixture_id":fixtureId_in,
                  "game_number" : aFixtureData_in['game_number'], 
                  "date_time" : aFixtureData_in['date_time'], 
@@ -245,7 +336,7 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  "team2_icon" : session.TeamTable[aFixtureData_in['team2']]["icon_file_name"],
                  "team1_goals" : aSourceTableData_in[fixtureId_in]['team1_goals'] if fixtureId_in in aSourceTableData_in else None,
                  "team2_goals" : aSourceTableData_in[fixtureId_in]['team2_goals'] if fixtureId_in in aSourceTableData_in else None,
-                 "points_scored" : aScore,
+                 "points_scored" : aSourceTableData_in[fixtureId_in]['score'] if fixtureId_in in aSourceTableData_in and 'score' in aSourceTableData_in[fixtureId_in] else None,
                  "venue" : aFixtureData_in['venue'], 
                  "venue_name" : session.StadiumTable[aFixtureData_in['venue']]['name'], 
                  "venue_city" : session.StadiumTable[aFixtureData_in['venue']]['city']
@@ -583,7 +674,9 @@ def GetAdminLeagues():
     
     
     return aLeagueData 
-    
+ 
+
+
 def GetLeagueDetails(aLeagueId_in):
 
     aLeague = db.league[aLeagueId_in]
@@ -598,6 +691,47 @@ def GetLeagueDetails(aLeagueId_in):
                         "membership_state" : aMember.membership_state,
                         "last_score" : db.auth_user[aMember.member_id].last_score
                     }
+        aMemberData.append(aMemberItem)
+            
+    aLeagueItem = {"league_id" : aLeague.id,
+                    "league_name" : aLeague.name,
+                    "league_desc" : aLeague.league_desc,
+                    "league_state" : aLeague.league_state,
+                    "all_members" : aMemberData
+                    }       
+                    
+    return aLeagueItem 
+    
+def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
+
+    aLeague = db.league[aLeagueId_in]
+    
+    aMembers = db(db.league_member.league_id == aLeague.id).select()
+        
+    aMemberData = []
+    for aMember in aMembers:
+        
+                    
+        aScoreData = []
+        aPredictions = db((db.match_prediction.predictor_id == aMember.member_id) & (db.match_prediction.pred_type == "prior")).select(orderby=db.match_prediction.match_id)
+        
+        logger.info("aPredictions %s", str(aPredictions))
+        
+        for aPred in aPredictions:
+            
+            aScoreData.append({"match_id" : aPred.match_id, 
+                               "score" : aPred.score, 
+                             })
+            
+                                 
+        aMemberItem = {"id" : aMember.id,
+                        "member_id" : aMember.member_id,
+                        "member_name" : db.auth_user[aMember.member_id].first_name,
+                        "membership_state" : aMember.membership_state,
+                        "last_score" : db.auth_user[aMember.member_id].last_score,
+                        "detailed_score" : aScoreData,
+                        }
+            
         aMemberData.append(aMemberItem)
             
     aLeagueItem = {"league_id" : aLeague.id,

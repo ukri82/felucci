@@ -14,7 +14,7 @@ migrate_flag = True
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
-    db = DAL('sqlite://storage.sqlite',pool_size=1,check_reserved=['all'],migrate=True)
+    db = DAL('sqlite://storage.sqlite',pool_size=1,check_reserved=['all'],migrate=True, adapter_args=dict(foreign_keys=False))
 else:
     ## connect to Google BigTable (optional 'google:datastore://namespace')
     db = DAL('google:datastore')
@@ -153,7 +153,8 @@ db.define_table('match_prediction',
     Field('team1_id','integer'),
     Field('team2_id','integer'),
     Field('team1_goals','integer', IS_INT_IN_RANGE(0, 100)),
-    Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), redefine=migrate_flag
+    Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), 
+    Field('score','integer'), redefine=migrate_flag
 )
 
 db.define_table('stadium',
@@ -213,6 +214,17 @@ db.define_table('league_member',
     Field('membership_state','string', length=10, requires=IS_IN_SET(('pending','approved','rejected','removed'))),
     redefine=migrate_flag
 )
+
+
+db.define_table('user_ranking_history',
+    Field('predictor_id', db.auth_user),
+    Field('match_id', 'integer'),   #wanted a foreign key to fixture :(
+    Field('member_id', db.league_member),
+    Field('score','integer'),
+    Field('match_rank','integer'),
+    redefine=migrate_flag
+)
+
 
 db.define_table('notification',
     Field('source_id',db.auth_user),

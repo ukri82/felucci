@@ -357,7 +357,22 @@ def name_suggestions():
 @auth.requires_login()    
 def get_league_page():
     response.view = 'default/user_league_page.html'
-    return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId))     
+    return dict(LeagueId = request.vars.LeagueId) 
+
+@auth.requires_login()    
+def get_league_ranking():
+    response.view = 'default/user_league_page_ranking.html'
+    return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId))  
+
+@auth.requires_login()    
+def get_league_graph():
+    response.view = 'default/user_league_page_graph.html'
+    return dict(LeagueId = request.vars.LeagueId, LeagueDetails = GetLeagueDetailsWithDetailedScore(request.vars.LeagueId)) 
+
+@auth.requires_login()
+@service.json 
+def get_league_graph_details():
+    return response.json(GetLeagueDetailsWithDetailedScore(request.vars.LeagueId))     
 
 @auth.requires_login()    
 def get_user_details_page():
@@ -403,6 +418,7 @@ def get_user_details_bets():
 
 @auth.requires_membership('admin')
 def get_bet_admin():
+    
     response.view = 'default/admin_global_bets.html'
     anActiveBets = GetActiveBetsAdmin()
     return dict(ActiveBets = anActiveBets)  
@@ -421,6 +437,7 @@ def submit_admin_bets():
     
 @auth.requires_membership('admin')
 def admin_page():
+    response.flash = T("Admin page...")
     response.view = 'default/admin_page.html'
     return dict()
     

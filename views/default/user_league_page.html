@@ -1,70 +1,17 @@
 <div id="UserLeaguesLeageDetailsPage">
 
-<h4 style="text-align:center;"> Scoresheet of the members </h4>
+<ul class="nav nav-tabs" data-tabs="tabs" id="LeagueDetailPageTabs">
+<li class="active"><a href="#LeagueRankingArea"  data-toggle="tab" onclick="$.web2py.component('default/get_league_ranking?LeagueId=' + '{{=LeagueId}}', 'LeagueRankingArea');"><h5> Ranking </h5></a></li>
+<li><a href="#LeagueGraphArea"  data-toggle="tab" onclick="$.web2py.component('default/get_league_graph?LeagueId=' + '{{=LeagueId}}', 'LeagueGraphArea');"><h5> Graph </h5></a></li>
+</ul>
 
+<div id="LeagueDetailsTabs_content" class="tab-content">
 
+<div class="tab-pane active" id = "LeagueRankingArea">
+{{=LOAD('default','get_league_ranking?LeagueId=' + LeagueId,ajax=True, ajax_trap=True, target = "LeagueRankingArea")}}
+</div>
 
+<div class="tab-pane" id = "LeagueGraphArea"/>
 
-<script type="text/javascript">
-
-   $('#UserLeaguesLeageDetailsPage').ready( function() {
-        
-        function mapsLoaded() {
-            alert("mapsLoaded");
-            var data = google.visualization.arrayToDataTable([
-              ['Year', 'Sales', 'Expenses'],
-              ['2004',  1000,      400],
-              ['2005',  1170,      460],
-              ['2006',  660,       1120],
-              ['2007',  1030,      540]
-            ]);
-
-            var options = {
-              title: 'Company Performance'
-            };
-
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-            chart.draw(data, options);
-        }
-        google.load("visualization", "1", {packages:["corechart"], "callback" : mapsLoaded});
-        
-    });
-</script>
-<body>
-<div id="chart_div" style="width: 900px; height: 500px;"></div>
-</body>
-
-    
-
-{{aSortedLeageDetails = sorted(LeagueDetails['all_members'], key=lambda k: k['last_score'], reverse=True)}}
-<table class="table1" id = "user_leagues_table__{{=LeagueDetails['league_id']}}">
-    <thead>
-        <tr>
-            <th scope="col" abbr="LeagueName">Member</th>
-            <th scope="col" abbr="LeagueOwner">Score</th>
-        </tr>
-    </thead>
-    
-    <tbody>
-    {{for item in aSortedLeageDetails:}}
-    {{if item['membership_state'] == 'approved':}}
-    <tr>
-        <td style="width: 40%">
-            <a href="#" id="user_leagues_table__Link_{{=item['id']}}_{{=item['member_id']}}">
-            {{=item['member_name']}}   
-            </a>
-            <script>
-            $('#user_leagues_table__Link_{{=item['id']}}_{{=item['member_id']}}').click(function() {
-                $.web2py.component('default/get_user_details_page?UserId=' + {{=item['member_id']}}, "user_leagues_table__{{=LeagueDetails['league_id']}}");
-                return false;
-            });
-            </script>
-        </td>
-        <td style="width: 40%"> {{=item['last_score']}}   </td>
-    </tr>
-    {{pass}}
-   {{pass}}
-    </tbody>
-</table>
-
+</div>
 </div>
