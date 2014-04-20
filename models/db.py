@@ -50,7 +50,7 @@ crud, service, plugins = Crud(db), Service(), PluginManager()
 auth.settings.extra_fields[auth.settings.table_user_name]= [
   Field('nickname', 'string'),
   Field('image', 'upload'),
-  Field('last_score', 'integer', writable=False)
+  Field('last_score', 'integer', writable=False, default=0)
 ]
 
 ## create all tables needed by auth if not custom tables
@@ -154,7 +154,7 @@ db.define_table('match_prediction',
     Field('team2_id','integer'),
     Field('team1_goals','integer', IS_INT_IN_RANGE(0, 100)),
     Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), 
-    Field('score','integer'), redefine=migrate_flag
+    Field('score','integer', default=0), redefine=migrate_flag
 )
 
 db.define_table('stadium',
@@ -178,11 +178,6 @@ db.define_table('team',
     Field('key_players','string', length=50), redefine=migrate_flag
 )
 
-db.define_table('user_point',
-    Field('match_prediction_id', db.match_prediction),
-    Field('points','integer'), redefine=migrate_flag
-)
-
 db.define_table('bet_offer',
     Field('match_id',db.fixture),
     Field('offer','text'),
@@ -195,8 +190,8 @@ db.define_table('bet_offer',
 db.define_table('user_bet',
     Field('predictor_id',db.auth_user),
     Field('bet_id', db.bet_offer),
-    Field('points','integer'),
-    Field('scored_points','integer'), 
+    Field('points','integer', default=0),
+    Field('scored_points','integer', default=0), 
     redefine=migrate_flag
 )
 
@@ -220,7 +215,7 @@ db.define_table('user_ranking_history',
     Field('predictor_id', db.auth_user),
     Field('match_id', 'integer'),   #wanted a foreign key to fixture :(
     Field('member_id', db.league_member),
-    Field('score','integer'),
+    Field('score','integer', default=0),
     Field('match_rank','integer'),
     redefine=migrate_flag
 )

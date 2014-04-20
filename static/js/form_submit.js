@@ -55,6 +55,7 @@ function submitForm(aPredFormId_in){
             // reenable the inputs
             $inputs.prop("disabled", false);
             theStartItemsDict[aPredFormId_in] = convertSerializedArrayToHash($form.serializeArray());
+            console.info("The following error occured: " + theStartItemsDict);
         });
     }
     return false;

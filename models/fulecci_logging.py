@@ -16,8 +16,8 @@ class GAEHandler(logging.Handler):
             thread = db.IntegerProperty()
             thread_name = db.StringProperty()
             process = db.IntegerProperty()
-            message = db.StringProperty(multiline=True)
-            args = db.StringProperty(multiline=True)
+            message = db.TextProperty()
+            args = db.TextProperty()
             date = db.DateTimeProperty(auto_now_add=True)
 
         log = Log()

@@ -21,6 +21,7 @@ def index():
         response.view = 'default/user_page.html'
         CacheData()
         CreateUserPreferences()
+        CreateGlobalLeagueAndAddMember()
     
     return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
 
@@ -476,7 +477,8 @@ def user():
     if request.args(0) == 'login':
         logger.info("request.args : %s", str(request))
         if form.accepts(request,session):
-            CreateUserPreferences()           
+            CreateUserPreferences()
+            CreateGlobalLeagueAndAddMember()
     """        
         
     return dict(form=auth())

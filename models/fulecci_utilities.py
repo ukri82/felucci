@@ -3,23 +3,20 @@ import re
 import datetime
 import collections
 import math
+import time
 
 def LogVal(aDesc_in, aVar_in):
     logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
     
 def CacheData():
+    logging.info("Cache is recreated for user : %s", str(auth.user.id))
     session.StadiumTable = db().select(db.stadium.ALL).as_dict( key = 'stadium_id')
     session.TeamTable = db().select(db.team.ALL).as_dict( key = 'team_id')
     session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
     session.TeamGroupTable = db().select(db.team_group.ALL).as_dict(key = 'team_id')
     
-    if request.env.web2py_runtime_gae:
-        session.PriorPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) and (db.match_prediction.pred_type == "prior")).select().as_dict(key = 'match_id')
-        session.SpotPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) and (db.match_prediction.pred_type == "spot")).select().as_dict(key = 'match_id')
-    else:
-        session.PriorPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "prior")).select().as_dict(key = 'match_id')
-        session.SpotPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "spot")).select().as_dict(key = 'match_id')
-
+    session.PriorPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "prior")).select().as_dict(key = 'match_id')
+    session.SpotPredictionTable = db((db.match_prediction.predictor_id == auth.user.id) & (db.match_prediction.pred_type == "spot")).select().as_dict(key = 'match_id')
         
 def ParseResultStr(aResult_in):
     
@@ -43,8 +40,35 @@ def ParseResultStr(aResult_in):
     aTeamIndex = int(aTeamIndexStr) - 1
 
     return aMatchId, aTeamIndex, aMatchOrPos
+  
+ 
+def StoreMatchResults(aResultData):
+
+    for aMatchId, aData in aResultData.items():
+        #logger.info("(aMatchId: %s, team1_goals: %s, team2_goals: %s)", str(aMatchId), str(aData['team1_goals']), str(aData['team2_goals']))
+        db.match_result.update_or_insert((db.match_result.match_id == aMatchId), 
+                                            match_id = aMatchId, 
+                                            team1_goals = aData['team1_goals'], 
+                                            team2_goals = aData['team2_goals'])
+    time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE                              
+    
+                                          
+def UpdateFixture(aFixtureData):
+
+    for aMatchId, aData in aFixtureData.items():
+        #logger.info("(aMatchId: %s, team1: %s, team1: %s)", str(aMatchId), str(aData['team1']), str(aData['team2']))
+        aTeam1 = aData['team1']
+        aTeam2 = aData['team2']
+        if aTeam2 == 0:
+            aTeam2 = aTeam1
         
-def UpdateResults(aParams_in):
+        db.fixture.update_or_insert((db.fixture.fixture_id == aMatchId), 
+                                            fixture_id = aMatchId, 
+                                            team1 = aTeam1,
+                                            team2 = aTeam2)
+    time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
+    
+def ExtractResultData(aParams_in):
     '''
     process each team results for each match
     '''
@@ -75,26 +99,16 @@ def UpdateResults(aParams_in):
                 aFixtureData[aMatchId]['team1'] = int(aParams_in[aUpdateReq])
             else:
                 aFixtureData[aMatchId]['team2'] = int(aParams_in[aUpdateReq])
-            
-    for aMatchId, aData in aResultData.items():
-        #logger.info("(aMatchId: %s, team1_goals: %s, team2_goals: %s)", str(aMatchId), str(aData['team1_goals']), str(aData['team2_goals']))
-        db.match_result.update_or_insert((db.match_result.match_id == aMatchId), 
-                                            match_id = aMatchId, 
-                                            team1_goals = aData['team1_goals'], 
-                                            team2_goals = aData['team2_goals'])
-                                            
-    for aMatchId, aData in aFixtureData.items():
-        #logger.info("(aMatchId: %s, team1: %s, team1: %s)", str(aMatchId), str(aData['team1']), str(aData['team2']))
-        aTeam1 = aData['team1']
-        aTeam2 = aData['team2']
-        if aTeam2 == 0:
-            aTeam2 = aTeam1
+                
+    return aFixtureData, aResultData
+                
+def UpdateResults(aParams_in):
+
+    aFixtureData, aResultData = ExtractResultData(aParams_in)
+    
+    UpdateFixture(aFixtureData)  
+    StoreMatchResults(aResultData)   
         
-        db.fixture.update_or_insert((db.fixture.fixture_id == aMatchId), 
-                                            fixture_id = aMatchId, 
-                                            team1 = aTeam1,
-                                            team2 = aTeam2)
-                                            
     CalculateGoalPredictionScores(aFixtureData, aResultData)
             
 def UpdatePredictions(aParams_in, aPredictionType_in):
@@ -118,14 +132,14 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
         
         if aMatchOrPos == "match":
             if aTeamIndex == 0:
-                aPredData[aMatchId]['team1_goals'] = int(aParams_in[aPredictReq])
+                aPredData[aMatchId]['team1_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
             else:
-                aPredData[aMatchId]['team2_goals'] = int(aParams_in[aPredictReq])
+                aPredData[aMatchId]['team2_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
         else:
             if aTeamIndex == 0:
-                aPredData[aMatchId]['team1_id'] = int(aParams_in[aPredictReq])
+                aPredData[aMatchId]['team1_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
             else:
-                aPredData[aMatchId]['team2_id'] = int(aParams_in[aPredictReq])
+                aPredData[aMatchId]['team2_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
         
     for aMatchId, aData in aPredData.items():
     
@@ -160,64 +174,81 @@ def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
         CalculateGoalScore(aMatchId)
         aMatchIdSet.add(aMatchId)
     
-    anAffectedLeagues = UpdateMatchScore(aMatchIdSet)
-    UpdateMatchRanking(anAffectedLeagues)
+    
+    UpdateMatchScoreAndRankForAllUsers(aMatchIdSet)
+    
     
     UpdateUserScores(aMatchIdSet)
 
     return 0
-    
-def UpdateMatchScore(aMatchSet_in):
 
-    aLeagueIdSet = set()
+
+def UpdateUserRankingHistory(aUserId, aMatchId, aLeagueMemberships, aCurrentScore):
+
+    for aLeagueMember in aLeagueMemberships:
+        db.user_ranking_history.update_or_insert(((db.user_ranking_history.predictor_id == aUserId) & 
+                                                  (db.user_ranking_history.match_id == aMatchId) & 
+                                                  (db.user_ranking_history.member_id == aLeagueMember.id)
+                                                 ), 
+                                                 predictor_id = aUserId,
+                                                 match_id = aMatchId,
+                                                 member_id = aLeagueMember.id,
+                                                 score = aCurrentScore
+                                                )
     
+ 
+def GetLastScoreForUser(aUserId_in, aMatchId_in):
+    aLastScore = 0
+    if aMatchId_in > 1:    #   Assumption : Match ids always start with 1
+        
+        aLastMatch = db(((db.user_ranking_history.predictor_id == aUserId_in) & 
+                          (db.user_ranking_history.match_id == (aMatchId_in - 1))
+                         )).select()   #add a validation for aMatchId_in - 1 restriction. The score will be same across all league memberships. So, ignore that in the query
+        if len(aLastMatch) > 0:
+            aLastScore = aLastMatch[0].score
+            
+    return aLastScore
+                
+def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
+
     #   Update the scores for all users.
     for aMatchId in sorted(aMatchSet_in):
         aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match
         
         aUsers = list(set(map(lambda x:x.predictor_id, aPredForMatch)))       #   Get all predictors
+        logging.info("aUsers : %s", str(aUsers))
         
-        aLeagueMemberships = db(db.league_member.member_id.belongs(aUsers)).select()  #   Find their league memberships
-        
-        
+        aLeagueIdSet = set()
         
         for aUserId in aUsers:
-            aLastScore = 0
-            if aMatchId > 1:    #   Assumption : Match ids always start with 1
-                
-                aLastMatch = db(((db.user_ranking_history.predictor_id == aUserId) & 
-                                  (db.user_ranking_history.match_id == (aMatchId - 1))
-                                 )).select()   #add a validation for aMatchId - 1 restriction. The score will be same across all league memberships. So, ignore that in the query
-                if len(aLastMatch) > 0:
-                    aLastScore = aLastMatch[0].score
-                                 
+            aLeagueMemberships = db((db.league_member.member_id == aUserId) & (db.league_member.membership_state == 'approved')).select()  #   Find their league memberships
+        
             aUserScore = sum(map(lambda x:x.score, filter(lambda x:x.predictor_id == aUserId, aPredForMatch)))  #   Get the total score from all predictions
+            aCurrentScore = GetLastScoreForUser(aUserId, aMatchId) + aUserScore
             
             #   Update the score for all league memberships
-            for aLeagueMember in filter(lambda x:x.member_id == aUserId, aLeagueMemberships):
-                aLeagueIdSet.add(aLeagueMember.league_id)   #   find out all the leagues that are affected
-                db.user_ranking_history.update_or_insert(((db.user_ranking_history.predictor_id == aUserId) & 
-                                                          (db.user_ranking_history.match_id == aMatchId) & 
-                                                          (db.user_ranking_history.member_id == aLeagueMember.id)
-                                                         ), 
-                                                         predictor_id = aUserId,
-                                                         match_id = aMatchId,
-                                                         member_id = aLeagueMember.id,
-                                                         score = aLastScore + aUserScore
-                                                        )
-    
-    return aLeagueIdSet
+            UpdateUserRankingHistory(aUserId, aMatchId, aLeagueMemberships, aCurrentScore)
+            
+            LogVal("aLeagueMemberships :", aLeagueMemberships)
+            aLeagueIdSet |= set(map(lambda x:x.league_id, aLeagueMemberships))
+            
         
-def UpdateMatchRanking(aLeagueIdSet_in):
+        
+        time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
+            
+        UpdateMatchRanking(aMatchId, aLeagueIdSet)
+            
+        
+def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
 
     LogVal("aLeagueIdSet :", aLeagueIdSet_in)
     anAllRankMap = []
     #   Update the ranking of all users in all leagues orderby=~db.notification.date_time
     for aLeagueId in aLeagueIdSet_in:
-        allMembershipsOfLeague = map(lambda x:x.id, db(db.league_member.league_id == aLeagueId).select())
+        allMembershipsOfLeague = map(lambda x:x.id, db((db.league_member.league_id == aLeagueId) & (db.league_member.membership_state == 'approved')).select())
         LogVal("allMembershipsOfLeague :", allMembershipsOfLeague)
         
-        aUserScores = db(db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)).select(orderby=~db.user_ranking_history.score)
+        aUserScores = db((db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)
         LogVal("aUserScores :", aUserScores)
         
         anAllRankMap.extend(list(zip(  map(lambda x:x.id, aUserScores), range(len(aUserScores))  )))
@@ -225,35 +256,25 @@ def UpdateMatchRanking(aLeagueIdSet_in):
     
     LogVal("anAllRankMap :", anAllRankMap)
     for aRank in anAllRankMap:
-        db(db.user_ranking_history.id == aRank[0]).update(match_rank = aRank[1])
+        db(db.user_ranking_history.id == aRank[0]).update(match_rank = aRank[1] + 1)
 
 def UpdateUserScores(aMatchSet_in):
-    anAllPredictions = db(db.match_prediction.match_id.belongs(list(aMatchSet_in))).select()
+
+    anAllPredictions = []
+    for aMatchId in aMatchSet_in:
+        anAllPredictions.extend(db(db.match_prediction.match_id == aMatchId).select())
     
     aUsers = set(map(lambda x:x.predictor_id, anAllPredictions))
     
     LogVal("aUsers :", aUsers) 
     
-    aUserScores = db(db.user_ranking_history.predictor_id.belongs(aUsers)).select()
-    
     for aUserId in aUsers:
+        aUserScores = db(db.user_ranking_history.predictor_id == aUserId).select()
         aLastScore = max(filter(lambda x:x.predictor_id == aUserId, aUserScores), key=lambda x:x.score).score
         LogVal("aLastScore :", aLastScore) 
         db(db.auth_user.id == aUserId).update(last_score = aLastScore)
 
-'''        
-    anAllPredictionMap = [[y for y in anAllPredictions if y.predictor_id == x] for x in aUsers]
-    LogVal("anAllPredictionMap :", anAllPredictionMap)
-    
-    
-    for aPredUserItem in anAllPredictionMap:
-        aTotalScore = 0
-        for aPredItem in aPredUserItem:
-            LogVal("aPredItem :", aPredItem.score)
-            aTotalScore = aTotalScore + aPredItem.score
-        LogVal("aTotalScore :", aTotalScore)   
-        db.auth_user[aPredUserItem[0].predictor_id].last_score = db.auth_user[aPredUserItem[0].predictor_id].last_score + aTotalScore
-'''
+
                                            
 def CalculatePositionScore(aMatchId_in):
     anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
@@ -274,20 +295,21 @@ def CalculateGoalScore(aMatchId_in):
         logger.info("team1_goals : %s, team2_goals : %s", str(aPrediction.team1_goals), str(aPrediction.team2_goals))
         aScore = 0
         
-        aGoalDiff = aPrediction.team1_goals - aPrediction.team2_goals
-        aPredOutcome = (aGoalDiff) / abs(aGoalDiff) if aGoalDiff != 0 else 0
-        LogVal("aPredOutcome :", aPredOutcome)
-        
-        #   Score for outcome
-        aResultScore = 7 if aPrediction.pred_type == "prior" else 3
-        aScore += aResultScore if aResultOutcome == aPredOutcome else 0
-        LogVal("aScore1 :", aScore)
-        
-        #   Score for goals
-        aDistance = math.sqrt((aPrediction.team1_goals - aResult.team1_goals) * (aPrediction.team1_goals - aResult.team1_goals) + 
-                        (aPrediction.team2_goals - aResult.team2_goals) * (aPrediction.team2_goals - aResult.team2_goals))
+        if aPrediction.team1_goals is not None and aPrediction.team2_goals is not None:
+            aGoalDiff = aPrediction.team1_goals - aPrediction.team2_goals
+            aPredOutcome = (aGoalDiff) / abs(aGoalDiff) if aGoalDiff != 0 else 0
+            LogVal("aPredOutcome :", aPredOutcome)
+            
+            #   Score for outcome
+            aResultScore = 7 if aPrediction.pred_type == "prior" else 3
+            aScore += aResultScore if aResultOutcome == aPredOutcome else 0
+            LogVal("aScore1 :", aScore)
+            
+            #   Score for goals
+            aDistance = math.sqrt((aPrediction.team1_goals - aResult.team1_goals) * (aPrediction.team1_goals - aResult.team1_goals) + 
+                            (aPrediction.team2_goals - aResult.team2_goals) * (aPrediction.team2_goals - aResult.team2_goals))
 
-        LogVal("aDistance :", aDistance)
+            LogVal("aDistance :", aDistance)
         
         aMaxPoint = 10 if aPrediction.pred_type == "prior" else 5
         aDistance = min(aMaxPoint, aDistance)   # anything more than aMaxPoint should get 0. No negative business
@@ -345,15 +367,17 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
     
 def GetGoalPredictions(aPredictionType_in, aUserId_in):
     
+    logging.info("aUserId_in: %s", str(aUserId_in))
     
     if aUserId_in == auth.user.id:
         aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
     else:
-        if request.env.web2py_runtime_gae:
-            aPredTableData = db((db.match_prediction.predictor_id == aUserId_in) and (db.match_prediction.pred_type == aPredictionType_in)).select().as_dict(key = 'match_id')
-        else:
+        '''if request.env.web2py_runtime_gae:
             aPredTableData = db((db.match_prediction.predictor_id == aUserId_in) & (db.match_prediction.pred_type == aPredictionType_in)).select().as_dict(key = 'match_id')
+        else:'''
+        aPredTableData = db((db.match_prediction.predictor_id == aUserId_in) & (db.match_prediction.pred_type == aPredictionType_in)).select().as_dict(key = 'match_id')
     
+    logging.info("aPredTableData: %s", str(aPredTableData))
     return JoinFixtureWith(aPredTableData)
     
 def JoinFixtureWith(aSourceData_in):
@@ -428,10 +452,10 @@ def GetUsers(aUserIdList_in):
 
 def GetComments(aTargetType_in, aTargetId_in):
     
-    if request.env.web2py_runtime_gae:
+    '''if request.env.web2py_runtime_gae:
         aCommentTable = db((db.user_comment.target_type == aTargetType_in) and (db.user_comment.target_id == aTargetId_in)).select()
-    else:
-        aCommentTable = db((db.user_comment.target_type == aTargetType_in) & (db.user_comment.target_id == aTargetId_in)).select()
+    else:'''
+    aCommentTable = db((db.user_comment.target_type == aTargetType_in) & (db.user_comment.target_id == aTargetId_in)).select()
         
     aUserIds = [item.author_id for item in aCommentTable]
     aUserData = GetUsers(aUserIds)
@@ -584,10 +608,10 @@ def GetNumUnreadNotifications():
     
 def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    if request.env.web2py_runtime_gae:
+    '''if request.env.web2py_runtime_gae:
         aNumEntries = db((db.notification.target_id == auth.user.id) and ~(db.notification.read_state == "deleted")).count()
-    else:
-        aNumEntries = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).count()
+    else:'''
+    aNumEntries = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).count()
     
     
     if aDirection_in == 'Left':
@@ -605,24 +629,23 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
             
-    if request.env.web2py_runtime_gae:
+    '''if request.env.web2py_runtime_gae:
         allMessages = db(db.notification.target_id == auth.user.id).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
-    else:
-        allMessages = db((db.notification.target_id == auth.user.id) and (db.notification.read_state != "deleted")).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
+    else:'''
+    allMessages = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).select(orderby = db.notification.read_state | ~db.notification.date_time, limitby=(aLeft, aRight))
         
     aMessageData = []
     for aMessageItem in allMessages:
-        logger.info("aMessageItem.target_id : %s" , str(aMessageItem.target_id));
-        if aMessageItem.read_state != "deleted":
-            aMessage = {"id" : aMessageItem.id,
-                        "date_time" : aMessageItem.date_time,
-                        "source_id" : aMessageItem.source_id,
-                        "source_name" : db.auth_user[aMessageItem.source_id].first_name,
-                        "subject" : aMessageItem.subject,
-                        "notification_body" : aMessageItem.notification_body,
-                        "read_state" : aMessageItem.read_state
-                        }
-            aMessageData.append(aMessage)
+        #if aMessageItem.read_state != "deleted":
+        aMessage = {"id" : aMessageItem.id,
+                    "date_time" : aMessageItem.date_time,
+                    "source_id" : aMessageItem.source_id,
+                    "source_name" : db.auth_user[aMessageItem.source_id].first_name,
+                    "subject" : aMessageItem.subject,
+                    "notification_body" : aMessageItem.notification_body,
+                    "read_state" : aMessageItem.read_state
+                    }
+        aMessageData.append(aMessage)
             
     return aMoreLeftFlag, aMoreRightFlag, anOffset_in, sorted(aMessageData, key=lambda k: k["date_time"], reverse = True)
     
@@ -863,7 +886,21 @@ def CreateUserPreferences():
         db.user_preference.insert(user_id = auth.user.id, pref_item = "Share prior prediction with public", pref_type = 'bool', pref_value = 'No')  
         db.user_preference.insert(user_id = auth.user.id, pref_item = "Share spot prediction with public", pref_type = 'bool', pref_value = 'No')
         db.user_preference.insert(user_id = auth.user.id, pref_item = "Share old bet details with public", pref_type = 'bool', pref_value = 'No') 
+ 
+def CreateGlobalLeagueAndAddMember():
+    
+    aGlobalLeague = db(db.league.name == "GlobalLeague").select()
+    
+    aLeagueId = 0
+    
+    if len(aGlobalLeague) == 0:
+        aLeagueId = db.league.insert(owner_id = auth.user.id, name = "GlobalLeague", league_desc = "Global League", league_state = 'active')
+    else:
+        aLeagueId = aGlobalLeague[0].id
         
+    aLeagueMember = db(( db.league_member.league_id == aLeagueId ) & (db.league_member.member_id == auth.user.id)).select()
+    if len(aLeagueMember) == 0:
+        db.league_member.insert(league_id = aLeagueId, member_id = auth.user.id, membership_state = 'approved')
     
 
 def SavePreferences(aSettings):
