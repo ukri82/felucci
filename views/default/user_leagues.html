@@ -32,6 +32,11 @@ League Description : <input value="" type="text" id="LeagueDescInput"/>
 <input type="button" value="Create" id="LeagueNameCreateButton"/>
 <script>
             $('#LeagueNameCreateButton').click(function() {
+                if($('#LeagueNameInput').val() == "GlobalLeague")
+                {
+                    alert("This is a reserved league name. Please choose another name");
+                    return false;
+                }
                 $.ajax({  type: "POST",  
                     url: '{{=URL('create_league')}}',  
                     data: { LeagueName: $('#LeagueNameInput').val(), LeagueDesc: $('#LeagueDescInput').val() }}).done(function( data ) {

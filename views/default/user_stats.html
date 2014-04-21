@@ -21,7 +21,7 @@ function StatsAvailableCB(aFirst_in)
 {
     $("#stats_table tbody").append($("#user_stats_content_dummy").html());
 }    
-LoadOnDemand("default/get_user_stats_chunk", "user_stats_content_dummy", "MoreStatsLink", "MoreFlag", StatsAvailableCB);
+LoadOnDemand("default/get_user_stats_chunk", "", "user_stats_content_dummy", "MoreStatsLink", "MoreFlag", StatsAvailableCB);
 
 function ClickUserDetails(aUserId_in)
 {

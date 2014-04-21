@@ -86,7 +86,8 @@ def get_results():
 @auth.requires_login()
 def get_user_stats_chunk_data():
     
-    if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+    #if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+    if request.vars.NextChunk == 'true':
         session.myUserStatsOffset = session.myUserStatsOffset + 4
     else:
         session.myUserStatsOffset = 0
@@ -113,7 +114,8 @@ def get_stats():
 @auth.requires_login()
 def get_newsfeed_chunk_data():
     
-    if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+    #if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
+    if request.vars.NextChunk == 'true':
         session.myNewsFeedOffset = session.myNewsFeedOffset + 4
     else:
         session.myNewsFeedOffset = 0
@@ -360,9 +362,29 @@ def get_league_page():
     response.view = 'default/user_league_page.html'
     return dict(LeagueId = request.vars.LeagueId) 
 
+@auth.requires_login()
+def get_league_ranking_chunk_data():
+    
+    if request.vars.NextChunk == 'true':
+        session.myLeagueRankingOffset = session.myLeagueRankingOffset + 2
+    else:
+        session.myLeagueRankingOffset = 0
+        
+    aMoreFlag, aMemberData = GetLeagueRankNextChunk(request.vars.LeagueId, session.myLeagueRankingOffset, 2)
+    return aMoreFlag, aMemberData
+    
+@auth.requires_login()
+def get_league_ranking_chunk():
+    
+    aMoreFlag, aMemberData = get_league_ranking_chunk_data()
+    
+    response.view = 'default/user_league_page_ranking_chunk.html'
+    return dict(LeagueDetails = aMemberData, MoreFlag = aMoreFlag, LeagueId = request.vars.LeagueId)
+    
 @auth.requires_login()    
 def get_league_ranking():
-    response.view = 'default/user_league_page_ranking.html'
+    logger.info("[%s] : get_league_ranking", str(request.vars.LeagueId))
+    response.view = 'default/user_league_page_ranking_main.html'
     return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId))  
 
 @auth.requires_login()    

@@ -50,7 +50,9 @@ def StoreMatchResults(aResultData):
                                             match_id = aMatchId, 
                                             team1_goals = aData['team1_goals'], 
                                             team2_goals = aData['team2_goals'])
-    time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE                              
+                                            
+    if request.env.web2py_runtime_gae:
+        time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE                              
     
                                           
 def UpdateFixture(aFixtureData):
@@ -66,7 +68,9 @@ def UpdateFixture(aFixtureData):
                                             fixture_id = aMatchId, 
                                             team1 = aTeam1,
                                             team2 = aTeam2)
-    time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
+                                            
+    if request.env.web2py_runtime_gae:
+        time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
     
 def ExtractResultData(aParams_in):
     '''
@@ -215,15 +219,16 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
     for aMatchId in sorted(aMatchSet_in):
         aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match
         
-        aUsers = list(set(map(lambda x:x.predictor_id, aPredForMatch)))       #   Get all predictors
-        logging.info("aUsers : %s", str(aUsers))
+        aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL)))       #   Get all predictors
+        LogVal("aUsers :", aUsers)
         
         aLeagueIdSet = set()
         
         for aUserId in aUsers:
             aLeagueMemberships = db((db.league_member.member_id == aUserId) & (db.league_member.membership_state == 'approved')).select()  #   Find their league memberships
         
-            aUserScore = sum(map(lambda x:x.score, filter(lambda x:x.predictor_id == aUserId, aPredForMatch)))  #   Get the total score from all predictions
+            aPredictionsForUser = filter(lambda x:x.predictor_id == aUserId, aPredForMatch)
+            aUserScore = sum(map(lambda x:x.score, aPredictionsForUser)) if aPredictionsForUser else 0  #   Get the total score from all predictions
             aCurrentScore = GetLastScoreForUser(aUserId, aMatchId) + aUserScore
             
             #   Update the score for all league memberships
@@ -233,8 +238,8 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
             aLeagueIdSet |= set(map(lambda x:x.league_id, aLeagueMemberships))
             
         
-        
-        time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
+        if request.env.web2py_runtime_gae:
+            time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
             
         UpdateMatchRanking(aMatchId, aLeagueIdSet)
             
@@ -608,9 +613,6 @@ def GetNumUnreadNotifications():
     
 def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     
-    '''if request.env.web2py_runtime_gae:
-        aNumEntries = db((db.notification.target_id == auth.user.id) and ~(db.notification.read_state == "deleted")).count()
-    else:'''
     aNumEntries = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).count()
     
     
@@ -629,9 +631,6 @@ def GetUserNotifications(anOffset_in, aCount_in, aDirection_in):
     aMoreLeftFlag = aLeft > 0
     aMoreRightFlag = aRight < aNumEntries
             
-    '''if request.env.web2py_runtime_gae:
-        allMessages = db(db.notification.target_id == auth.user.id).select(orderby=~db.notification.date_time, limitby=(aLeft, aRight))
-    else:'''
     allMessages = db((db.notification.target_id == auth.user.id) & (db.notification.read_state != "deleted")).select(orderby = db.notification.read_state | ~db.notification.date_time, limitby=(aLeft, aRight))
         
     aMessageData = []
@@ -725,34 +724,75 @@ def GetLeagueDetails(aLeagueId_in):
                     
     return aLeagueItem 
     
+def GetLeagueRankNextChunk(aLeagueId_in, anOffset_in, aCount_in):
+
+    LogVal("aLeagueId_in :", aLeagueId_in)
+    aMemberDict = db(db.league_member.league_id == aLeagueId_in).select().as_dict(key = 'id')
+    aMembers = aMemberDict.keys()
+    aLastMatchIdRec = db.user_ranking_history.match_id.max()
+    if aLastMatchIdRec is None:
+        return False, []
+    
+    aLastMatchId = db().select(aLastMatchIdRec).first()[aLastMatchIdRec]
+    LogVal("aLastMatchId :", aLastMatchId)
+    
+    aNumEntries = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).count()
+    aMin = min(anOffset_in + aCount_in, aNumEntries)
+    LogVal("aNumEntries :", aNumEntries)
+    LogVal("aMin :", aMin)
+    LogVal("aMembers :", aMembers)
+    
+    aRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(anOffset_in, aMin))
+    LogVal("aRankingHistory :", aRankingHistory)
+    
+    LogVal("aMemberDict :", aMemberDict)
+    aMemberData = []
+    for aRankingHistory in aRankingHistory:
+        aMemberItem = {"id" : aRankingHistory.id,
+                        "match_rank" : aRankingHistory.match_rank,
+                        "member_id" : aRankingHistory.predictor_id,
+                        "member_name" : db.auth_user[aRankingHistory.predictor_id].first_name,
+                        "membership_state" : aMemberDict[aRankingHistory.member_id]['membership_state'],
+                        "last_score" : aRankingHistory.score
+                    }
+        aMemberData.append(aMemberItem)
+    
+    return aNumEntries > aMin , aMemberData
+    
+    
 def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
 
     aLeague = db.league[aLeagueId_in]
     
-    aMembers = db(db.league_member.league_id == aLeague.id).select()
-        
+    aMembers = map(lambda x:x.id, db(db.league_member.league_id == aLeague.id).select())
+    LogVal("aMembers :", aMembers)
+    
+    aLastMatchIdRec = db.user_ranking_history.match_id.max()
+    if aLastMatchIdRec is None:
+        return []
+    aLastMatchId = db().select(aLastMatchIdRec).first()[aLastMatchIdRec]
+    
+    aUserRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(0, 10))
+    LogVal("aUserRankingHistory :", aUserRankingHistory)
+    
+    aUsers = set(map(lambda x:x.predictor_id, aUserRankingHistory))
+    LogVal("aUsers :", aUsers)
+       
     aMemberData = []
-    for aMember in aMembers:
+    for aUserId in aUsers:
         
-                    
-        aScoreData = []
-        aPredictions = db((db.match_prediction.predictor_id == aMember.member_id) & (db.match_prediction.pred_type == "prior")).select(orderby=db.match_prediction.match_id)
+        aAllUserHistory = db(db.user_ranking_history.predictor_id == aUserId).select(orderby = db.user_ranking_history.match_id)
+        LogVal("aAllUserHistory :", aAllUserHistory)
         
-        logger.info("aPredictions %s", str(aPredictions))
+        aRankHistory = map(lambda x:{  "match_id" : x.match_id, 
+                                        "match_rank" : x.match_rank, 
+                                     }, aAllUserHistory)
         
-        for aPred in aPredictions:
-            
-            aScoreData.append({"match_id" : aPred.match_id, 
-                               "score" : aPred.score, 
-                             })
-            
-                                 
+        aMember = aAllUserHistory[0]                         
         aMemberItem = {"id" : aMember.id,
-                        "member_id" : aMember.member_id,
-                        "member_name" : db.auth_user[aMember.member_id].first_name,
-                        "membership_state" : aMember.membership_state,
-                        "last_score" : db.auth_user[aMember.member_id].last_score,
-                        "detailed_score" : aScoreData,
+                        "member_id" : aMember.predictor_id,
+                        "member_name" : db.auth_user[aMember.predictor_id].first_name,
+                        "rank_history" : aRankHistory,
                         }
             
         aMemberData.append(aMemberItem)
@@ -763,7 +803,8 @@ def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
                     "league_state" : aLeague.league_state,
                     "all_members" : aMemberData
                     }       
-                    
+     
+    LogVal("aLeagueItem :", aLeagueItem)
     return aLeagueItem 
     
 def GetAllLeagues():
@@ -894,7 +935,7 @@ def CreateGlobalLeagueAndAddMember():
     aLeagueId = 0
     
     if len(aGlobalLeague) == 0:
-        aLeagueId = db.league.insert(owner_id = auth.user.id, name = "GlobalLeague", league_desc = "Global League", league_state = 'active')
+        aLeagueId = db.league.insert(name = "GlobalLeague", league_desc = "Global League", league_state = 'active')
     else:
         aLeagueId = aGlobalLeague[0].id
         

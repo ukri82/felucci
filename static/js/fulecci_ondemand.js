@@ -1,10 +1,17 @@
-function LoadNextChunk(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, aFirst_in, aDataCallback_in)
+function LoadNextChunk(aURL_in, aParams_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, aFirst_in, aDataCallback_in)
 {
     aURL = aURL_in;
+    aNextChunk = "false";
     if(aFirst_in == false)
     {
-        aURL += "?NextChunk=True";
+        aNextChunk = "true";
     }
+    aURL += "?";
+    if(aParams_in != "")
+    {
+        aURL += aParams_in + "&";
+    }
+    aURL += "NextChunk=" + aNextChunk;
     
     $.web2py.component(aURL, aTargetDivId_in);
     
@@ -33,14 +40,14 @@ function LoadNextChunk(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in,
     }());
  }
 
-function LoadOnDemand(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, aDataCallback_in)
+function LoadOnDemand(aURL_in, aParams_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, aDataCallback_in)
 {
     $(document).ready(function(){
         
-        LoadNextChunk(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, true, aDataCallback_in);
+        LoadNextChunk(aURL_in, aParams_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, true, aDataCallback_in);
         
         $("#" + aMoreLinkId_in).click(function(){  
-            LoadNextChunk(aURL_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, false, aDataCallback_in);
+            LoadNextChunk(aURL_in, aParams_in, aTargetDivId_in, aMoreLinkId_in, aMoreFlagId_in, false, aDataCallback_in);
         });
 
     });

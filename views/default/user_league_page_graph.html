@@ -14,7 +14,7 @@
             ]);*/
 
             var options = {
-              title: 'Score progress'
+              title: 'Rank progress'
             };
 
             var chart = new google.visualization.LineChart(document.getElementById('chart_div_{{=LeagueId}}'));
@@ -31,7 +31,7 @@
                     
                    var aMatchMap = new Object();
                     $.each( data.all_members, function( aKey, aMember_in ) {
-                        $.each( aMember_in.detailed_score, function( aKey, aScoreData_in ) {
+                        $.each( aMember_in.rank_history, function( aKey, aScoreData_in ) {
                             aMatchMap[aScoreData_in.match_id] = new Array(data.all_members.length);
                         });
                     });
@@ -40,8 +40,8 @@
                         
                         aScoreData.addColumn('number', aMember_in.member_name);
                         
-                        $.each( aMember_in.detailed_score, function( aMatchKey, aScoreData_in ) {
-                            aMatchMap[aScoreData_in.match_id][aMemberKey_in] = aScoreData_in.score;
+                        $.each( aMember_in.rank_history, function( aMatchKey, aScoreData_in ) {
+                            aMatchMap[aScoreData_in.match_id][aMemberKey_in] = aScoreData_in.match_rank;
                         });
                     });
                     
