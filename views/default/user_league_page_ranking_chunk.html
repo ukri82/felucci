@@ -1,0 +1,22 @@
+
+{{for item in LeagueDetails:}}
+{{if item['membership_state'] == 'approved':}}
+<tr>
+    <td style="width: 20%"> {{=item['match_rank']}}   </td>
+    <td style="width: 40%">
+        <a href="#" id="user_leagues_table__Link_{{=LeagueId}}_{{=item['member_id']}}">
+        {{=item['member_name']}}   
+        </a>
+        <script>
+        $('#user_leagues_table__Link_{{=LeagueId}}_{{=item['member_id']}}').click(function() {
+            $.web2py.component('default/get_user_details_page?UserId={{=item['member_id']}}', $("#user_leagues_table__{{=LeagueId}}").parent().attr('id'));
+            return false;
+        });
+        </script>
+    </td>
+    <td style="width: 20%"> {{=item['last_score']}}   </td>
+</tr>
+{{pass}}
+{{pass}}
+
+<input value="{{=MoreFlag}}" type="hidden" id="MoreFlag" />

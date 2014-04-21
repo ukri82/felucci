@@ -1,0 +1,34 @@
+<h2 style="text-align:center;">Ranking of the members</h2>
+
+<div id="user_league_users_content_dummy" style = "display:none"/>
+
+
+<table class="table1" id = "user_leagues_table__{{=LeagueDetails['league_id']}}">
+    <thead>
+        <tr>
+            <th scope="col" abbr="LeagueName">Rank</th>
+            <th scope="col" abbr="LeagueName">Member</th>
+            <th scope="col" abbr="LeagueOwner">Score</th>
+        </tr>
+    </thead>
+    
+    <tbody>
+    </tbody>
+</table>    
+
+<script language="javascript" type="text/javascript">
+function LeagueUsersAvailableCB(aFirst_in)
+{
+    var anHTML = $("#user_league_users_content_dummy").html();
+    $("#user_league_users_content_dummy").html("");
+    $("#user_leagues_table__{{=LeagueDetails['league_id']}} tbody").append(anHTML);
+    
+}    
+LoadOnDemand("default/get_league_ranking_chunk", "LeagueId={{=LeagueDetails['league_id']}}", "user_league_users_content_dummy", "MoreStatsLink__{{=LeagueDetails['league_id']}}", "MoreFlag", LeagueUsersAvailableCB);
+
+</script>
+
+<h4><p class="links" style="text-align:center"><a href='javascript:void(0)' class="comments" id = "MoreStatsLink__{{=LeagueDetails['league_id']}}" style="color: #FFFFFF">More</a></p></h4>
+
+</div>
+
