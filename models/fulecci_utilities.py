@@ -672,7 +672,7 @@ def GetUserLeagues():
                             "league_member_id" : aLeague.id,
                             "league_name" : aLeagueDetails.name,
                             "owner_id" : aLeagueDetails.owner_id,
-                            "owner_name" : db.auth_user[aLeagueDetails.owner_id].first_name,
+                            "owner_name" : db.auth_user[aLeagueDetails.owner_id].first_name if aLeagueDetails.owner_id is not None else "",
                             "membership_state" : aLeague.membership_state,
                             "num_members" : aNumMembers
                             }
@@ -724,17 +724,26 @@ def GetLeagueDetails(aLeagueId_in):
                     
     return aLeagueItem 
     
+def GetLastMatchId():
+
+    aLastMatchIdRec = db(db.user_ranking_history).select(db.user_ranking_history.match_id.max())
+    if aLastMatchIdRec is None:
+        return -1
+    
+    if request.env.web2py_runtime_gae:
+        aLastMatchId = aLastMatchIdRec.first().match_id
+    else:
+        aLastMatchId = aLastMatchIdRec.first()['_extra']['MAX(user_ranking_history.match_id)']
+    return aLastMatchId
+    
 def GetLeagueRankNextChunk(aLeagueId_in, anOffset_in, aCount_in):
 
     LogVal("aLeagueId_in :", aLeagueId_in)
     aMemberDict = db(db.league_member.league_id == aLeagueId_in).select().as_dict(key = 'id')
     aMembers = aMemberDict.keys()
-    aLastMatchIdRec = db.user_ranking_history.match_id.max()
-    if aLastMatchIdRec is None:
+    aLastMatchId = GetLastMatchId()
+    if aLastMatchId == -1:
         return False, []
-    
-    aLastMatchId = db().select(aLastMatchIdRec).first()[aLastMatchIdRec]
-    LogVal("aLastMatchId :", aLastMatchId)
     
     aNumEntries = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).count()
     aMin = min(anOffset_in + aCount_in, aNumEntries)
@@ -767,10 +776,9 @@ def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
     aMembers = map(lambda x:x.id, db(db.league_member.league_id == aLeague.id).select())
     LogVal("aMembers :", aMembers)
     
-    aLastMatchIdRec = db.user_ranking_history.match_id.max()
-    if aLastMatchIdRec is None:
+    aLastMatchId = GetLastMatchId()
+    if aLastMatchId == -1:
         return []
-    aLastMatchId = db().select(aLastMatchIdRec).first()[aLastMatchIdRec]
     
     aUserRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(0, 10))
     LogVal("aUserRankingHistory :", aUserRankingHistory)

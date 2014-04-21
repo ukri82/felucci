@@ -26,15 +26,17 @@
             </script>
         </td>
         <td style="width: 40%">
-            <a href="#" id="user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}">
-            {{=item['owner_name']}}   
-            </a>
-            <script>
-            $('#user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}').click(function() {
-                $.web2py.component('default/get_user_details_page?UserId=' + {{=item['owner_id']}}, $('#all_leagues_table').parent().attr('id'));
-                return false;
-            });
-            </script>
+            {{if item['owner_id'] is not None:}}
+                <a href="#" id="user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}">
+                {{=item['owner_name']}}   
+                </a>
+                <script>
+                $('#user_leagues_table__Link_{{=item['league_id']}}_{{=item['owner_id']}}').click(function() {
+                    $.web2py.component('default/get_user_details_page?UserId=' + {{=item['owner_id']}}, $('#all_leagues_table').parent().attr('id'));
+                    return false;
+                });
+                </script>
+            {{pass}}
         </td>
         <td style="width: 10%"> {{=item['num_members']}}   </td>
         <td style="width: 10%">
