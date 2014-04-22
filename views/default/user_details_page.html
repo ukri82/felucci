@@ -4,7 +4,12 @@
         <td rowspan = '2'>{{=IMG(_src=URL('download', UserDetails['image']),_alt=UserDetails['first_name'], _class="profile_image", _style="float: right;")}}</td>
     </tr>
     <tr>
-        <td style="text-align:left;"><h4> Current Score = {{=(UserDetails['last_score'])}} </h4></td>
+        <td style="text-align:left;">
+        <h5> 
+            Score = {{=(UserDetails['last_score'])}} <br/>
+            Rank = {{=(UserDetails['last_rank'])}}
+        </h5>
+        </td>
     </tr>
 </table>
 

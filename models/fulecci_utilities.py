@@ -265,19 +265,16 @@ def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
 
 def UpdateUserScores(aMatchSet_in):
 
-    anAllPredictions = []
-    for aMatchId in aMatchSet_in:
-        anAllPredictions.extend(db(db.match_prediction.match_id == aMatchId).select())
+    aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL))) 
     
-    aUsers = set(map(lambda x:x.predictor_id, anAllPredictions))
-    
-    LogVal("aUsers :", aUsers) 
-    
+    aLastMatchId = GetLastMatchId()
+    if aLastMatchId == -1:
+        return
+        
     for aUserId in aUsers:
-        aUserScores = db(db.user_ranking_history.predictor_id == aUserId).select()
-        aLastScore = max(filter(lambda x:x.predictor_id == aUserId, aUserScores), key=lambda x:x.score).score
-        LogVal("aLastScore :", aLastScore) 
-        db(db.auth_user.id == aUserId).update(last_score = aLastScore)
+        aMatchHistoryRec = db((db.user_ranking_history.predictor_id == aUserId) & (db.user_ranking_history.match_id == aLastMatchId)).select().first()
+        LogVal("aMatchHistoryRec :", aMatchHistoryRec) 
+        db(db.auth_user.id == aUserId).update(last_score = aMatchHistoryRec.score, last_rank = aMatchHistoryRec.match_rank )
 
 
                                            
@@ -699,21 +696,22 @@ def GetAdminLeagues():
  
 
 
-def GetLeagueDetails(aLeagueId_in):
+def GetLeagueDetails(aLeagueId_in, anAllUserInfo_in):
 
     aLeague = db.league[aLeagueId_in]
     
     aMembers = db(db.league_member.league_id == aLeague.id).select()
         
     aMemberData = []
-    for aMember in aMembers:
-        aMemberItem = {"id" : aMember.id,
-                        "member_id" : aMember.member_id,
-                        "member_name" : db.auth_user[aMember.member_id].first_name,
-                        "membership_state" : aMember.membership_state,
-                        "last_score" : db.auth_user[aMember.member_id].last_score
-                    }
-        aMemberData.append(aMemberItem)
+    if anAllUserInfo_in == True:
+        for aMember in aMembers:
+            aMemberItem = {"id" : aMember.id,
+                            "member_id" : aMember.member_id,
+                            "member_name" : db.auth_user[aMember.member_id].first_name,
+                            "membership_state" : aMember.membership_state,
+                            "last_score" : db.auth_user[aMember.member_id].last_score
+                        }
+            aMemberData.append(aMemberItem)
             
     aLeagueItem = {"league_id" : aLeague.id,
                     "league_name" : aLeague.name,
@@ -766,10 +764,11 @@ def GetLeagueRankNextChunk(aLeagueId_in, anOffset_in, aCount_in):
                     }
         aMemberData.append(aMemberItem)
     
+    LogVal("aMemberData :", aMemberData)
     return aNumEntries > aMin , aMemberData
     
     
-def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
+def GetLeagueRankHistory(aLeagueId_in):
 
     aLeague = db.league[aLeagueId_in]
     
@@ -780,10 +779,20 @@ def GetLeagueDetailsWithDetailedScore(aLeagueId_in):
     if aLastMatchId == -1:
         return []
     
-    aUserRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(0, 10))
+    aMaxPossibleEntries = 2
+    aUserRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(0, aMaxPossibleEntries))
     LogVal("aUserRankingHistory :", aUserRankingHistory)
     
     aUsers = set(map(lambda x:x.predictor_id, aUserRankingHistory))
+    
+    #   Forcibly include the current user if he is part of the league
+    if auth.user.id not in aUsers:
+        aUserLeagueMembership = db((db.league_member.league_id == aLeague.id) & (db.league_member.member_id == auth.user.id)).select()
+        if len(aUserLeagueMembership) > 0:
+            if len(aUsers) == aMaxPossibleEntries:
+                aUsers.pop()
+            aUsers.add(auth.user.id)
+        
     LogVal("aUsers :", aUsers)
        
     aMemberData = []
@@ -924,6 +933,7 @@ def GetUserDetails(aUserId_in):
                     "last_name" : aUserDetailsRec.last_name,
                     "first_name" : aUserDetailsRec.first_name,
                     "last_score" : aUserDetailsRec.last_score,
+                    "last_rank" : aUserDetailsRec.last_rank,
                     "image" : aUserDetailsRec.image,
                     }
     return aUserDetails

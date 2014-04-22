@@ -2,66 +2,76 @@
 
 <script type="text/javascript">
 
-   $('#UserLeaguesLeageChartPage_{{=LeagueId}}').ready( function() {
-        
-        function mapsLoaded() {
-            /*var data = google.visualization.arrayToDataTable([
-              ['Year', 'Sales', 'Expenses'],
-              ['2004',  1000,      400],
-              ['2005',  1170,      460],
-              ['2006',  660,       1120],
-              ['2007',  1030,      540]
-            ]);*/
+$('#UserLeaguesLeageChartPage_{{=LeagueId}}').ready( function() {
+    
+    function mapsLoaded() 
+    {
+        var options = 
+        {
+            title: 'Rank progress',
+            backgroundColor: '#C6D6A9',
+            width: 900,
+            height: 500,
+            vAxis :
+            {
+                title: "Rank",
+                direction: -1,
+                showTextEvery: 1,
+                viewWindow:
+                {
+                    min: 0,
+                    max: 10
+                }
+            },
+            hAxis :
+            {
+                title: "Match"
+            }
+        };
 
-            var options = {
-              title: 'Rank progress'
-            };
-
-            var chart = new google.visualization.LineChart(document.getElementById('chart_div_{{=LeagueId}}'));
-            
-            var aScoreData = new google.visualization.DataTable();
-            aScoreData.addColumn('string', 'Match');
-            
-            
-            $.ajax({  type: "POST", 
-                    dataType: "json",
-                    url: '{{=URL('get_league_graph_details.json')}}', 
-                    data: { LeagueId: {{=LeagueId}}}
-                  }).done(function( data ) {
-                    
-                   var aMatchMap = new Object();
-                    $.each( data.all_members, function( aKey, aMember_in ) {
-                        $.each( aMember_in.rank_history, function( aKey, aScoreData_in ) {
-                            aMatchMap[aScoreData_in.match_id] = new Array(data.all_members.length);
-                        });
-                    });
-                    
-                    $.each( data.all_members, function( aMemberKey_in, aMember_in ) {
-                        
-                        aScoreData.addColumn('number', aMember_in.member_name);
-                        
-                        $.each( aMember_in.rank_history, function( aMatchKey, aScoreData_in ) {
-                            aMatchMap[aScoreData_in.match_id][aMemberKey_in] = aScoreData_in.match_rank;
-                        });
-                    });
-                    
-                    console.log(aMatchMap);
-                    
-                    $.each( aMatchMap, function( aKey, aValue_in ) {
-                        aValue_in.splice(0, 0, aKey);
-                        aScoreData.addRow(aValue_in);
-                    });
-                    
-                    chart.draw(aScoreData, options);
-            });
-            
-            
-        }
-        google.load("visualization", "1", {packages:["corechart"], "callback" : mapsLoaded});
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div_{{=LeagueId}}'));
         
-    });
+        var aScoreData = new google.visualization.DataTable();
+        aScoreData.addColumn('string', 'Match');
+        
+        
+        $.ajax({  type: "POST", 
+                dataType: "json",
+                url: '{{=URL('get_league_graph_details.json')}}', 
+                data: { LeagueId: {{=LeagueId}}}
+              }).done(function( data ) {
+                
+               var aMatchMap = new Object();
+                $.each( data.all_members, function( aKey, aMember_in ) {
+                    $.each( aMember_in.rank_history, function( aKey, aScoreData_in ) {
+                        aMatchMap[aScoreData_in.match_id] = new Array(data.all_members.length);
+                    });
+                });
+                
+                $.each( data.all_members, function( aMemberKey_in, aMember_in ) {
+                    
+                    aScoreData.addColumn('number', aMember_in.member_name);
+                    
+                    $.each( aMember_in.rank_history, function( aMatchKey, aScoreData_in ) {
+                        aMatchMap[aScoreData_in.match_id][aMemberKey_in] = aScoreData_in.match_rank;
+                    });
+                });
+                
+                $.each( aMatchMap, function( aKey, aValue_in ) {
+                    aValue_in.splice(0, 0, aKey);
+                    aScoreData.addRow(aValue_in);
+                });
+                
+                chart.draw(aScoreData, options);
+        });
+        
+        
+    }
+    google.load("visualization", "1", {packages:["corechart"], "callback" : mapsLoaded});
+    
+});
 </script>
 
-<div id="chart_div_{{=LeagueId}}" style="width: 900px; height: 500px;"/>
+<div id="chart_div_{{=LeagueId}}" />
 
 </div>

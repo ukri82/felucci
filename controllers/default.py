@@ -278,7 +278,7 @@ def get_all_leagues():
 @auth.requires_login()    
 def get_users_leagues():
     response.view = 'default/user_admin_leagues_all_users.html'
-    return dict(LeagueDetail = GetLeagueDetails(request.vars.Id)) 
+    return dict(LeagueDetail = GetLeagueDetails(request.vars.Id, True)) 
     
 @auth.requires_login()    
 def join_league():
@@ -385,17 +385,17 @@ def get_league_ranking_chunk():
 def get_league_ranking():
     logger.info("[%s] : get_league_ranking", str(request.vars.LeagueId))
     response.view = 'default/user_league_page_ranking_main.html'
-    return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId))  
+    return dict(LeagueDetails = GetLeagueDetails(request.vars.LeagueId, False))  
 
 @auth.requires_login()    
 def get_league_graph():
     response.view = 'default/user_league_page_graph.html'
-    return dict(LeagueId = request.vars.LeagueId, LeagueDetails = GetLeagueDetailsWithDetailedScore(request.vars.LeagueId)) 
+    return dict(LeagueId = request.vars.LeagueId) 
 
 @auth.requires_login()
 @service.json 
 def get_league_graph_details():
-    return response.json(GetLeagueDetailsWithDetailedScore(request.vars.LeagueId))     
+    return response.json(GetLeagueRankHistory(request.vars.LeagueId))     
 
 @auth.requires_login()    
 def get_user_details_page():

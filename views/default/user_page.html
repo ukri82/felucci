@@ -23,7 +23,15 @@ background-size: auto;
 <div class="container">
 <div class="span2 left-sidebar">
 <ul class="nav nav-list" data-tabs="tabs" id="UserTabs">
-      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2);">{{=auth.user.nickname}}</h4></li>
+      <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} 
+        <h4 style="color:rgb(23, 31, 2);">
+            {{=auth.user.nickname}} <br/>
+        </h4>
+        </h5>
+            Score {{=auth.user.last_score}} <br/>
+            Rank {{=auth.user.last_rank}}
+        </h5>
+      </li>
       <li class="divider"></li>
       <li class="active" ><a href="#UserHome"  data-toggle="tab" onclick="$.web2py.component('default/get_newsfeed', 'UserHome');"><i class="icon icon-home"></i> <b> Home </b></a></li>
       <li><a href="#UserNotifications"  data-toggle="tab"  onclick="$('#NotificationCounterMain').hide();$.web2py.component('default/get_notifications', 'UserNotifications');"><i class="icon icon-envelope"></i> <b> Notification </b>
