@@ -45,7 +45,7 @@ def get_prior_predictions():
     
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetGoalPredictions("prior", auth.user.id), 
-                PositionPredictionData = GetPositionPredictions(), 
+                PositionPredictionData = GetPositionPredictions(False), 
                 SubmitButtonText = "Submit Prior Predictions",
                 SubmitURL = "submit_prior_predictions",
                 PredictionFormId = "PriorPredictionFormId",
@@ -73,15 +73,22 @@ def get_predictions():
 def get_results():
     
     response.view = 'default/user_prior_predictions.html'
-    return dict(MacthPredictionData = GetResults(), 
-                PositionPredictionData = GetPositionPredictions(),
+    return dict(MacthPredictionData = GetGoalPredictionResults(), 
+                PositionPredictionData = GetPositionPredictions(True),
                 SubmitButtonText = "Submit Results",
                 SubmitURL = "submit_results",
                 PredictionFormId = "ResultFormId",
                 ReadOnlyFlag = "False"
                 )
                 
-  
+                
+@auth.requires_login()
+def calculate_pos_prediction_score():
+    
+    CalculatePositionScore()
+    response.flash = T("Position prediction scores are calculated")
+    return dict()
+    
 
 @auth.requires_login()
 def get_user_stats_chunk_data():
@@ -411,7 +418,7 @@ def get_user_details_prior_pred():
     
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetGoalPredictions("prior", request.vars.UserId), 
-                PositionPredictionData = GetPositionPredictions(), 
+                PositionPredictionData = GetPositionPredictions(False), 
                 PredictionFormId = "UserDetailsPriorPredictionFormId",
                 ReadOnlyFlag = "True"
                 )
@@ -460,8 +467,10 @@ def submit_admin_bets():
     
 @auth.requires_membership('admin')
 def admin_page():
+    CacheData()
     response.flash = T("Admin page...")
     response.view = 'default/admin_page.html'
+    
     return dict()
     
 @auth.requires_membership('admin')
@@ -474,7 +483,23 @@ def submit_results():
     response.flash = T("Results updated...")
     
     return get_results()
+    
+#@auth.requires_membership('admin')
+def populate_user_table():
+    logger.info("Populating the user table with dummy data: %s", str(auth.user.id))
+    
+    response.flash = T("Populated the table...")
+    SimulateUserData()
+    return dict()
+    
+#@auth.requires_membership('admin')
+def delete_user_table():
 
+    logger.info("Deleting the dummy data in the table: %s", str(auth.user.id))
+    response.flash = T("Deleted the dummy data...")
+    DeleteDummyUserData()
+    return dict()
+    
 #admin stuff ends.
   
   
@@ -501,8 +526,14 @@ def user():
         if form.accepts(request,session):
             CreateUserPreferences()
             CreateGlobalLeagueAndAddMember()
-    """        
-        
+    """    
+    '''
+    form=auth()
+    if request.args(0) == 'login':
+        logger.info("request.args : %s", str(request))
+        if form.accepts(request,session):
+            CacheData()
+    '''        
     return dict(form=auth())
 
 @cache.action()

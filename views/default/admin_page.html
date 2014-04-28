@@ -4,7 +4,7 @@
 <ul class="nav nav-list" data-tabs="tabs" id="AdminTabs">
       <li class="nav-header">{{=IMG(_src=URL('download', auth.user.image),_alt=auth.user.nickname, _class="profile_image")}} <h4 style="color:rgb(23, 31, 2)">{{=auth.user.nickname}}</h4></li>
       <li class="divider"></li>
-      <li class="active" ><a href="#Results"  data-toggle="tab"><i class="icon-white icon-home"></i> <b>Results</b></a></li>
+      <li class="active" ><a href="#Results"  data-toggle="tab" onclick="$.web2py.component('default/get_results', 'Results');"><i class="icon-white icon-home"></i> <b>Results</b></a></li>
       <li><a href="#Database"  data-toggle="tab" ><i class="icon-book"></i> <b>Database </a></li>
       <li><a href="#ActiveBets"  data-toggle="tab" onclick="$.web2py.component('default/get_bet_admin', 'ActiveBets');"><i class="icon-briefcase"></i> <b>Bets </b></a></li>
       <li class="divider"></li>
@@ -22,11 +22,48 @@
 {{=LOAD('default','get_results',ajax=True, ajax_trap=True, target = "Results")}}
 </div>
 <div class="tab-pane" id="Database">
-<h5> Select DB csv file and click import </h5>
-<form action = "/fulecci/default/submit_data_file" enctype="multipart/form-data" method="post">
-<input type="file" name="csv_file" title="Browse...">
-<input type="submit" value="Import" class="btn">
-</form>
+    <h5> Select DB csv file and click import </h5>
+    <form action = "/fulecci/default/submit_data_file" enctype="multipart/form-data" method="post">
+        <input type="file" name="csv_file" title="Browse...">
+        <input type="submit" value="Import" class="btn">
+    </form>
+    
+    <input type="button" id="CalculatePositionPredictionScore" value="Calculate Position Prediction" class="btn">
+    <script>
+            $('#CalculatePositionPredictionScore').click(function() {
+                $.ajax({  type: "POST",  
+                    url: '{{=URL('calculate_pos_prediction_score')}}',  
+                    data: { }}).done(function( data ) {
+                            console.log("Position prediction scores are calculated");
+                            });  
+                return false;
+            });
+    </script>
+    <br/>
+    <br/>
+    <br/>
+    <input type="button" id="PopulateUserTable" value="Populate User Table" class="btn">
+    <script>
+            $('#PopulateUserTable').click(function() {
+                $.ajax({  type: "POST",  
+                    url: '{{=URL('populate_user_table')}}',  
+                    data: { }}).done(function( data ) {
+                            console.log("Table is populated");
+                            });  
+                return false;
+            });
+    </script>
+    <input type="button" id="DeleteUserTable" value="Delete User Table" class="btn">
+    <script>
+            $('#DeleteUserTable').click(function() {
+                $.ajax({  type: "POST",  
+                    url: '{{=URL('delete_user_table')}}',  
+                    data: { }}).done(function( data ) {
+                            console.log("Table is deleted");
+                            });  
+                return false;
+            });
+    </script>
 
 </div>
 <div class="tab-pane" id="ActiveBets">

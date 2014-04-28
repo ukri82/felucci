@@ -4,6 +4,7 @@ import datetime
 import collections
 import math
 import time
+from itertools import groupby
 
 def LogVal(aDesc_in, aVar_in):
     logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
@@ -83,7 +84,7 @@ def ExtractResultData(aParams_in):
         
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aUpdateReq)
          
-        logger.info("(aMatchId: %s, aTeamIndex: %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aParams_in[aUpdateReq]))
+        logger.info("(aMatchId: %s, aTeamIndex: %s, aMatchOrPos = %s, goals: %s)", str(aMatchId), str(aTeamIndex), str(aMatchOrPos), str(aParams_in[aUpdateReq]))
         
         
         
@@ -112,6 +113,8 @@ def UpdateResults(aParams_in):
     
     UpdateFixture(aFixtureData)  
     StoreMatchResults(aResultData)   
+    #   update chache
+    session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
         
     CalculateGoalPredictionScores(aFixtureData, aResultData)
             
@@ -170,9 +173,6 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
 def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
 
     aMatchIdSet = set()
-    for aMatchId, aData in aFixtureData_in.items():
-        CalculatePositionScore(aMatchId)
-        aMatchIdSet.add(aMatchId)
         
     for aMatchId, aData in aResultData_in.items():
         CalculateGoalScore(aMatchId)
@@ -217,9 +217,9 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
 
     #   Update the scores for all users.
     for aMatchId in sorted(aMatchSet_in):
-        aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match
+        aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match ### SCALE WARNING ###
         
-        aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL)))       #   Get all predictors
+        aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL)))       #   Get all predictors   ### SCALE WARNING ###
         LogVal("aUsers :", aUsers)
         
         aLeagueIdSet = set()
@@ -250,10 +250,18 @@ def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
     anAllRankMap = []
     #   Update the ranking of all users in all leagues orderby=~db.notification.date_time
     for aLeagueId in aLeagueIdSet_in:
-        allMembershipsOfLeague = map(lambda x:x.id, db((db.league_member.league_id == aLeagueId) & (db.league_member.membership_state == 'approved')).select())
+        allMembershipsOfLeague = map(lambda x:x.id, db((db.league_member.league_id == aLeagueId) & (db.league_member.membership_state == 'approved')).select()) ### SCALE WARNING ###
         LogVal("allMembershipsOfLeague :", allMembershipsOfLeague)
         
-        aUserScores = db((db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)
+        '''
+        for aMembershipChunk in [allMembershipsOfLeague[i : i + 10] for i in range(0, len(allMembershipsOfLeague), 10)]:
+            LogVal("aMembershipChunk :", aMembershipChunk)
+            aUserScores = db((db.user_ranking_history.member_id.belongs(aMembershipChunk)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)
+            LogVal("aUserScores :", aUserScores)
+            if request.env.web2py_runtime_gae:
+                time.sleep( 1 )
+        '''
+        aUserScores = db((db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)    ### SCALE WARNING ###
         LogVal("aUserScores :", aUserScores)
         
         anAllRankMap.extend(list(zip(  map(lambda x:x.id, aUserScores), range(len(aUserScores))  )))
@@ -265,7 +273,7 @@ def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
 
 def UpdateUserScores(aMatchSet_in):
 
-    aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL))) 
+    aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL))) ### SCALE WARNING ###
     
     aLastMatchId = GetLastMatchId()
     if aLastMatchId == -1:
@@ -273,19 +281,105 @@ def UpdateUserScores(aMatchSet_in):
         
     for aUserId in aUsers:
         aMatchHistoryRec = db((db.user_ranking_history.predictor_id == aUserId) & (db.user_ranking_history.match_id == aLastMatchId)).select().first()
-        LogVal("aMatchHistoryRec :", aMatchHistoryRec) 
         db(db.auth_user.id == aUserId).update(last_score = aMatchHistoryRec.score, last_rank = aMatchHistoryRec.match_rank )
 
 
                                            
-def CalculatePositionScore(aMatchId_in):
-    anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
-    #implement the logic for position prediction scoring here
+def CalculatePositionScore():
+    logger.info("==================================")
+    allFixtures = db(db.fixture.stage != "Group").select()
+    allNonGroupMatches = groupby(allFixtures, lambda x: x.stage)
+    LogVal("allNonGroupMatches", allNonGroupMatches)
+    
+    
+    aStageLastMatchDict = dict((aStage, max(map(lambda x:x.fixture_id, aFixtureItem))) for aStage, aFixtureItem in allNonGroupMatches)
+    LogVal("aStageLastMatchDict", aStageLastMatchDict)
+        
+    aMatchIds = map(lambda x:x.game_number, allFixtures)
+    anAllPredictions = filter(lambda x:x.team1_id is not None and x.team2_id is not None, db(db.match_prediction.match_id.belongs(aMatchIds)).select())   ### SCALE WARNING ###
+    LogVal("anAllPredictions", anAllPredictions)
+    
+    aUserPredictionsGroups = groupby(anAllPredictions, lambda x: x.predictor_id)
+    LogVal("aUserPredictionsGroups", aUserPredictionsGroups)
+    
+    aScoreDict = dict.fromkeys(map(lambda x:x.id, anAllPredictions), 0)
+    LogVal("aScoreDict", aScoreDict)
+    
+    allNonGroupMatches = groupby(allFixtures, lambda x: x.stage)  # Earlier allNonGroupMatches is destroyed due to some peculiarity of groupby
+    for aStage, aMatchSetDummy in allNonGroupMatches:
+        aMatchSet = list(aMatchSetDummy)
+        logger.info("aStage = %s, aMatchSet = %s", str(aStage), str(aMatchSet))
+        
+        
+        aMatchesWithTeamsAvailable = filter(lambda x:x.team1 != -1 and x.team2 != -1, aMatchSet)
+        LogVal("aMatchesWithTeamsAvailable", aMatchesWithTeamsAvailable)
+        #   Check if the predictions match the positions first
+        if aStage == "IP":
+            
+            for aMatch in aMatchesWithTeamsAvailable:
+                LogVal("aMatch", aMatch)
+                aPredictionsForMatch = filter(lambda x:x.match_id == aMatch.game_number, anAllPredictions)
+                LogVal("aPredictionsForMatch", aPredictionsForMatch)
+                if len(aPredictionsForMatch) > 0 :
+                    if aPredictionsForMatch[0].team1_id == aMatch.team1:
+                        LogVal("aPredictionsForMatch[0].team1_id", aPredictionsForMatch[0].team1_id)
+                        aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
+                    if aPredictionsForMatch[0].team2_id == aMatch.team2:
+                        LogVal("aPredictionsForMatch[0].team2_id", aPredictionsForMatch[0].team2_id)
+                        aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
+                        
+        #   Check if the teams falling anywhere in the stage    
+        logger.info("------------------------------------------------------")
+        aTeamsInStage = set(map(lambda x:x.team1, aMatchesWithTeamsAvailable) + map(lambda x:x.team2, aMatchesWithTeamsAvailable))
+        LogVal("aTeamsInStage", aTeamsInStage)
+        
+        LogVal("map(lambda x:x.game_number, aMatchSet)", map(lambda x:x.game_number, aMatchSet))
+        anAllPredictionsForThisStage = filter(lambda x:x.match_id in map(lambda x:x.game_number, aMatchSet), anAllPredictions)
+        LogVal("anAllPredictionsForThisStage", anAllPredictionsForThisStage)
+        
+        aMatchesForUserInThisStage = groupby(anAllPredictionsForThisStage, lambda x: x.predictor_id)
+        LogVal("aMatchesForUserInThisStage", aMatchesForUserInThisStage)
+    
+        for aPredictorId, aPredSetDummy in aMatchesForUserInThisStage:
+            
+            aPredSet = list(aPredSetDummy)
+            
+            aTeamsInPrediction = set(map(lambda x:x.team1_id, aPredSet) + map(lambda x:x.team2_id, aPredSet))
+            
+            LogVal("aTeamsInPrediction", aTeamsInPrediction)
+            
+            aCommonTeams = aTeamsInStage & aTeamsInPrediction # interesction of two sets
+            
+            LogVal("aCommonTeams", aCommonTeams)
+            
+            aNumberOfCorrectPredictions = len(aCommonTeams)
+            aStageScore = 0
+            if aStage == "IP":
+                aStageScore = aNumberOfCorrectPredictions * 5
+            elif aStage == "JQ":
+                aStageScore = aNumberOfCorrectPredictions * 10
+            elif aStage == "KS":
+                aStageScore = aNumberOfCorrectPredictions * 15
+            elif aStage == "L":
+                aStageScore = aNumberOfCorrectPredictions * 15
+            elif aStage == "MFN":
+                aStageScore = aNumberOfCorrectPredictions * 20
+            elif aStage == "NWN":
+                aStageScore = aNumberOfCorrectPredictions * 20
+            elif aStage == "OFN":
+                aStageScore = aNumberOfCorrectPredictions * 20
+               
+            aLastMatchPredId = max(aPredSet, key=lambda x:x.match_id).id
+            aScoreDict[aLastMatchPredId] = aScoreDict[aLastMatchPredId] + aStageScore
+            
+            
+    LogVal("aScoreDict", aScoreDict)
+    
 
         
 def CalculateGoalScore(aMatchId_in):
 
-    anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select()
+    anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select() ### SCALE WARNING ###
     aResult = db(db.match_result.match_id == aMatchId_in).select()[0]
     aGoalDiff = aResult.team1_goals - aResult.team2_goals
     aResultOutcome = (aGoalDiff)/abs(aGoalDiff) if aGoalDiff != 0 else 0
@@ -403,14 +497,34 @@ def JoinFixtureWith(aSourceData_in):
 
     
     
-def GetPositionPredictions():
+def GetPositionPredictions(aResults_in):
     
-    aFixtureData = session.FixtureTable
-    aPredTableData = session.PriorPredictionTable
-    
+    if aResults_in:
+        session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
+        
     aPredResults = dict()
-    for fixtureId, aFixtureData in aFixtureData.items():
-        if aFixtureData['team1'] not in session.TeamGroupTable:
+    for fixtureId, aFixtureData in session.FixtureTable.items():
+    
+        aTeam1Id = -1
+        aTeam2Id = -1
+        addFxitureId = False
+        
+        if not aResults_in:
+            if aFixtureData['team1'] not in session.TeamGroupTable:
+                addFxitureId = True
+                
+                if fixtureId in session.PriorPredictionTable:
+                   aTeam1Id = session.PriorPredictionTable[fixtureId]['team1_id']
+                   aTeam2Id = session.PriorPredictionTable[fixtureId]['team2_id']
+                
+        else:    
+            if aFixtureData["stage"] != "Group":
+                addFxitureId = True
+                aTeam1Id = aFixtureData['team1']
+                aTeam2Id = aFixtureData['team2']
+                
+            
+        if addFxitureId:
             aPossibleTeam1 = GetAllPossibleTeams(fixtureId, 1)
             aPossibleTeam2 = GetAllPossibleTeams(fixtureId, 2)
             
@@ -423,18 +537,19 @@ def GetPositionPredictions():
                          "team2_desc" : aFixtureData['team2_definition'], 
                          "possible_team1" : aPossibleTeam1Data, 
                          "possible_team2" : aPossibleTeam2Data,
-                         "team1_id" : aPredTableData[fixtureId]['team1_id'] if fixtureId in aPredTableData else 0,
-                         "team2_id" : aPredTableData[fixtureId]['team2_id'] if fixtureId in aPredTableData else 0
+                         "team1_id" : aTeam1Id,
+                         "team2_id" : aTeam2Id
                         }
-             
+                 
             if aFixtureData["stage"] not in aPredResults:
                 aPredResults[aFixtureData["stage"]] = list()
             
             aPredResults[aFixtureData["stage"]].append(aPredData)
     
+    
     return aPredResults
 
-def GetResults():
+def GetGoalPredictionResults():
     
     aResTableData = db().select(db.match_result.ALL).as_dict(key = 'match_id')
     
@@ -512,6 +627,8 @@ def RetrieveNextChunk(aTable_in, aSortField_in, anOffset_in, aCount_in, anAsc_in
 def RecreateData(aCSVFileName_in):
     db(db.match_result.id > 0).delete()
     db(db.match_prediction.id > 0).delete()
+    db(db.user_ranking_history.id > 0).delete()
+    db(db.user_ranking_history.id > 0).delete()
     db(db.team.id > 0).delete()
     db(db.fixture.id > 0).delete()
     db(db.team_group.id > 0).delete()
@@ -977,6 +1094,28 @@ def IsAllowed(aPref_in, aUserId_in):
         
     return aPref[0]['pref_value']
 
-                            
+def DeleteDummyUserData():
+
+    aDummyUsers = db(db.auth_user.last_name == "Test").select()
+    for aUser in aDummyUsers:
+        db(db.league_member.member_id == aUser).delete()
     
+    db(db.auth_user.last_name == "Test").delete()
+    
+def SimulateUserData():
+
+    aGlobalLeagueId = db(db.league.name == "GlobalLeague").select().first().id
+    
+    aFirst = 0
+    aDummyUsers = sorted(db(db.auth_user.last_name == "Test").select(), key=lambda k: int(re.search('User_(\d*)', k.first_name).group(1)))
+    if len(aDummyUsers) > 0 :
+        LogVal("aDummyUser : ", aDummyUsers[len(aDummyUsers) - 1])
+        aRegObj = re.search('User_(\d*)', aDummyUsers[len(aDummyUsers) - 1].first_name)
+        aFirst = int(aRegObj.group(1)) + 1
+        
+    
+    for number in range(aFirst,aFirst + 100):
+        aUserId = db.auth_user.insert(first_name = "User_" + str(number), last_name = "Test", email = "User_" + str(number) + "@yahoo.com")
+        db.league_member.insert(league_id = aGlobalLeagueId, member_id = aUserId, membership_state = 'approved')
+        time.sleep( 1 ) 
     

@@ -158,18 +158,24 @@ $(document).ready(function()
             <td>{{=predData['team1_desc']}}
                 {{aName1 = "%s_pos_%s_team1" % (PredictionFormId, predData['fixture_id'])}}
                 {{if ReadOnlyFlag == 'False' :}}
-                    <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test">
+                    <select id="{{=aName1}}" name="{{=aName1}}" class="test">
                 {{else:}}
-                    <select id="{{=predData['fixture_id']}}" name="{{=aName1}}" class="test" disabled>
+                    <select id="{{=aName1}}" name="{{=aName1}}" class="test" disabled>
                 {{pass}}
-                {{for aTeamData in predData['possible_team1']:}}
-                    {{if predData['team1_id'] == aTeamData['id'] :}}
-                        <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
-                    {{else:}}
-                        <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
-                    {{pass}}
-                {{pass}}
-                </select>
+                
+                        {{aSelectedIndex = -1}}
+                        {{aLoopIndex = 0}}
+                        {{for aTeamData in predData['possible_team1']:}}
+                            <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
+                            {{if predData['team1_id'] == aTeamData['id'] :}}
+                                {{aSelectedIndex = aLoopIndex}}
+                            {{pass}}
+                            {{aLoopIndex = aLoopIndex + 1}}
+                        {{pass}}
+                    </select>
+                <script>
+                    $('#{{=aName1}}').prop('selectedIndex', {{=aSelectedIndex}});
+                </script>
             </td>
 
             {{if predData['team2_desc'] != predData['team1_desc']:}}
@@ -178,19 +184,25 @@ $(document).ready(function()
                 <td>{{=predData['team2_desc']}}
                     {{aName2 = "%s_pos_%s_team2" % (PredictionFormId, predData['fixture_id'])}}
                     {{if ReadOnlyFlag == 'False' :}}
-                        <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test" >
+                        <select id="{{=aName2}}" name="{{=aName2}}" class="test" >
                     {{else:}}
-                        <select id="{{=predData['fixture_id']}}" name="{{=aName2}}" class="test" disabled>
+                        <select id="{{=aName2}}" name="{{=aName2}}" class="test" disabled>
                     {{pass}}
                     
-                    {{for aTeamData in predData['possible_team2']:}}
-                        {{if predData['team2_id'] == aTeamData['id'] :}}
-                            <option value="{{=aTeamData['id']}}" selected>{{=aTeamData['name']}}</option>
-                        {{else:}}
-                            <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
-                        {{pass}}
-                    {{pass}}
-                    </select>
+                            {{aSelectedIndex = -1}}
+                            {{aLoopIndex = 0}}
+                            {{for aTeamData in predData['possible_team2']:}}
+                                <option value="{{=aTeamData['id']}}">{{=aTeamData['name']}}</option>
+                                {{if predData['team2_id'] == aTeamData['id'] :}}
+                                    {{aSelectedIndex = aLoopIndex}}
+                                {{pass}}
+                                {{aLoopIndex = aLoopIndex + 1}}
+                            {{pass}}
+                        </select>
+                    
+                    <script>
+                        $('#{{=aName2}}').prop('selectedIndex', {{=aSelectedIndex}});
+                    </script>
                 </td>
             {{pass}}
         </tr>

@@ -50,7 +50,7 @@ crud, service, plugins = Crud(db), Service(), PluginManager()
 auth.settings.extra_fields[auth.settings.table_user_name]= [
   Field('nickname', 'string'),
   Field('image', 'upload'),
-  Field('last_score', 'integer', writable=False, default=0),
+  Field('last_score', 'integer', writable=False, default=10),
   Field('last_rank', 'integer', writable=False, default=0)
 ]
 
