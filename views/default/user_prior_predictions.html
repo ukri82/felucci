@@ -29,7 +29,7 @@
 <script>
 $(document).ready(function() 
 {
-    initializeValues({{=PredictionFormId}});
+    window.setTimeout(initializeValues,0, {{=PredictionFormId}});   //  Don't call initialize immediately. Wait for all scripts to get executed. Some scripts change the default selections
 });
 </script>
 

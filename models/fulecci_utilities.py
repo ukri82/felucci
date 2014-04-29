@@ -307,8 +307,10 @@ def CalculatePositionScore():
     
     allNonGroupMatches = groupby(allFixtures, lambda x: x.stage)  # Earlier allNonGroupMatches is destroyed due to some peculiarity of groupby
     for aStage, aMatchSetDummy in allNonGroupMatches:
+        LogVal("aStage", aStage)
+        
         aMatchSet = list(aMatchSetDummy)
-        logger.info("aStage = %s, aMatchSet = %s", str(aStage), str(aMatchSet))
+        #logger.info("aStage = %s, aMatchSet = %s", str(aStage), str(aMatchSet))
         
         
         aMatchesWithTeamsAvailable = filter(lambda x:x.team1 != -1 and x.team2 != -1, aMatchSet)
@@ -322,23 +324,24 @@ def CalculatePositionScore():
                 LogVal("aPredictionsForMatch", aPredictionsForMatch)
                 if len(aPredictionsForMatch) > 0 :
                     if aPredictionsForMatch[0].team1_id == aMatch.team1:
-                        LogVal("aPredictionsForMatch[0].team1_id", aPredictionsForMatch[0].team1_id)
+                        LogVal("*******aPredictionsForMatch[0].team1_id********", aPredictionsForMatch[0].team1_id)
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
                     if aPredictionsForMatch[0].team2_id == aMatch.team2:
-                        LogVal("aPredictionsForMatch[0].team2_id", aPredictionsForMatch[0].team2_id)
+                        LogVal("*******aPredictionsForMatch[0].team2_id*******", aPredictionsForMatch[0].team2_id)
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
                         
+        LogVal("aScoreDict after IP stage", aScoreDict)                
         #   Check if the teams falling anywhere in the stage    
-        logger.info("------------------------------------------------------")
+        
         aTeamsInStage = set(map(lambda x:x.team1, aMatchesWithTeamsAvailable) + map(lambda x:x.team2, aMatchesWithTeamsAvailable))
         LogVal("aTeamsInStage", aTeamsInStage)
         
-        LogVal("map(lambda x:x.game_number, aMatchSet)", map(lambda x:x.game_number, aMatchSet))
+        #LogVal("map(lambda x:x.game_number, aMatchSet)", map(lambda x:x.game_number, aMatchSet))
         anAllPredictionsForThisStage = filter(lambda x:x.match_id in map(lambda x:x.game_number, aMatchSet), anAllPredictions)
         LogVal("anAllPredictionsForThisStage", anAllPredictionsForThisStage)
         
         aMatchesForUserInThisStage = groupby(anAllPredictionsForThisStage, lambda x: x.predictor_id)
-        LogVal("aMatchesForUserInThisStage", aMatchesForUserInThisStage)
+        LogVal("aMatchesForUserInThisStage", list(aMatchesForUserInThisStage))
     
         for aPredictorId, aPredSetDummy in aMatchesForUserInThisStage:
             
@@ -350,7 +353,7 @@ def CalculatePositionScore():
             
             aCommonTeams = aTeamsInStage & aTeamsInPrediction # interesction of two sets
             
-            LogVal("aCommonTeams", aCommonTeams)
+            LogVal("*******aCommonTeams*******", aCommonTeams)
             
             aNumberOfCorrectPredictions = len(aCommonTeams)
             aStageScore = 0
@@ -370,9 +373,10 @@ def CalculatePositionScore():
                 aStageScore = aNumberOfCorrectPredictions * 20
                
             aLastMatchPredId = max(aPredSet, key=lambda x:x.match_id).id
+            LogVal("aLastMatchPredId", aLastMatchPredId)
             aScoreDict[aLastMatchPredId] = aScoreDict[aLastMatchPredId] + aStageScore
-            
-            
+        LogVal("aScoreDict after normal stage", aScoreDict)      
+        logger.info("------------------------------------------------------")
     LogVal("aScoreDict", aScoreDict)
     
 
