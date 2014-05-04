@@ -4,7 +4,7 @@ import datetime
 import collections
 import math
 import time
-from itertools import groupby
+from collections import defaultdict
 
 def LogVal(aDesc_in, aVar_in):
     logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
@@ -182,7 +182,7 @@ def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
     UpdateMatchScoreAndRankForAllUsers(aMatchIdSet)
     
     
-    UpdateUserScores(aMatchIdSet)
+    UpdateScoresInUserTable(aMatchIdSet)
 
     return 0
 
@@ -205,22 +205,35 @@ def GetLastScoreForUser(aUserId_in, aMatchId_in):
     aLastScore = 0
     if aMatchId_in > 1:    #   Assumption : Match ids always start with 1
         
+        '''
         aLastMatch = db(((db.user_ranking_history.predictor_id == aUserId_in) & 
                           (db.user_ranking_history.match_id == (aMatchId_in - 1))
                          )).select()   #add a validation for aMatchId_in - 1 restriction. The score will be same across all league memberships. So, ignore that in the query
         if len(aLastMatch) > 0:
             aLastScore = aLastMatch[0].score
-            
+        '''
+        anAllPrevMatchRecords = db((db.user_ranking_history.predictor_id == aUserId_in) & (db.user_ranking_history.match_id < aMatchId_in)).select()  ### SCALE WARNING ###
+        if len(anAllPrevMatchRecords) == 0:
+            return aLastScore
+        LogVal("anAllPrevMatchRecords", anAllPrevMatchRecords)    
+        aLastMatchId = max(map(lambda x:x.match_id, anAllPrevMatchRecords))
+        LogVal("aLastMatchId", aLastMatchId)
+        aLastScore = filter(lambda x:x.match_id == aLastMatchId, anAllPrevMatchRecords)[0].score
+        
     return aLastScore
                 
 def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
 
+    LogVal("aMatchSet_in :", aMatchSet_in)
+    
     #   Update the scores for all users.
     for aMatchId in sorted(aMatchSet_in):
         aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match ### SCALE WARNING ###
+        LogVal("aMatchId", aMatchId)
+        LogVal("aPredForMatch", aPredForMatch)
         
         aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL)))       #   Get all predictors   ### SCALE WARNING ###
-        LogVal("aUsers :", aUsers)
+        LogVal("aUsers", aUsers)
         
         aLeagueIdSet = set()
         
@@ -228,13 +241,16 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
             aLeagueMemberships = db((db.league_member.member_id == aUserId) & (db.league_member.membership_state == 'approved')).select()  #   Find their league memberships
         
             aPredictionsForUser = filter(lambda x:x.predictor_id == aUserId, aPredForMatch)
+            LogVal("aPredictionsForUser", aPredictionsForUser)
+            
             aUserScore = sum(map(lambda x:x.score, aPredictionsForUser)) if aPredictionsForUser else 0  #   Get the total score from all predictions
             aCurrentScore = GetLastScoreForUser(aUserId, aMatchId) + aUserScore
+            LogVal("aCurrentScore", aCurrentScore)
             
             #   Update the score for all league memberships
             UpdateUserRankingHistory(aUserId, aMatchId, aLeagueMemberships, aCurrentScore)
             
-            LogVal("aLeagueMemberships :", aLeagueMemberships)
+            LogVal("aLeagueMemberships", aLeagueMemberships)
             aLeagueIdSet |= set(map(lambda x:x.league_id, aLeagueMemberships))
             
         
@@ -271,81 +287,92 @@ def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
     for aRank in anAllRankMap:
         db(db.user_ranking_history.id == aRank[0]).update(match_rank = aRank[1] + 1)
 
-def UpdateUserScores(aMatchSet_in):
+def UpdateScoresInUserTable(aMatchSet_in):
 
-    aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL))) ### SCALE WARNING ###
-    
     aLastMatchId = GetLastMatchId()
+    LogVal("aLastMatchId", aLastMatchId)
+    
     if aLastMatchId == -1:
         return
         
+    aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL))) ### SCALE WARNING ###
+    
     for aUserId in aUsers:
         aMatchHistoryRec = db((db.user_ranking_history.predictor_id == aUserId) & (db.user_ranking_history.match_id == aLastMatchId)).select().first()
         db(db.auth_user.id == aUserId).update(last_score = aMatchHistoryRec.score, last_rank = aMatchHistoryRec.match_rank )
 
 
-                                           
+def GetPositionScore(aStage_in, aCommonTeams_in):
+    aNumberOfCorrectPredictions = len(aCommonTeams_in)
+    aStageScore = 0
+    if aStage_in == "IP":
+        aStageScore = aNumberOfCorrectPredictions * 5
+    elif aStage_in == "JQ":
+        aStageScore = aNumberOfCorrectPredictions * 10
+    elif aStage_in == "KS":
+        aStageScore = aNumberOfCorrectPredictions * 15
+    elif aStage_in == "L":
+        aStageScore = aNumberOfCorrectPredictions * 15
+    elif aStage_in == "MFN":
+        aStageScore = aNumberOfCorrectPredictions * 20
+    elif aStage_in == "NWN":
+        aStageScore = aNumberOfCorrectPredictions * 20
+    elif aStage_in == "OFN":
+        aStageScore = aNumberOfCorrectPredictions * 20
+    return aStageScore
+    
 def CalculatePositionScore():
     logger.info("==================================")
     allFixtures = db(db.fixture.stage != "Group").select()
-    allNonGroupMatches = groupby(allFixtures, lambda x: x.stage)
-    LogVal("allNonGroupMatches", allNonGroupMatches)
     
-    
-    aStageLastMatchDict = dict((aStage, max(map(lambda x:x.fixture_id, aFixtureItem))) for aStage, aFixtureItem in allNonGroupMatches)
+    aStageGroupedFixture = defaultdict( list )
+    for aMatch in allFixtures:
+        aStageGroupedFixture[aMatch.stage].append(aMatch)
+            
+    aStageLastMatchDict = dict((aStage, max(map(lambda x:x.fixture_id, aFixtureItem))) for aStage, aFixtureItem in aStageGroupedFixture.items())
     LogVal("aStageLastMatchDict", aStageLastMatchDict)
         
     aMatchIds = map(lambda x:x.game_number, allFixtures)
     anAllPredictions = filter(lambda x:x.team1_id is not None and x.team2_id is not None, db(db.match_prediction.match_id.belongs(aMatchIds)).select())   ### SCALE WARNING ###
     LogVal("anAllPredictions", anAllPredictions)
     
-    aUserPredictionsGroups = groupby(anAllPredictions, lambda x: x.predictor_id)
-    LogVal("aUserPredictionsGroups", aUserPredictionsGroups)
-    
     aScoreDict = dict.fromkeys(map(lambda x:x.id, anAllPredictions), 0)
-    LogVal("aScoreDict", aScoreDict)
+    anAffectedMatchSet = set()
     
-    allNonGroupMatches = groupby(allFixtures, lambda x: x.stage)  # Earlier allNonGroupMatches is destroyed due to some peculiarity of groupby
-    for aStage, aMatchSetDummy in allNonGroupMatches:
+    for aStage, aMatchSet in aStageGroupedFixture.items():
         LogVal("aStage", aStage)
-        
-        aMatchSet = list(aMatchSetDummy)
-        #logger.info("aStage = %s, aMatchSet = %s", str(aStage), str(aMatchSet))
-        
         
         aMatchesWithTeamsAvailable = filter(lambda x:x.team1 != -1 and x.team2 != -1, aMatchSet)
         LogVal("aMatchesWithTeamsAvailable", aMatchesWithTeamsAvailable)
+        
         #   Check if the predictions match the positions first
         if aStage == "IP":
             
             for aMatch in aMatchesWithTeamsAvailable:
-                LogVal("aMatch", aMatch)
                 aPredictionsForMatch = filter(lambda x:x.match_id == aMatch.game_number, anAllPredictions)
                 LogVal("aPredictionsForMatch", aPredictionsForMatch)
                 if len(aPredictionsForMatch) > 0 :
                     if aPredictionsForMatch[0].team1_id == aMatch.team1:
-                        LogVal("*******aPredictionsForMatch[0].team1_id********", aPredictionsForMatch[0].team1_id)
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
+                        anAffectedMatchSet.add(aMatch.game_number)
                     if aPredictionsForMatch[0].team2_id == aMatch.team2:
-                        LogVal("*******aPredictionsForMatch[0].team2_id*******", aPredictionsForMatch[0].team2_id)
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
+                        anAffectedMatchSet.add(aMatch.game_number)
                         
-        LogVal("aScoreDict after IP stage", aScoreDict)                
+        LogVal("aScoreDict after IP stage", aScoreDict)    
+        
         #   Check if the teams falling anywhere in the stage    
         
         aTeamsInStage = set(map(lambda x:x.team1, aMatchesWithTeamsAvailable) + map(lambda x:x.team2, aMatchesWithTeamsAvailable))
-        LogVal("aTeamsInStage", aTeamsInStage)
         
         #LogVal("map(lambda x:x.game_number, aMatchSet)", map(lambda x:x.game_number, aMatchSet))
         anAllPredictionsForThisStage = filter(lambda x:x.match_id in map(lambda x:x.game_number, aMatchSet), anAllPredictions)
-        LogVal("anAllPredictionsForThisStage", anAllPredictionsForThisStage)
         
-        aMatchesForUserInThisStage = groupby(anAllPredictionsForThisStage, lambda x: x.predictor_id)
-        LogVal("aMatchesForUserInThisStage", list(aMatchesForUserInThisStage))
-    
-        for aPredictorId, aPredSetDummy in aMatchesForUserInThisStage:
-            
-            aPredSet = list(aPredSetDummy)
+        aMatchesForUserInThisStage = defaultdict( list )
+        for aPred in anAllPredictionsForThisStage:
+            aMatchesForUserInThisStage[aPred.predictor_id].append(aPred)
+        
+        for aPredictorId, aPredSet in aMatchesForUserInThisStage.items():
             
             aTeamsInPrediction = set(map(lambda x:x.team1_id, aPredSet) + map(lambda x:x.team2_id, aPredSet))
             
@@ -355,31 +382,31 @@ def CalculatePositionScore():
             
             LogVal("*******aCommonTeams*******", aCommonTeams)
             
-            aNumberOfCorrectPredictions = len(aCommonTeams)
-            aStageScore = 0
-            if aStage == "IP":
-                aStageScore = aNumberOfCorrectPredictions * 5
-            elif aStage == "JQ":
-                aStageScore = aNumberOfCorrectPredictions * 10
-            elif aStage == "KS":
-                aStageScore = aNumberOfCorrectPredictions * 15
-            elif aStage == "L":
-                aStageScore = aNumberOfCorrectPredictions * 15
-            elif aStage == "MFN":
-                aStageScore = aNumberOfCorrectPredictions * 20
-            elif aStage == "NWN":
-                aStageScore = aNumberOfCorrectPredictions * 20
-            elif aStage == "OFN":
-                aStageScore = aNumberOfCorrectPredictions * 20
+            aStageScore = GetPositionScore(aStage, aCommonTeams)
                
-            aLastMatchPredId = max(aPredSet, key=lambda x:x.match_id).id
-            LogVal("aLastMatchPredId", aLastMatchPredId)
+            aLastMatchRef = max(aPredSet, key=lambda x:x.match_id)
+            aLastMatchPredId = aLastMatchRef.id
+            anAffectedMatchSet.add(aLastMatchRef.match_id)
             aScoreDict[aLastMatchPredId] = aScoreDict[aLastMatchPredId] + aStageScore
+            
         LogVal("aScoreDict after normal stage", aScoreDict)      
         logger.info("------------------------------------------------------")
+        
     LogVal("aScoreDict", aScoreDict)
+    UpdatePredictionScore(aScoreDict)
+    
+    UpdateMatchScoreAndRankForAllUsers(anAffectedMatchSet)
+    UpdateScoresInUserTable(anAffectedMatchSet)
+    
     
 
+def UpdatePredictionScore(aScoreDict_in):
+    #   update the score in database.
+    for aPredId, aScore in aScoreDict_in.items():
+    
+        db.match_prediction.update_or_insert((db.match_prediction.id == aPredId), 
+                                                score = aScore
+                                            )
         
 def CalculateGoalScore(aMatchId_in):
 
@@ -418,13 +445,9 @@ def CalculateGoalScore(aMatchId_in):
         
         aScore += int(aDistanceScore + 0.5) #round
         aScoreDict[aPrediction.id] = aScore
-     
-    #   update the score in database.
-    for aPredId, aScore in aScoreDict.items():
     
-        db.match_prediction.update_or_insert((db.match_prediction.id == aPredId), 
-                                                score = aScore
-                                            )
+    UpdatePredictionScore(aScoreDict)
+    
 
     
 def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
@@ -846,14 +869,17 @@ def GetLeagueDetails(aLeagueId_in, anAllUserInfo_in):
 def GetLastMatchId():
 
     aLastMatchIdRec = db(db.user_ranking_history).select(db.user_ranking_history.match_id.max())
-    if aLastMatchIdRec is None:
-        return -1
     
+    if aLastMatchIdRec is None or len(aLastMatchIdRec) == 0:
+        return -1
+        
+    LogVal("aLastMatchIdRec :", aLastMatchIdRec)
     if request.env.web2py_runtime_gae:
         aLastMatchId = aLastMatchIdRec.first().match_id
     else:
         aLastMatchId = aLastMatchIdRec.first()['_extra']['MAX(user_ranking_history.match_id)']
-    return aLastMatchId
+        
+    return -1 if aLastMatchId is None else aLastMatchId 
     
 def GetLeagueRankNextChunk(aLeagueId_in, anOffset_in, aCount_in):
 
@@ -1118,7 +1144,7 @@ def SimulateUserData():
         aFirst = int(aRegObj.group(1)) + 1
         
     
-    for number in range(aFirst,aFirst + 100):
+    for number in range(aFirst,aFirst + 30):
         aUserId = db.auth_user.insert(first_name = "User_" + str(number), last_name = "Test", email = "User_" + str(number) + "@yahoo.com")
         db.league_member.insert(league_id = aGlobalLeagueId, member_id = aUserId, membership_state = 'approved')
         time.sleep( 1 ) 

@@ -35,6 +35,8 @@
                     url: '{{=URL('calculate_pos_prediction_score')}}',  
                     data: { }}).done(function( data ) {
                             console.log("Position prediction scores are calculated");
+                            }).fail(function( data ) {
+                            console.log("Error in calculating Position prediction scores: " + data);
                             });  
                 return false;
             });

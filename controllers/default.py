@@ -82,9 +82,9 @@ def get_results():
                 )
                 
                 
-@auth.requires_login()
+
 def calculate_pos_prediction_score():
-    
+    logger.info("calculate_pos_prediction_score: Position prediction score calculation triggered")
     CalculatePositionScore()
     response.flash = T("Position prediction scores are calculated")
     return dict()
