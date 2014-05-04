@@ -410,9 +410,12 @@ def UpdatePredictionScore(aScoreDict_in):
         
 def CalculateGoalScore(aMatchId_in):
 
+    LogVal("aMatchId_in", aMatchId_in)
+    
     anAllPredictions = db(db.match_prediction.match_id == aMatchId_in).select() ### SCALE WARNING ###
     aResult = db(db.match_result.match_id == aMatchId_in).select()[0]
     aGoalDiff = aResult.team1_goals - aResult.team2_goals
+    LogVal("aGoalDiff", aGoalDiff)
     aResultOutcome = (aGoalDiff)/abs(aGoalDiff) if aGoalDiff != 0 else 0
     LogVal("aResultOutcome :", aResultOutcome)
     
@@ -423,6 +426,18 @@ def CalculateGoalScore(aMatchId_in):
         aScore = 0
         
         if aPrediction.team1_goals is not None and aPrediction.team2_goals is not None:
+            aPredGoalDiff = aPrediction.team1_goals - aPrediction.team2_goals
+            LogVal("aPredGoalDiff", aPredGoalDiff)
+            aPredOutcome = (aPredGoalDiff)/abs(aPredGoalDiff) if aPredGoalDiff != 0 else 0
+            LogVal("aPredOutcome", aPredOutcome)
+            
+            if aPrediction.team1_goals == aResult.team1_goals and aPrediction.team2_goals == aResult.team2_goals:
+                aScore += 6 if aPrediction.pred_type == "prior" else 4
+            elif aResultOutcome == aPredOutcome:
+                aScore += 3 if aPrediction.pred_type == "prior" else 2
+        '''
+        if aPrediction.team1_goals is not None and aPrediction.team2_goals is not None:
+            
             aGoalDiff = aPrediction.team1_goals - aPrediction.team2_goals
             aPredOutcome = (aGoalDiff) / abs(aGoalDiff) if aGoalDiff != 0 else 0
             LogVal("aPredOutcome :", aPredOutcome)
@@ -444,6 +459,8 @@ def CalculateGoalScore(aMatchId_in):
         LogVal("aDistanceScore :", aDistanceScore)
         
         aScore += int(aDistanceScore + 0.5) #round
+        '''
+        LogVal("aScore", aScore)
         aScoreDict[aPrediction.id] = aScore
     
     UpdatePredictionScore(aScoreDict)

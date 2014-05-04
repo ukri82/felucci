@@ -40,7 +40,9 @@
         <td style="width: 10%">
         {{if item['membership_state'] == 'approved':}}
         {{if item['league_name'] != 'GlobalLeague':}}
+        {{if item['owner_id'] != auth.user.id and item['owner_id'] != None:}}
             <a href="#" id="LeagueItemLeave_{{=item['league_member_id']}}" title="Leave">{{=IMG(_src=URL('static/images', 'league-user-leave.ico'))}}</a>
+        {{pass}}
         {{pass}}
         {{else:}}
             Pending
