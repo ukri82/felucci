@@ -319,32 +319,36 @@ li.w2p_grid_breadcrumb_elem {
    min-height: 400px;
 }
 /* 
-	Generic Styling, for Desktops/Laptops 
-	*/
-	table.table1 { 
-		width: 100%; 
-		border-collapse: collapse; 
-	}
-	/* Zebra striping */
-	.table1 tr { 
-		background: #ECF0C5; 
-	}
-	.table1 th { 
-		background: #91A762; 
-		color: white; 
-		font-weight: bold; 
-        text-align:center;
-	}
-	.table1 td, th { 
-		padding: 6px; 
-		border: 1px solid #ccc; 
-		text-align: center; 
-        font-weight: bold; 
-        color: rgb(42, 48, 37);
-        background-clip: padding-box;
-        border-radius: 5px;
-        background-color: #C3CE9A;
-	}
+Generic Styling, for Desktops/Laptops 
+*/
+table.table1 { 
+    width: 100%; 
+    border-collapse: collapse; 
+}
+/* Zebra striping */
+.table1 tr { 
+    background: #ECF0C5; 
+}
+.table1 th { 
+    background: #91A762; 
+    color: white; 
+    font-weight: bold; 
+    text-align:center;
+    border: 1px solid #ccc;
+    border-radius: 0px;
+}
+.table1 td, th { 
+    padding: 6px; 
+    /*border: 1px solid #ccc; */
+    text-align: center; 
+    font-weight: bold; 
+    color: rgb(42, 48, 37);
+    background-clip: padding-box;
+    border-radius: 10px;
+    background-color: #C3CE9A;
+    border-collapse: collapse; 
+}
+
     
 table.mail_table { 
 		width: 100%; 

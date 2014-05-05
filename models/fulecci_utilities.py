@@ -4,6 +4,7 @@ import datetime
 import collections
 import math
 import time
+
 from collections import defaultdict
 
 def LogVal(aDesc_in, aVar_in):
@@ -486,7 +487,7 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
 
     aPredData = {"fixture_id":fixtureId_in,
                  "game_number" : aFixtureData_in['game_number'], 
-                 "date_time" : aFixtureData_in['date_time'], 
+                 "date_time" : aFixtureData_in['date_time'].strftime("%b %d %H:%M"), 
                  "referee" : aFixtureData_in['referee'], 
                  "team1_id" : aFixtureData_in['team1'], 
                  "team2_id" : aFixtureData_in['team2'], 
@@ -763,7 +764,34 @@ def UpdateAdminBets(aParams_in):
     for aKey, aVal in aAllBetReq.items():
         db(db.bet_offer.id == aKey).update(bet_state = aVal["state"],
                                             bet_result = aVal["result"])
-
+                                            
+    UpdateUserBetScores(aAllBetReq)
+                                            
+                                            
+def UpdateUserBetScores(aAllBetReq_in):
+    
+    aAllBets = db().select(db.bet_offer.ALL).as_dict(key = 'id')
+    allUserBets = db(db.user_bet.bet_id.belongs(aAllBetReq_in.keys())).select()
+    
+    aUserBetMap = dict()
+    for aUserBet in allUserBets:
+        aScore = aUserBet["points"] * aAllBets[aUserBet["bet_id"]]["odd"] if aAllBets[aUserBet["bet_id"]]["bet_result"] == 'met' else 0
+        aUserBetMap[aUserBet["id"]] = {"match_id":aAllBets[aUserBet["bet_id"]]["match_id"], 
+                                        "predictor_id":aUserBet["predictor_id"],
+                                        "score" : aScore}
+    
+    LogVal("aUserBetMap", aUserBetMap)
+    for aKey, aVal in aUserBetMap.items():
+        db(db.user_bet.id == aKey).update(scored_points = aVal["score"])
+        db.match_prediction.update_or_insert((db.match_prediction.match_id == aVal["match_id"]) & 
+                                             (db.match_prediction.predictor_id == aVal["predictor_id"]) & 
+                                             (db.match_prediction.pred_type == "bet"), 
+                                                match_id = aVal["match_id"], 
+                                                pred_type = "bet",
+                                                predictor_id = aVal["predictor_id"], 
+                                                score = aVal["score"]
+                                            )
+    
 def GetNumUnreadNotifications():
     
     return db((db.notification.target_id == auth.user.id) & (db.notification.read_state == "unopened")).count()

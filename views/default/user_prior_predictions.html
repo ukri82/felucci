@@ -71,6 +71,7 @@ $(document).ready(function()
 <!--  Tabs content definition --->
 <div id="fixture_tabs_content" class="tab-content">     
  
+
 {{index = 0}}
  
 {{for aGroupName in keylist:}}
@@ -85,16 +86,17 @@ $(document).ready(function()
     <thead>
         <tr>
             <th></th>
-            <th scope="col" abbr="GameNumber">Game</th>
-            <th scope="col" abbr="Team1">Team 1</th>
-            <th scope="col" abbr="Team2">Team 2</th>
-            <th scope="col" abbr="DateTime">Date and Time</th>
+            <th scope="col" abbr="GameNumber">Game number</th>
+            <th scope="col" abbr="Team1">Team 1 goals</th>
+            <th scope="col" abbr="Team2">Team 2 goals</th>
+            <th scope="col" abbr="DateTime">Date and Time (Brazil) </th>
             <th scope="col" abbr="Venue">Venue</th>
             <th scope="col" abbr="Venue">Score</th>
         </tr>
     </thead>
     
     <tbody>
+    <tr>Please enter your predicted scores below</tr>
     {{matchIndex = 1}}
     {{items = []}}
     {{items = MacthPredictionData[aGroupName]}}
@@ -141,6 +143,8 @@ $(document).ready(function()
 
 {{if 'PositionPredictionData' in vars():}}
 <div class="tab-pane" id="{{=('SecondStage_' + PredictionFormId)}}" style="border: 2px solid #959B90;">
+Please select your predicted teams in the stages below
+
 {{keylist = PositionPredictionData.keys()}}
 {{keylist.sort()}}
 
@@ -149,13 +153,14 @@ $(document).ready(function()
 <div id="StageData" style="border: 2px solid #959B90;">
     <h4 style = "text-align:center;">{{=GetTextForGroup(aStage)}}</h4>
     <table class="table1">
+        
         {{for predData in aStagePredictionData:}}
         <tr>
             {{if predData['team2_desc'] != predData['team1_desc']:}}
                 <td>Match {{=predData['game_number']}}</td>
             {{pass}}
             
-            <td>{{=predData['team1_desc']}}
+            <td>{{=predData['team1_desc'] if aStage == "IP" else ""}}
                 {{aName1 = "%s_pos_%s_team1" % (PredictionFormId, predData['fixture_id'])}}
                 {{if ReadOnlyFlag == 'False' :}}
                     <select id="{{=aName1}}" name="{{=aName1}}" class="test">
@@ -181,7 +186,7 @@ $(document).ready(function()
             {{if predData['team2_desc'] != predData['team1_desc']:}}
                 <td>X</td>
                 
-                <td>{{=predData['team2_desc']}}
+                <td>{{=predData['team2_desc'] if aStage == "IP" else ""}}
                     {{aName2 = "%s_pos_%s_team2" % (PredictionFormId, predData['fixture_id'])}}
                     {{if ReadOnlyFlag == 'False' :}}
                         <select id="{{=aName2}}" name="{{=aName2}}" class="test" >
