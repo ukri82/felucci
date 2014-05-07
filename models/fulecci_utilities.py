@@ -5,7 +5,6 @@ import collections
 import math
 import time
 
-from collections import defaultdict
 
 def LogVal(aDesc_in, aVar_in):
     logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
@@ -750,6 +749,7 @@ def GetActiveBetsAdmin():
     
 def UpdateAdminBets(aParams_in):
 
+    LogVal("aParams_in", aParams_in)
     aAllBetReq = dict()
     for aBetReq, aValue in aParams_in.items():
         matchObj = re.search('bet_([a-zA-Z]+)_(\d+)', aBetReq)
@@ -781,6 +781,7 @@ def UpdateUserBetScores(aAllBetReq_in):
                                         "score" : aScore}
     
     LogVal("aUserBetMap", aUserBetMap)
+    anAffectedMatchSet = set()
     for aKey, aVal in aUserBetMap.items():
         db(db.user_bet.id == aKey).update(scored_points = aVal["score"])
         db.match_prediction.update_or_insert((db.match_prediction.match_id == aVal["match_id"]) & 
@@ -791,6 +792,10 @@ def UpdateUserBetScores(aAllBetReq_in):
                                                 predictor_id = aVal["predictor_id"], 
                                                 score = aVal["score"]
                                             )
+        anAffectedMatchSet.add(aVal["match_id"])
+                                            
+    UpdateMatchScoreAndRankForAllUsers(anAffectedMatchSet)
+    UpdateScoresInUserTable(anAffectedMatchSet)
     
 def GetNumUnreadNotifications():
     

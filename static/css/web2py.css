@@ -347,6 +347,7 @@ table.table1 {
     border-radius: 10px;
     background-color: #C3CE9A;
     border-collapse: collapse; 
+    vertical-align:middle;
 }
 
     
