@@ -23,7 +23,7 @@ def index():
         CreateUserPreferences()
         CreateGlobalLeagueAndAddMember()
     
-    return dict(message_header=T('Hello'), message_contents=T('Welcome to World Cup 2014 predictions'))
+    return dict(message_header=T('Hello'), message_contents=T('Welcome to Fulecci (World Cup 2014 predictions)'))
 
 @auth.requires_login()    
 def get_settings():
@@ -49,7 +49,8 @@ def get_prior_predictions():
                 SubmitButtonText = "Submit Prior Predictions",
                 SubmitURL = "submit_prior_predictions",
                 PredictionFormId = "PriorPredictionFormId",
-                ReadOnlyFlag = "False"
+                HelpMessage = "Please enter your predicted scores below(Only until the start of world cup)",
+                ReadOnlyFlag = IsTournamentStarted()
                 )
 @auth.requires_login()
 def get_spot_predictions():
@@ -59,6 +60,7 @@ def get_spot_predictions():
                 SubmitButtonText = "Submit Spot Predictions",
                 SubmitURL = "submit_spot_predictions",
                 PredictionFormId = "SpotPredictionFormId",
+                HelpMessage = "Please enter your predicted scores below",
                 ReadOnlyFlag = "False"
                 )
     
@@ -78,6 +80,7 @@ def get_results():
                 SubmitButtonText = "Submit Results",
                 SubmitURL = "submit_results",
                 PredictionFormId = "ResultFormId",
+                HelpMessage = "",
                 ReadOnlyFlag = "False"
                 )
                 
@@ -149,10 +152,15 @@ def get_newsfeed():
 def submit_prior_predictions():
    
     logger.info("[%s] : Prior predictions are submitted: %s", auth.user.id, str(request.vars))
-    
-    UpdatePredictions(request.vars, "prior")
-    
-    response.flash = T("Predictions updated...")
+    if IsTournamentStarted() == "True":
+        logger.info("The prior predictions are not updated since the tournament is already started")
+        response.flash = T("Your predictions cannot be updated since the deadline is passed")
+    else:  
+        somePredictionsAreNotUpdated = UpdatePredictions(request.vars, "prior")
+        if somePredictionsAreNotUpdated:
+            response.flash = T("The prior predictions are not updated since some of the matches are already started")
+        else:
+            response.flash = T("Predictions updated...")
     
     return get_predictions()
     
@@ -161,9 +169,11 @@ def submit_spot_predictions():
    
     logger.info("[%s] : Spot predictions are submitted: %s", auth.user.id, str(request.vars))
     
-    UpdatePredictions(request.vars, "spot")
-    
-    response.flash = T("Predictions updated...")
+    somePredictionsAreNotUpdated = UpdatePredictions(request.vars, "spot")
+    if somePredictionsAreNotUpdated:
+        response.flash = T("Some of the spot predictions are not updated since the corresponding matches are already started")
+    else:
+        response.flash = T("Predictions updated...")
     
     return get_predictions()
  
@@ -420,6 +430,7 @@ def get_user_details_prior_pred():
     return dict(MacthPredictionData = GetGoalPredictions("prior", request.vars.UserId), 
                 PositionPredictionData = GetPositionPredictions(False), 
                 PredictionFormId = "UserDetailsPriorPredictionFormId",
+                HelpMessage = "",
                 ReadOnlyFlag = "True"
                 )
 
@@ -432,6 +443,7 @@ def get_user_details_spot_pred():
     response.view = 'default/user_prior_predictions.html'
     return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
                 PredictionFormId = "UserDetailsSpotPredictionFormId",
+                HelpMessage = "",
                 ReadOnlyFlag = "True"
                 )       
                 

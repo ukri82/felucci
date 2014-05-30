@@ -86,30 +86,30 @@ $(document).ready(function()
     <thead>
         <tr>
             <th></th>
-            <th scope="col" abbr="GameNumber">Game number</th>
-            <th scope="col" abbr="Team1">Team 1 goals</th>
-            <th scope="col" abbr="Team2">Team 2 goals</th>
-            <th scope="col" abbr="DateTime">Date and Time (Brazil) </th>
-            <th scope="col" abbr="Venue">Venue</th>
-            <th scope="col" abbr="Venue">Score</th>
+            <!--<th scope="col" abbr="GameNumber" style="width: 3%;">Game number</th>!-->
+            <th scope="col" abbr="Team1" style="width: 30%;">Team 1 goals</th>
+            <th scope="col" abbr="Team2" style="width: 30%;">Team 2 goals</th>
+            <th scope="col" abbr="DateTime" style="width: 10%;">Date and Time (German) </th>
+            <th scope="col" abbr="Venue" style="width: 25%;">Venue</th>
+            <th scope="col" abbr="Score" style="width: 5%;">Score</th>
         </tr>
     </thead>
     
     <tbody>
-    <tr>Please enter your predicted scores below</tr>
+    <tr>{{=HelpMessage}}</tr>
     {{matchIndex = 1}}
     {{items = []}}
     {{items = MacthPredictionData[aGroupName]}}
     {{for item in items:}}
         <tr>
             <th scope="row">{{=matchIndex}}{{matchIndex = matchIndex + 1}}</th>
-            <td>{{=item['game_number']}}</td>
+            <!--<td>{{=item['game_number']}}</td>!-->
             <td>
                 {{=item['team1_short_name']}}
                 {{if item['team1_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
                 {{pass}}
-                    {{if ReadOnlyFlag == 'False' :}}
+                    {{if ReadOnlyFlag == 'False' and item['match_started'] == "False":}}
                         {{=INPUT(_type='number', _name="%s_match_%s_score1" % (PredictionFormId, item['fixture_id']), _value = item['team1_goals'], _style="width: 50px;")}} 
                     {{else:}}
                         {{=LABEL(item['team1_goals'], _class="PredictionViewGoals")}}
@@ -120,7 +120,7 @@ $(document).ready(function()
                 {{if item['team2_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
                 {{pass}}
-                    {{if ReadOnlyFlag == 'False' :}}
+                    {{if ReadOnlyFlag == 'False' and item['match_started'] == "False":}}
                         {{=INPUT(_type='number', _name="%s_match_%s_score2" % (PredictionFormId, item['fixture_id']), _value = item['team2_goals'], _style="width: 50px;")}}
                     {{else:}}
                         {{=LABEL(item['team2_goals'], _class="PredictionViewGoals")}}
@@ -128,8 +128,8 @@ $(document).ready(function()
             </td>
             
             <td>{{=item['date_time']}}</td>
-            <td style="max-width: 150px;">{{=item['venue_name']}}, {{=item['venue_city']}}</td>
-            <td style="max-width: 150px;">{{=item['points_scored']}}</td>
+            <td >{{=item['venue_name']}}, {{=item['venue_city']}}</td>
+            <td >{{=item['points_scored']}}</td>
         </tr>
     {{pass}}
     
@@ -143,7 +143,7 @@ $(document).ready(function()
 
 {{if 'PositionPredictionData' in vars():}}
 <div class="tab-pane" id="{{=('SecondStage_' + PredictionFormId)}}" style="border: 2px solid #959B90;">
-Please select your predicted teams in the stages below
+{{=HelpMessage}}
 
 {{keylist = PositionPredictionData.keys()}}
 {{keylist.sort()}}

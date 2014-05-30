@@ -155,6 +155,7 @@ db.define_table('match_prediction',
     Field('team2_id','integer'),
     Field('team1_goals','integer', IS_INT_IN_RANGE(0, 100)),
     Field('team2_goals','integer', IS_INT_IN_RANGE(0, 100)), 
+    Field('points_scored','integer', default=-1),
     Field('score','integer', default=0), redefine=migrate_flag
 )
 

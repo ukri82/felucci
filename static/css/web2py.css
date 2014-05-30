@@ -440,10 +440,27 @@ table.InvisibleTable {
 {
     text-align:center; 
     font-weight:bold;
-    font-size: 190%;
+    font-size: 150%;
     color: rgb(8, 83, 77);
 }
 
+
+#CountDownDiv {
+    border: none;
+    text-align: center; 
+    font-family: Arial; 
+    font-size: 26px; 
+    font-weight: normal;    /* options are normal, bold, bolder, lighter */
+    color: white;    /* change color using the hexadecimal color codes for HTML */
+    background-color: transparent;    /* change the background color using the hex color codes for HTML */
+    margin: 0px auto; 
+    text-align: center;
+    width: 1200px; 
+    height: 37px;
+    position: relative;    /* leave as "relative" to keep timer centered on your page, or change to "absolute" then change the values of the "top" and "left" properties to position the timer */
+    top: 0px;            /* change to position the timer */
+    left: 0px;            /* change to position the timer; delete this property and it's value to keep timer centered on page */
+}
 
 /* fix some IE problems */
 

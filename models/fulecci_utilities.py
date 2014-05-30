@@ -4,7 +4,8 @@ import datetime
 import collections
 import math
 import time
-
+from collections import  defaultdict
+from datetime import datetime, timedelta
 
 def LogVal(aDesc_in, aVar_in):
     logger.info("Value of %s : %s", str(aDesc_in), str(aVar_in))
@@ -125,28 +126,35 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
     '''
     logger.info("Pred=============================================== %s", str(len(aParams_in)))
     
+    somePredictionsAreNotUpdated = False;
     aPredData = dict()
     for aPredictReq in aParams_in:
         aMatchId, aTeamIndex, aMatchOrPos = ParseResultStr(aPredictReq)
       
         logger.info("(aMatchOrPos : %s, aMatchId: %s, aTeamIndex: %s, goals: %s)", aMatchOrPos, str(aMatchId), str(aTeamIndex), str(aParams_in[aPredictReq]))
-        if aMatchId not in aPredData:
-            aCacheTable = session.PriorPredictionTable if aPredictionType_in == "prior" else session.SpotPredictionTable
-            aPredData[aMatchId] = {'team1_goals' : aCacheTable[aMatchId]['team1_goals'] if aMatchId in aCacheTable else None,
-                                        'team2_goals' : aCacheTable[aMatchId]['team2_goals'] if aMatchId in aCacheTable else None, 
-                                        'team1_id' : aCacheTable[aMatchId]['team1_id'] if aMatchId in aCacheTable else None, 
-                                        'team2_id' : aCacheTable[aMatchId]['team2_id'] if aMatchId in aCacheTable else None}
         
-        if aMatchOrPos == "match":
-            if aTeamIndex == 0:
-                aPredData[aMatchId]['team1_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
-            else:
-                aPredData[aMatchId]['team2_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
+        if IsMatchStarted(session.FixtureTable[aMatchId]) == "True":
+            logger.info("The predictions for aMatchId : %s is not updated since the match is already started", str(aMatchId))
+            somePredictionsAreNotUpdated = True
         else:
-            if aTeamIndex == 0:
-                aPredData[aMatchId]['team1_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
+        
+            if aMatchId not in aPredData:
+                aCacheTable = session.PriorPredictionTable if aPredictionType_in == "prior" else session.SpotPredictionTable
+                aPredData[aMatchId] = {'team1_goals' : aCacheTable[aMatchId]['team1_goals'] if aMatchId in aCacheTable else None,
+                                            'team2_goals' : aCacheTable[aMatchId]['team2_goals'] if aMatchId in aCacheTable else None, 
+                                            'team1_id' : aCacheTable[aMatchId]['team1_id'] if aMatchId in aCacheTable else None, 
+                                            'team2_id' : aCacheTable[aMatchId]['team2_id'] if aMatchId in aCacheTable else None}
+            
+            if aMatchOrPos == "match":
+                if aTeamIndex == 0:
+                    aPredData[aMatchId]['team1_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
+                else:
+                    aPredData[aMatchId]['team2_goals'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
             else:
-                aPredData[aMatchId]['team2_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
+                if aTeamIndex == 0:
+                    aPredData[aMatchId]['team1_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
+                else:
+                    aPredData[aMatchId]['team2_id'] = int(aParams_in[aPredictReq]) if aParams_in[aPredictReq] != '' else None
         
     for aMatchId, aData in aPredData.items():
     
@@ -169,7 +177,8 @@ def UpdatePredictions(aParams_in, aPredictionType_in):
                                  'team2_id' : aData['team2_id'],
                                  'id' : anId
                                 }
-
+    return somePredictionsAreNotUpdated
+    
 def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
 
     aMatchIdSet = set()
@@ -320,9 +329,23 @@ def GetPositionScore(aStage_in, aCommonTeams_in):
     elif aStage_in == "OFN":
         aStageScore = aNumberOfCorrectPredictions * 20
     return aStageScore
+   
+def FindMatchesNotScoredYet():
+    allMatches = db(db.fixture.id > 0).select(db.fixture.game_number)
     
+    matchesWithResults = map(lambda x:x.match_id, db(db.match_result.id > 0).select(db.match_result.match_id))
+    LogVal("matchesWithResults", matchesWithResults)
+    
+    predictionsThatNotYetScored = map(lambda x:x.match_id, db((db.match_prediction.match_id.belongs(matchesWithResults)) & (db.match_prediction.points_scored == -1)).select(db.match_prediction.match_id))
+    
+    LogVal("predictionsThatNotYetScored", predictionsThatNotYetScored)
+        
 def CalculatePositionScore():
     logger.info("==================================")
+    #FindMatchesNotScoredYet()
+    
+    #return
+    
     allFixtures = db(db.fixture.stage != "Group").select()
     
     aStageGroupedFixture = defaultdict( list )
@@ -405,6 +428,7 @@ def UpdatePredictionScore(aScoreDict_in):
     for aPredId, aScore in aScoreDict_in.items():
     
         db.match_prediction.update_or_insert((db.match_prediction.id == aPredId), 
+                                                points_scored = 1,
                                                 score = aScore
                                             )
         
@@ -481,9 +505,16 @@ def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
     
     return aResult
 
-
+def IsMatchStarted(aFixtureData_in):
+    aStartOfMatchUTC = aFixtureData_in['date_time'] - timedelta(hours = 2)  #Convert the german time to UTC
+    aMatchStarted = "True" if datetime.now() >= aStartOfMatchUTC else "False"
+    return aMatchStarted
+    
+    
 def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
 
+    
+    
     aPredData = {"fixture_id":fixtureId_in,
                  "game_number" : aFixtureData_in['game_number'], 
                  "date_time" : aFixtureData_in['date_time'].strftime("%b %d %H:%M"), 
@@ -501,13 +532,15 @@ def CreatePredictionData(fixtureId_in, aFixtureData_in, aSourceTableData_in):
                  "points_scored" : aSourceTableData_in[fixtureId_in]['score'] if fixtureId_in in aSourceTableData_in and 'score' in aSourceTableData_in[fixtureId_in] else None,
                  "venue" : aFixtureData_in['venue'], 
                  "venue_name" : session.StadiumTable[aFixtureData_in['venue']]['name'], 
-                 "venue_city" : session.StadiumTable[aFixtureData_in['venue']]['city']
+                 "venue_city" : session.StadiumTable[aFixtureData_in['venue']]['city'],
+                 "match_started" : IsMatchStarted(aFixtureData_in)
                  }
     return aPredData
     
 def GetGoalPredictions(aPredictionType_in, aUserId_in):
     
     logging.info("aUserId_in: %s", str(aUserId_in))
+    logger.info("---------------------------------------")
     
     if aUserId_in == auth.user.id:
         aPredTableData = session.PriorPredictionTable if aPredictionType_in is "prior" else session.SpotPredictionTable
@@ -540,6 +573,11 @@ def JoinFixtureWith(aSourceData_in):
     return aResults
 
     
+def IsTournamentStarted():
+    aDayOfFirstMatch = db(db.fixture.game_number == '1').select().first().date_time
+    aPreviousDayOfTournamentStart = aDayOfFirstMatch - timedelta(days = 1)
+    aTournamentStarted = "True" if datetime.now() >= aPreviousDayOfTournamentStart else "False"
+    return aTournamentStarted
     
 def GetPositionPredictions(aResults_in):
     
@@ -574,6 +612,7 @@ def GetPositionPredictions(aResults_in):
             
             aPossibleTeam1Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam1]
             aPossibleTeam2Data = [{"id" : row, "name" : session.TeamTable[row]['name']} for row in aPossibleTeam2]
+            
             
             aPredData = {"fixture_id":fixtureId, 
                          "game_number" : aFixtureData['game_number'], 
@@ -790,6 +829,7 @@ def UpdateUserBetScores(aAllBetReq_in):
                                                 match_id = aVal["match_id"], 
                                                 pred_type = "bet",
                                                 predictor_id = aVal["predictor_id"], 
+                                                points_scored = 1,
                                                 score = aVal["score"]
                                             )
         anAffectedMatchSet.add(aVal["match_id"])

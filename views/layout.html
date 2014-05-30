@@ -72,7 +72,7 @@
   {{block head}}{{end}}
 </head>
 
-<body style="background-color: rgb(64, 68, 22);color: #FFF;">
+<body style="background-color: rgb(64, 68, 22);color: #FFF;"  onload="countdown(year,month,day,hour,minute);">
   <!-- Navbar ================================================== -->
   <div class="navbar navbar-inverse">
     <div class="flash">{{=response.flash or ''}}</div>
@@ -109,6 +109,7 @@
                     <small>{{=response.subtitle or ''}}</small>
                 </h2>
             </div>
+            <div id="CountDownDiv"></div>
         </div>
 	{{pass}}
     </header>
