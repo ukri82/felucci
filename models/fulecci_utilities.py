@@ -1237,5 +1237,5 @@ def SimulateUserData():
     for number in range(aFirst,aFirst + 30):
         aUserId = db.auth_user.insert(first_name = "User_" + str(number), last_name = "Test", email = "User_" + str(number) + "@yahoo.com")
         db.league_member.insert(league_id = aGlobalLeagueId, member_id = aUserId, membership_state = 'approved')
-        time.sleep( 1 ) 
+        #time.sleep( 1 ) 
     

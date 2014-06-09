@@ -157,7 +157,9 @@ $(document).ready(function()
         {{for predData in aStagePredictionData:}}
         <tr>
             {{if predData['team2_desc'] != predData['team1_desc']:}}
+            {{if aStage == "IP":}}
                 <td>Match {{=predData['game_number']}}</td>
+            {{pass}}
             {{pass}}
             
             <td>{{=predData['team1_desc'] if aStage == "IP" else ""}}
@@ -184,7 +186,11 @@ $(document).ready(function()
             </td>
 
             {{if predData['team2_desc'] != predData['team1_desc']:}}
-                <td>X</td>
+                <td>
+                {{if aStage == "IP":}}
+                X
+                {{pass}}
+                </td>
                 
                 <td>{{=predData['team2_desc'] if aStage == "IP" else ""}}
                     {{aName2 = "%s_pos_%s_team2" % (PredictionFormId, predData['fixture_id'])}}

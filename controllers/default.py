@@ -98,11 +98,11 @@ def get_user_stats_chunk_data():
     
     #if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
     if request.vars.NextChunk == 'true':
-        session.myUserStatsOffset = session.myUserStatsOffset + 4
+        session.myUserStatsOffset = session.myUserStatsOffset + 10
     else:
         session.myUserStatsOffset = 0
     
-    aMoreFlag, aStatsData = RetrieveNextChunk(db.auth_user, 'last_score', session.myUserStatsOffset, 4, False)
+    aMoreFlag, aStatsData = RetrieveNextChunk(db.auth_user, 'last_score', session.myUserStatsOffset, 10, False)
     
     return aMoreFlag, aStatsData
     
@@ -126,11 +126,11 @@ def get_newsfeed_chunk_data():
     
     #if len(request.vars.items()) > 0 and request.vars.items()[0][0] == 'NextChunk':
     if request.vars.NextChunk == 'true':
-        session.myNewsFeedOffset = session.myNewsFeedOffset + 4
+        session.myNewsFeedOffset = session.myNewsFeedOffset + 10
     else:
         session.myNewsFeedOffset = 0
     
-    aMoreFlag, aNewsData = RetrieveNextChunk(db.news_item, 'date_time', session.myNewsFeedOffset, 4, True)
+    aMoreFlag, aNewsData = RetrieveNextChunk(db.news_item, 'date_time', session.myNewsFeedOffset, 10, True)
     
     return aMoreFlag, aNewsData
     
@@ -383,11 +383,11 @@ def get_league_page():
 def get_league_ranking_chunk_data():
     
     if request.vars.NextChunk == 'true':
-        session.myLeagueRankingOffset = session.myLeagueRankingOffset + 2
+        session.myLeagueRankingOffset = session.myLeagueRankingOffset + 10
     else:
         session.myLeagueRankingOffset = 0
         
-    aMoreFlag, aMemberData = GetLeagueRankNextChunk(request.vars.LeagueId, session.myLeagueRankingOffset, 2)
+    aMoreFlag, aMemberData = GetLeagueRankNextChunk(request.vars.LeagueId, session.myLeagueRankingOffset, 10)
     return aMoreFlag, aMemberData
     
 @auth.requires_login()
