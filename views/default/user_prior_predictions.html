@@ -89,7 +89,7 @@ $(document).ready(function()
             <!--<th scope="col" abbr="GameNumber" style="width: 3%;">Game number</th>!-->
             <th scope="col" abbr="Team1" style="width: 30%;">Team 1 goals</th>
             <th scope="col" abbr="Team2" style="width: 30%;">Team 2 goals</th>
-            <th scope="col" abbr="DateTime" style="width: 10%;">Date and Time (German) </th>
+            <th scope="col" abbr="DateTime" style="width: 10%;">Date and Time (UTC) </th>
             <th scope="col" abbr="Venue" style="width: 25%;">Venue</th>
             <th scope="col" abbr="Score" style="width: 5%;">Score</th>
         </tr>
@@ -109,7 +109,8 @@ $(document).ready(function()
                 {{if item['team1_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team1_icon']),_alt=item['team1_name'], _title = item['team1_name'])}} 
                 {{pass}}
-                    {{if ReadOnlyFlag == 'False' and item['match_started'] == "False":}}
+                    {{aMakeMatchWriteable = item['match_started'] == "False" or Results}}
+                    {{if ReadOnlyFlag == 'False' and aMakeMatchWriteable:}}
                         {{=INPUT(_type='number', _name="%s_match_%s_score1" % (PredictionFormId, item['fixture_id']), _value = item['team1_goals'], _style="width: 50px;")}} 
                     {{else:}}
                         {{=LABEL(item['team1_goals'], _class="PredictionViewGoals")}}
@@ -120,7 +121,8 @@ $(document).ready(function()
                 {{if item['team2_icon'] != 'none' :}}
                     {{=IMG(_src=URL('static/images/country_icons', item['team2_icon']),_alt=item['team2_name'], _title = item['team2_name'])}}  
                 {{pass}}
-                    {{if ReadOnlyFlag == 'False' and item['match_started'] == "False":}}
+                    {{aMakeMatchWriteable = item['match_started'] == "False" or Results}}
+                    {{if ReadOnlyFlag == 'False' and aMakeMatchWriteable:}}
                         {{=INPUT(_type='number', _name="%s_match_%s_score2" % (PredictionFormId, item['fixture_id']), _value = item['team2_goals'], _style="width: 50px;")}}
                     {{else:}}
                         {{=LABEL(item['team2_goals'], _class="PredictionViewGoals")}}

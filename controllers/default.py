@@ -3,7 +3,7 @@
 
 import logging
 import re
-
+import datetime
 
 #########################################################################
 ## This is a sample controller
@@ -50,7 +50,8 @@ def get_prior_predictions():
                 SubmitURL = "submit_prior_predictions",
                 PredictionFormId = "PriorPredictionFormId",
                 HelpMessage = "Please enter your predicted scores below(Only until the start of world cup)",
-                ReadOnlyFlag = IsTournamentStarted()
+                ReadOnlyFlag = IsTournamentStarted(),
+                Results = False
                 )
 @auth.requires_login()
 def get_spot_predictions():
@@ -61,7 +62,8 @@ def get_spot_predictions():
                 SubmitURL = "submit_spot_predictions",
                 PredictionFormId = "SpotPredictionFormId",
                 HelpMessage = "Please enter your predicted scores below",
-                ReadOnlyFlag = "False"
+                ReadOnlyFlag = "False",
+                Results = False
                 )
     
 @auth.requires_login()
@@ -81,7 +83,8 @@ def get_results():
                 SubmitURL = "submit_results",
                 PredictionFormId = "ResultFormId",
                 HelpMessage = "",
-                ReadOnlyFlag = "False"
+                ReadOnlyFlag = "False",
+                Results = True
                 )
                 
                 
@@ -91,7 +94,13 @@ def calculate_pos_prediction_score():
     CalculatePositionScore()
     response.flash = T("Position prediction scores are calculated")
     return dict()
-    
+
+@auth.requires_login()
+def update_user_rec_history():
+    logger.info("update_user_rec_history: User record history calculation triggered")
+    UpdateUserRecHistory()
+    response.flash = T("User record history is updated")
+    return dict()    
 
 @auth.requires_login()
 def get_user_stats_chunk_data():
@@ -388,6 +397,8 @@ def get_league_ranking_chunk_data():
         session.myLeagueRankingOffset = 0
         
     aMoreFlag, aMemberData = GetLeagueRankNextChunk(request.vars.LeagueId, session.myLeagueRankingOffset, 10)
+    LogVal("aMemberData : ", aMemberData)
+    
     return aMoreFlag, aMemberData
     
 @auth.requires_login()
@@ -431,7 +442,8 @@ def get_user_details_prior_pred():
                 PositionPredictionData = GetPositionPredictions(False), 
                 PredictionFormId = "UserDetailsPriorPredictionFormId",
                 HelpMessage = "",
-                ReadOnlyFlag = "True"
+                ReadOnlyFlag = "True",
+                Results = False
                 )
 
 @auth.requires_login()    
@@ -444,7 +456,8 @@ def get_user_details_spot_pred():
     return dict(MacthPredictionData = GetGoalPredictions("spot", request.vars.UserId), 
                 PredictionFormId = "UserDetailsSpotPredictionFormId",
                 HelpMessage = "",
-                ReadOnlyFlag = "True"
+                ReadOnlyFlag = "True",
+                Results = False
                 )       
                 
 @auth.requires_login()    

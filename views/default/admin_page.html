@@ -41,6 +41,20 @@
                 return false;
             });
     </script>
+    <input type="button" id="UpdateUserRecHistory" value="Update User Records" class="btn">
+    <script>
+            $('#UpdateUserRecHistory').click(function() {
+                $.ajax({  type: "POST",  
+                    url: '{{=URL('update_user_rec_history')}}',  
+                    data: { }}).done(function( data ) {
+                            console.log("User rec history is calculated");
+                            }).fail(function( data ) {
+                            console.log("Error in calculating User rec history: " + data);
+                            });  
+                return false;
+            });
+    </script>
+    
     <br/>
     <br/>
     <br/>

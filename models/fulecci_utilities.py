@@ -196,32 +196,25 @@ def CalculateGoalPredictionScores(aFixtureData_in, aResultData_in):
     return 0
 
 
-def UpdateUserRankingHistory(aUserId, aMatchId, aLeagueMemberships, aCurrentScore):
+def UpdateUserRankingHistory(aUserId, aGameNumber, aLeagueMemberships, aCurrentScore):
 
     for aLeagueMember in aLeagueMemberships:
         db.user_ranking_history.update_or_insert(((db.user_ranking_history.predictor_id == aUserId) & 
-                                                  (db.user_ranking_history.match_id == aMatchId) & 
+                                                  (db.user_ranking_history.match_id == aGameNumber) & 
                                                   (db.user_ranking_history.member_id == aLeagueMember.id)
                                                  ), 
                                                  predictor_id = aUserId,
-                                                 match_id = aMatchId,
+                                                 match_id = aGameNumber,
                                                  member_id = aLeagueMember.id,
                                                  score = aCurrentScore
                                                 )
     
  
-def GetLastScoreForUser(aUserId_in, aMatchId_in):
+def GetLastScoreForUser(aUserId_in, aGameNumber_in):
     aLastScore = 0
-    if aMatchId_in > 1:    #   Assumption : Match ids always start with 1
+    if aGameNumber_in > 1:    #   Assumption : Match ids always start with 1
         
-        '''
-        aLastMatch = db(((db.user_ranking_history.predictor_id == aUserId_in) & 
-                          (db.user_ranking_history.match_id == (aMatchId_in - 1))
-                         )).select()   #add a validation for aMatchId_in - 1 restriction. The score will be same across all league memberships. So, ignore that in the query
-        if len(aLastMatch) > 0:
-            aLastScore = aLastMatch[0].score
-        '''
-        anAllPrevMatchRecords = db((db.user_ranking_history.predictor_id == aUserId_in) & (db.user_ranking_history.match_id < aMatchId_in)).select()  ### SCALE WARNING ###
+        anAllPrevMatchRecords = db((db.user_ranking_history.predictor_id == aUserId_in) & (db.user_ranking_history.match_id < aGameNumber_in)).select()  ### SCALE WARNING ###
         if len(anAllPrevMatchRecords) == 0:
             return aLastScore
         LogVal("anAllPrevMatchRecords", anAllPrevMatchRecords)    
@@ -234,11 +227,15 @@ def GetLastScoreForUser(aUserId_in, aMatchId_in):
 def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
 
     LogVal("aMatchSet_in :", aMatchSet_in)
+    aSortedMatchSet = db(db.fixture.fixture_id.belongs(aMatchSet_in)).select(orderby = db.fixture.game_number)
     
     #   Update the scores for all users.
-    for aMatchId in sorted(aMatchSet_in):
-        aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match ### SCALE WARNING ###
+    for aMatch in aSortedMatchSet:
+        aMatchId = aMatch.fixture_id
         LogVal("aMatchId", aMatchId)
+        
+        aPredForMatch = db(db.match_prediction.match_id == aMatchId).select()   #Get all predictions for this match ### SCALE WARNING ###
+        
         LogVal("aPredForMatch", aPredForMatch)
         
         aUsers = list(map(lambda x:x.id, db().select(db.auth_user.ALL)))       #   Get all predictors   ### SCALE WARNING ###
@@ -247,17 +244,18 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
         aLeagueIdSet = set()
         
         for aUserId in aUsers:
+            
             aLeagueMemberships = db((db.league_member.member_id == aUserId) & (db.league_member.membership_state == 'approved')).select()  #   Find their league memberships
         
             aPredictionsForUser = filter(lambda x:x.predictor_id == aUserId, aPredForMatch)
             LogVal("aPredictionsForUser", aPredictionsForUser)
             
             aUserScore = sum(map(lambda x:x.score, aPredictionsForUser)) if aPredictionsForUser else 0  #   Get the total score from all predictions
-            aCurrentScore = GetLastScoreForUser(aUserId, aMatchId) + aUserScore
+            aCurrentScore = GetLastScoreForUser(aUserId, aMatch.game_number) + aUserScore
             LogVal("aCurrentScore", aCurrentScore)
             
             #   Update the score for all league memberships
-            UpdateUserRankingHistory(aUserId, aMatchId, aLeagueMemberships, aCurrentScore)
+            UpdateUserRankingHistory(aUserId, aMatch.game_number, aLeagueMemberships, aCurrentScore)
             
             LogVal("aLeagueMemberships", aLeagueMemberships)
             aLeagueIdSet |= set(map(lambda x:x.league_id, aLeagueMemberships))
@@ -266,10 +264,10 @@ def UpdateMatchScoreAndRankForAllUsers(aMatchSet_in):
         if request.env.web2py_runtime_gae:
             time.sleep( 5 )             #   To workaround the eventual consistency BS of the GAE
             
-        UpdateMatchRanking(aMatchId, aLeagueIdSet)
+        UpdateMatchRanking(aMatch.game_number, aLeagueIdSet)
             
         
-def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
+def UpdateMatchRanking(aGameNumber_in, aLeagueIdSet_in):
 
     LogVal("aLeagueIdSet :", aLeagueIdSet_in)
     anAllRankMap = []
@@ -278,15 +276,7 @@ def UpdateMatchRanking(aMatchId_in, aLeagueIdSet_in):
         allMembershipsOfLeague = map(lambda x:x.id, db((db.league_member.league_id == aLeagueId) & (db.league_member.membership_state == 'approved')).select()) ### SCALE WARNING ###
         LogVal("allMembershipsOfLeague :", allMembershipsOfLeague)
         
-        '''
-        for aMembershipChunk in [allMembershipsOfLeague[i : i + 10] for i in range(0, len(allMembershipsOfLeague), 10)]:
-            LogVal("aMembershipChunk :", aMembershipChunk)
-            aUserScores = db((db.user_ranking_history.member_id.belongs(aMembershipChunk)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)
-            LogVal("aUserScores :", aUserScores)
-            if request.env.web2py_runtime_gae:
-                time.sleep( 1 )
-        '''
-        aUserScores = db((db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)) & (db.user_ranking_history.match_id == aMatchId_in)).select(orderby=~db.user_ranking_history.score)    ### SCALE WARNING ###
+        aUserScores = db((db.user_ranking_history.member_id.belongs(allMembershipsOfLeague)) & (db.user_ranking_history.match_id == aGameNumber_in)).select(orderby=~db.user_ranking_history.score)    ### SCALE WARNING ###
         LogVal("aUserScores :", aUserScores)
         
         anAllRankMap.extend(list(zip(  map(lambda x:x.id, aUserScores), range(len(aUserScores))  )))
@@ -507,7 +497,7 @@ def GetAllPossibleTeams(aMatchId_in, aTeamPos_in):
 
 def IsMatchStarted(aFixtureData_in):
     aStartOfMatchUTC = aFixtureData_in['date_time'] - timedelta(hours = 2)  #Convert the german time to UTC
-    aMatchStarted = "True" if datetime.now() >= aStartOfMatchUTC else "False"
+    aMatchStarted = "True" if datetime.datetime.now() >= aStartOfMatchUTC else "False"
     return aMatchStarted
     
     
@@ -576,7 +566,7 @@ def JoinFixtureWith(aSourceData_in):
 def IsTournamentStarted():
     aDayOfFirstMatch = db(db.fixture.game_number == '1').select().first().date_time
     aPreviousDayOfTournamentStart = aDayOfFirstMatch - timedelta(days = 1)
-    aTournamentStarted = "True" if datetime.now() >= aPreviousDayOfTournamentStart else "False"
+    aTournamentStarted = "True" if datetime.datetime.now() >= aPreviousDayOfTournamentStart else "False"
     return aTournamentStarted
     
 def GetPositionPredictions(aResults_in):
@@ -638,7 +628,13 @@ def GetGoalPredictionResults():
     
     return JoinFixtureWith(aResTableData)
     
+def UpdateUserRecHistory():
 
+    anAffectedMatchSet = set(map(lambda x:x.match_id, db(db.match_prediction.points_scored == 1).select()))
+    LogVal("anAffectedMatchSet", anAffectedMatchSet) 
+    
+    UpdateMatchScoreAndRankForAllUsers(anAffectedMatchSet)
+    UpdateScoresInUserTable(anAffectedMatchSet)
     
 
     
@@ -652,9 +648,6 @@ def GetUsers(aUserIdList_in):
 
 def GetComments(aTargetType_in, aTargetId_in):
     
-    '''if request.env.web2py_runtime_gae:
-        aCommentTable = db((db.user_comment.target_type == aTargetType_in) and (db.user_comment.target_id == aTargetId_in)).select()
-    else:'''
     aCommentTable = db((db.user_comment.target_type == aTargetType_in) & (db.user_comment.target_id == aTargetId_in)).select()
         
     aUserIds = [item.author_id for item in aCommentTable]
@@ -674,7 +667,6 @@ def GetComments(aTargetType_in, aTargetId_in):
         aResults.append({'id' : commentData.id,
 						 'comment' : aComment})
 
-    #logger.info("value of aResults is %s", str(aResults))
     return sorted(aResults, key=lambda k: k['comment']["date_time"])
 
 def SubmitComment(aTargetType_in, aTargetId_in, aComment_in):
@@ -768,10 +760,16 @@ def GetOldBets(aUserId_in):
 def UpdateUserBets(aParams_in):
 
     aAllBetReq = []
+    aTotalPoints = 0
     for aBetReq, aPoint in aParams_in.items():
         aBetId = int(re.search('user_bet_(\d+)', aBetReq).group(1))
         aPoint = int(aPoint)
         aAllBetReq.append({"id" : aBetId, "points" : aPoint})
+        aTotalPoints = aTotalPoints + aPoint
+        
+    logger.info("User spent %s points on betting", str(aTotalPoints))
+    
+    db(db.auth_user.id == auth.user.id).update(last_score = (auth.user.last_score - aTotalPoints))
 
     for aReq in aAllBetReq:
         db.user_bet.update_or_insert((db.user_bet.bet_id == aReq["id"]), 
@@ -788,6 +786,7 @@ def GetActiveBetsAdmin():
     
 def UpdateAdminBets(aParams_in):
 
+    logger.info("---------------------------")
     LogVal("aParams_in", aParams_in)
     aAllBetReq = dict()
     for aBetReq, aValue in aParams_in.items():
@@ -800,6 +799,9 @@ def UpdateAdminBets(aParams_in):
         
         aAllBetReq[aBetId][aFieldName] = aValue
 
+    aAllBetReq = dict((k, v) for k, v in aAllBetReq.iteritems() if v["state"] == "closed")
+    
+    LogVal("aAllBetReq", aAllBetReq)
     for aKey, aVal in aAllBetReq.items():
         db(db.bet_offer.id == aKey).update(bet_state = aVal["state"],
                                             bet_result = aVal["result"])
@@ -814,7 +816,7 @@ def UpdateUserBetScores(aAllBetReq_in):
     
     aUserBetMap = dict()
     for aUserBet in allUserBets:
-        aScore = aUserBet["points"] * aAllBets[aUserBet["bet_id"]]["odd"] if aAllBets[aUserBet["bet_id"]]["bet_result"] == 'met' else 0
+        aScore = aUserBet["points"] * aAllBets[aUserBet["bet_id"]]["odd"] if aAllBets[aUserBet["bet_id"]]["bet_result"] == 'met' else -aUserBet["points"]
         aUserBetMap[aUserBet["id"]] = {"match_id":aAllBets[aUserBet["bet_id"]]["match_id"], 
                                         "predictor_id":aUserBet["predictor_id"],
                                         "score" : aScore}
@@ -1007,6 +1009,8 @@ def GetLeagueRankNextChunk(aLeagueId_in, anOffset_in, aCount_in):
     
 def GetLeagueRankHistory(aLeagueId_in):
 
+    LogVal("aLeagueId_in", aLeagueId_in)
+    
     aLeague = db.league[aLeagueId_in]
     
     aMembers = map(lambda x:x.id, db(db.league_member.league_id == aLeague.id).select())
@@ -1016,7 +1020,7 @@ def GetLeagueRankHistory(aLeagueId_in):
     if aLastMatchId == -1:
         return []
     
-    aMaxPossibleEntries = 2
+    aMaxPossibleEntries = 15
     aUserRankingHistory = db((db.user_ranking_history.member_id.belongs(aMembers)) & (db.user_ranking_history.match_id == aLastMatchId)).select(orderby = db.user_ranking_history.match_rank, limitby=(0, aMaxPossibleEntries))
     LogVal("aUserRankingHistory :", aUserRankingHistory)
     
@@ -1035,7 +1039,7 @@ def GetLeagueRankHistory(aLeagueId_in):
     aMemberData = []
     for aUserId in aUsers:
         
-        aAllUserHistory = db(db.user_ranking_history.predictor_id == aUserId).select(orderby = db.user_ranking_history.match_id)
+        aAllUserHistory = db((db.user_ranking_history.predictor_id == aUserId) & (db.user_ranking_history.member_id.belongs(aMembers))).select(orderby = db.user_ranking_history.match_id)
         LogVal("aAllUserHistory :", aAllUserHistory)
         
         aRankHistory = map(lambda x:{  "match_id" : x.match_id, 
