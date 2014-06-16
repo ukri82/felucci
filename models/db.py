@@ -10,7 +10,7 @@ import logging, logging.handlers
 ## be redirected to HTTPS, uncomment the line below:
 # request.requires_https()
 
-migrate_flag = False
+migrate_flag = True
 
 if not request.env.web2py_runtime_gae:
     ## if NOT running on Google App Engine use SQLite or other DB
