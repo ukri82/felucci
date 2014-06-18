@@ -118,6 +118,7 @@ def UpdateResults(aParams_in):
     session.FixtureTable = db().select(db.fixture.ALL).as_dict(key = 'fixture_id')
         
     CalculateGoalPredictionScores(aFixtureData, aResultData)
+    CalculatePositionScore()
             
 def UpdatePredictions(aParams_in, aPredictionType_in):
 
@@ -320,32 +321,17 @@ def GetPositionScore(aStage_in, aCommonTeams_in):
         aStageScore = aNumberOfCorrectPredictions * 20
     return aStageScore
    
-def FindMatchesNotScoredYet():
-    allMatches = db(db.fixture.id > 0).select(db.fixture.game_number)
-    
-    matchesWithResults = map(lambda x:x.match_id, db(db.match_result.id > 0).select(db.match_result.match_id))
-    LogVal("matchesWithResults", matchesWithResults)
-    
-    predictionsThatNotYetScored = map(lambda x:x.match_id, db((db.match_prediction.match_id.belongs(matchesWithResults)) & (db.match_prediction.points_scored == -1)).select(db.match_prediction.match_id))
-    
-    LogVal("predictionsThatNotYetScored", predictionsThatNotYetScored)
-        
+       
 def CalculatePositionScore():
-    logger.info("==================================")
-    #FindMatchesNotScoredYet()
-    
-    #return
-    
+    logger.info("CalculatePositionScore ==================================")
+        
     allFixtures = db(db.fixture.stage != "Group").select()
     
     aStageGroupedFixture = defaultdict( list )
     for aMatch in allFixtures:
         aStageGroupedFixture[aMatch.stage].append(aMatch)
             
-    aStageLastMatchDict = dict((aStage, max(map(lambda x:x.fixture_id, aFixtureItem))) for aStage, aFixtureItem in aStageGroupedFixture.items())
-    LogVal("aStageLastMatchDict", aStageLastMatchDict)
-        
-    aMatchIds = map(lambda x:x.game_number, allFixtures)
+    aMatchIds = map(lambda x:x.fixture_id, allFixtures)
     anAllPredictions = filter(lambda x:x.team1_id is not None and x.team2_id is not None, db(db.match_prediction.match_id.belongs(aMatchIds)).select())   ### SCALE WARNING ###
     LogVal("anAllPredictions", anAllPredictions)
     
@@ -362,15 +348,15 @@ def CalculatePositionScore():
         if aStage == "IP":
             
             for aMatch in aMatchesWithTeamsAvailable:
-                aPredictionsForMatch = filter(lambda x:x.match_id == aMatch.game_number, anAllPredictions)
+                aPredictionsForMatch = filter(lambda x:x.match_id == aMatch.fixture_id, anAllPredictions)
                 LogVal("aPredictionsForMatch", aPredictionsForMatch)
                 if len(aPredictionsForMatch) > 0 :
                     if aPredictionsForMatch[0].team1_id == aMatch.team1:
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
-                        anAffectedMatchSet.add(aMatch.game_number)
+                        anAffectedMatchSet.add(aMatch.fixture_id)
                     if aPredictionsForMatch[0].team2_id == aMatch.team2:
                         aScoreDict[aPredictionsForMatch[0].id] = aScoreDict[aPredictionsForMatch[0].id] + 5
-                        anAffectedMatchSet.add(aMatch.game_number)
+                        anAffectedMatchSet.add(aMatch.fixture_id)
                         
         LogVal("aScoreDict after IP stage", aScoreDict)    
         
@@ -379,7 +365,7 @@ def CalculatePositionScore():
         aTeamsInStage = set(map(lambda x:x.team1, aMatchesWithTeamsAvailable) + map(lambda x:x.team2, aMatchesWithTeamsAvailable))
         
         #LogVal("map(lambda x:x.game_number, aMatchSet)", map(lambda x:x.game_number, aMatchSet))
-        anAllPredictionsForThisStage = filter(lambda x:x.match_id in map(lambda x:x.game_number, aMatchSet), anAllPredictions)
+        anAllPredictionsForThisStage = filter(lambda x:x.match_id in map(lambda x:x.fixture_id, aMatchSet), anAllPredictions)
         
         aMatchesForUserInThisStage = defaultdict( list )
         for aPred in anAllPredictionsForThisStage:
